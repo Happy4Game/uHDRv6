@@ -1,7 +1,8 @@
 PyQt5
 colour
 colour-science
-sklearn
+scikit-learn
+matplotlib
 pathos
 geomdl
 rawpy
