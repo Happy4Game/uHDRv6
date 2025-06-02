@@ -559,7 +559,7 @@ class AdvanceSliderView(QFrame):
 
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(range[0]/step,range[1]/step)
-        self.slider.setValue(defaultValue/step)
+        self.slider.setValue(int(defaultValue/step))
         self.slider.setSingleStep(1)
 
         self.vbox.addWidget(self.firstrow)
