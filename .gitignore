@@ -1,1 +1,10 @@
 __pycache__
+.venv
+env
+env1
+.vs
+compOriginal.json
+thumbnails
+temp.json
+grey.json
+compOrigFinal.json
