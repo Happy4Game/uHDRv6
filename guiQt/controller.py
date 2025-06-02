@@ -779,7 +779,6 @@ class ToneCurveController():
             points = self.model.evaluate()
 
             self.callBackActive =  False
-
             self.view.sliderShadows.setValue(newValues["shadows"][1])
             self.view.editShadows.setText(str(newValues["shadows"][1]))
 
