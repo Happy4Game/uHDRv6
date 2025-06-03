@@ -6,8 +6,7 @@
     <ProjectHome>
     </ProjectHome>
     <StartupFile>uHDR.py</StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <SearchPath>..\uHDRv6</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>uHDR</Name>
@@ -79,6 +78,8 @@
     <Folder Include="preferences\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="HDRip.dll" />
+    <Content Include="HDRipold.dll" />
     <Content Include="preferences\prefs.json">
       <SubType>Code</SubType>
     </Content>
