@@ -201,7 +201,7 @@ class MultidimensionalImageAestheticsModel():
         return iam
 
     def build(self, key, builder, processpipe):
-        if not isintance(key,list):
+        if not isinstance(key,list):
             key, builder = [key],[builder]
         for k in key:
             self.add(k,builder.build(processpipe))
