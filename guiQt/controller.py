@@ -1032,6 +1032,7 @@ class HDRviewerController():
 
     def displayIMG(self, img):
         img = img.process(hdrCore.processing.clip())
+        print(self.model.scaling())
         colorData = img.colorData*self.model.displayModel['scaling']
 
         h,w, _ = colorData.shape
