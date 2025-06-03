@@ -461,7 +461,7 @@ class ToneCurveModel():
 
     def setValue(self, key, value, autoScale=False):
         if pref.verbose: print(" [MODEL] >> ToneCourveModel.setValue(",key,", ",value,", autoScale=",autoScale,")")
-        value = float(value)
+        value = int(value)
         # check key
         if key in self.control.keys():
             # transform in list
@@ -569,7 +569,7 @@ class HDRviewerModel(object):
         # current image
         self.currentIMG = None
 
-        self.displayModel = pref.getHDRdisplays()
+        self.displayModel = pref.getHDRdisplay()
 
     def scaling(self): 
         if pref.verbose: print(f" [MODEL] >> HDRviewerModel.scaling():{self.displayModel['scaling']}")
@@ -800,9 +800,9 @@ class ColorEditorsAutoModel:
 
                 dictSegment =  {
                     "selection": {
-                        "lightness":    [ Lmin,  Lmax],
-                        "chroma":       [ Cmin,  Cmax],
-                        "hue":          [ Hmin,  Hmax ]},
+                        "lightness":    [ int(Lmin),  int(Lmax)],
+                        "chroma":       [ int(Cmin),  int(Cmax)],
+                        "hue":          [ int(Hmin),  int(Hmax)]},
                     "edit": {"hue": 0,"exposure": 0,"contrast": 0,"saturation": 0},
                     "mask": False}
                 dictValuesList.append(dictSegment)

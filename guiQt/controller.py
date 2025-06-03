@@ -779,7 +779,6 @@ class ToneCurveController():
             points = self.model.evaluate()
 
             self.callBackActive =  False
-
             self.view.sliderShadows.setValue(newValues["shadows"][1])
             self.view.editShadows.setText(str(newValues["shadows"][1]))
 
@@ -1033,6 +1032,7 @@ class HDRviewerController():
 
     def displayIMG(self, img):
         img = img.process(hdrCore.processing.clip())
+        print(self.model.scaling())
         colorData = img.colorData*self.model.displayModel['scaling']
 
         h,w, _ = colorData.shape

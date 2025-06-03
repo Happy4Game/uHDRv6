@@ -1152,6 +1152,7 @@ class HDRviewerView(QFrame):
         self.updateButton = QPushButton("update")
         self.compareButton = QPushButton("compare")
         self.autoCheckBox = QCheckBox("auto")
+
         if build:
             cValue = self.controller.parent.view.dock.view.childControllers[0].model.autoPreviewHDR
             self.autoCheckBox.setChecked(cValue)
