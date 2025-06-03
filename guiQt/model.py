@@ -440,8 +440,8 @@ class ToneCurveModel():
         if pref.verbose: print(" [MODEL] >> ToneCourveModel.__init__()")
 
         #  start
-        self.control = {'start':[0.0,0.0], 'shadows': [10.0,10.0], 'blacks': [30.0,30.0], 'mediums': [50.0,50.0], 'whites': [70.0,70.0], 'highlights': [90.0,90.0], 'end': [100.0,100.0]}
-        self.default = {'start':[0.0,0.0], 'shadows': [10.0,10.0], 'blacks': [30.0,30.0], 'mediums': [50.0,50.0], 'whites': [70.0,70.0], 'highlights': [90.0,90.0], 'end': [100.0,100.0]}
+        self.control = {'start':[0,0], 'shadows': [10,10], 'blacks': [30,30], 'mediums': [50,50], 'whites': [70,70], 'highlights': [90,90], 'end': [100,100]}
+        self.default = {'start':[0,0], 'shadows': [10,10], 'blacks': [30,30], 'mediums': [50,50], 'whites': [70,70], 'highlights': [90,90], 'end': [100,100]}
 
         self.curve =    BSpline.Curve()
         self.curve.degree = 2
@@ -461,7 +461,7 @@ class ToneCurveModel():
 
     def setValue(self, key, value, autoScale=False):
         if pref.verbose: print(" [MODEL] >> ToneCourveModel.setValue(",key,", ",value,", autoScale=",autoScale,")")
-        value = int(value)
+
         # check key
         if key in self.control.keys():
             # transform in list
@@ -472,7 +472,7 @@ class ToneCurveModel():
             if (listValues[:index,1] <= value).all() and (value <= listValues[index+1:,1]).all():
                 # can change
                 oldValue = self.control[listKeys[index]]
-                self.control[listKeys[index]] = [oldValue[0],value]            
+                self.control[listKeys[index]] = [oldValue[0],int(value)]            
             elif not (value <= listValues[index+1:,1]).all():
                 if autoScale:
                     minValue = min(listValues[index:,1])
@@ -482,12 +482,12 @@ class ToneCurveModel():
                     newValues = value*(1- u)+ u*maxValue
                     for i,v in enumerate(newValues):
                         oldValue = self.control[listKeys[i+index+1]]
-                        self.control[listKeys[i+index+1]] = [oldValue[0],np.round(v)]
+                        self.control[listKeys[i+index+1]] = [oldValue[0],int(np.round(v))]
                 else:
                     # not autoScale, set to minValue
                     oldValue = self.control[listKeys[index]]
                     minValue = min(listValues[index+1:,1])
-                    self.control[listKeys[index]] = [oldValue[0],minValue]
+                    self.control[listKeys[index]] = [oldValue[0],int(minValue)]
             elif not (listValues[:index,1] <= value).all():
                 if autoScale:
                     minValue = listValues[0,1]
@@ -496,12 +496,12 @@ class ToneCurveModel():
                     newValues = minValue*(1- u)+ u*value
                     for i,v in enumerate(newValues):
                         oldValue = self.control[listKeys[i]]
-                        self.control[listKeys[i]] = [oldValue[0],np.round(v)]
+                        self.control[listKeys[i]] = [oldValue[0],int(np.round(v))]
                 else:
                     # not autoScale, set to maxValue
                     oldValue = self.control[listKeys[index]]
                     maxValue =  max(listValues[:index,1])
-                    self.control[listKeys[index]] = [oldValue[0],maxValue]
+                    self.control[listKeys[index]] = [oldValue[0],int(maxValue)]
 
         return self.control
 
