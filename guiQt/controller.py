@@ -849,7 +849,8 @@ class ToneCurveController():
                 y_predict = self.networkModel(x)
 
             kpc = (y_predict[0]*100).tolist() 
-            kpcDict = {'start':[0.0,0.0], 'shadows': [10.0,kpc[0]], 'blacks': [30.0,kpc[1]], 'mediums': [50.0,kpc[2]], 'whites': [70.0,kpc[3]], 'highlights': [90.0,kpc[4]], 'end': [100.0,100.0]}
+            print(kpc)
+            kpcDict = {'start':[0.0,0.0], 'shadows': [10.0,int(kpc[0])], 'blacks': [30.0,int(kpc[1])], 'mediums': [50.0,int(kpc[2])], 'whites': [70.0,int(kpc[3])], 'highlights': [90.0,int(kpc[4])], 'end': [100.0,100.0]}
             self.setValues(kpcDict,callBackActive = True)
             self.parent.controller.changeToneCurve(kpcDict) 
      
