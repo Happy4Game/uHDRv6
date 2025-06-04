@@ -18,8 +18,36 @@
 # --- Package hdrGUI ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrGUI consists of the classes for GUI.
+guiQt.model module: Model classes for uHDR GUI application.
 
+This module implements the Model component of the Model-View-Controller (MVC) 
+architecture pattern used in uHDR. It contains data models that manage the 
+state and business logic for image gallery, image editing, aesthetics analysis,
+and various UI components.
+
+The models handle:
+- Image gallery management and pagination
+- HDR image processing pipeline parameters
+- Tone curve and color editing configurations  
+- Geometry transformations and lightness masking
+- Aesthetics analysis and color palette extraction
+- Threading coordination for parallel processing
+
+Main Classes:
+    ImageWidgetModel: Simple image display model
+    ImageGalleryModel: Gallery view with pagination and process-pipes
+    AppModel: Main application state and directory management
+    EditImageModel: Complete HDR editing pipeline model
+    ToneCurveModel: B-spline tone curve editing with control points
+    LightnessMaskModel: Tone range selection masking
+    HDRviewerModel: HDR display configuration
+    ImageAestheticsModel: Color palette and aesthetics analysis
+    ColorEditorsAutoModel: Automatic color editor configuration
+
+Threading Models:
+    AdvanceSliderModel: Slider state management
+    LchColorSelectorModel: LCH color space editing
+    GeometryModel: Geometric transformations
 """
 
 # -----------------------------------------------------------------------------
@@ -44,16 +72,47 @@ from PyQt5.QtCore import QRunnable
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageWidgetModel(object):
-    """ image gui model """
+    """
+    Simple model for individual image widget display.
+    
+    Manages the data state for a single image widget that can display
+    either numpy arrays or hdrCore.image.Image objects.
+    
+    Attributes:
+        controller: Reference to the controlling ImageWidgetController
+        image: Image data (numpy.ndarray or hdrCore.image.Image)
+    
+    Methods:
+        setImage: Update the displayed image
+        getColorData: Get color data for rendering
+    """
 
     def __init__(self, controller):
-
+        """
+        Initialize the image widget model.
+        
+        Args:
+            controller: Parent ImageWidgetController instance
+        """
         self.controller = controller
         self.image = None # numpy array or hdrCore.image.Image
 
-    def setImage(self,image): self.image = image
+    def setImage(self,image): 
+        """
+        Set the image to be displayed.
+        
+        Args:
+            image (numpy.ndarray or hdrCore.image.Image): Image data to display
+        """
+        self.image = image
 
     def getColorData(self): 
+        """
+        Extract color data from the current image for display.
+        
+        Returns:
+            numpy.ndarray: RGB color data ready for Qt display
+        """
         if isinstance(self.image, np.ndarray):
             return self.image
         elif isinstance(self.image, hdrCore.image.Image):
@@ -62,28 +121,38 @@ class ImageWidgetModel(object):
 # --- class ImageGalleryModel --------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageGalleryModel:
-    """ ImageGalleryModel:management of image gallery
-
-        Attributes:
-            controller (ImageGalleryController): parent of self
-            imagesFilenames (list[str]): list of image filenames
-            processPipes (list[hdrCore.porocessing.ProcessPipe]): list of process-pipes associated to images
-            _selectedImage (int): index of current (selected) process-pipe
-
-            aestheticsModels (list[hdrCore.aesthetics.MultidimensionalImageAestheticsModel])
-
-        Methods:
-            setSelectedImage
-            selectedImage
-            getSelectedProcessPipe
-            setImages
-            loadPage
-            save
-            getFilenamesOfCurrentPage
-            getProcessPipeById
+    """
+    Model for image gallery management with pagination and process-pipes.
+    
+    Handles a collection of images with their associated processing pipelines,
+    supporting paginated display and thumbnail generation. Each image has an
+    associated ProcessPipe for HDR editing operations.
+    
+    Attributes:
+        controller (ImageGalleryController): Parent controller reference
+        imageFilenames (list[str]): List of image file paths
+        processPipes (list[ProcessPipe]): HDR processing pipelines for each image
+        _selectedImage (int): Index of currently selected image (-1 if none)
+        aestheticsModels (list): Aesthetic analysis models for images
+    
+    Methods:
+        setSelectedImage: Set the currently selected image index
+        selectedImage: Get the currently selected image index
+        getSelectedProcessPipe: Get the ProcessPipe for selected image
+        setImages: Load a new set of images into the gallery
+        loadPage: Load and process images for a specific page
+        save: Save all ProcessPipe metadata to image files
+        getFilenamesOfCurrentPage: Get filenames for current page
+        getProcessPipeById: Get ProcessPipe by index
     """
 
     def __init__(self, _controller):
+        """
+        Initialize the image gallery model.
+        
+        Args:
+            _controller (ImageGalleryController): Parent controller instance
+        """
         if pref.verbose:  print(" [MODEL] >> ImageGalleryModel.__init__()")
 
         self.controller = _controller
@@ -93,11 +162,31 @@ class ImageGalleryModel:
 
         self.aesthetics = []
 
-    def setSelectedImage(self,id): self._selectedImage = id
+    def setSelectedImage(self,id): 
+        """
+        Set the currently selected image by index.
+        
+        Args:
+            id (int): Index of image to select
+        """
+        self._selectedImage = id
 
-    def selectedImage(self): return self._selectedImage
+    def selectedImage(self): 
+        """
+        Get the index of currently selected image.
+        
+        Returns:
+            int: Selected image index (-1 if none selected)
+        """
+        return self._selectedImage
 
     def getSelectedProcessPipe(self):
+        """
+        Get the ProcessPipe associated with the selected image.
+        
+        Returns:
+            ProcessPipe or None: Processing pipeline for selected image
+        """
         if pref.verbose: print(" [MODEL] >> ImageGalleryModel.getSelectedProcessPipe(",  ")")
 
         res = None
@@ -105,6 +194,15 @@ class ImageGalleryModel:
         return res
 
     def setImages(self, filenames):
+        """
+        Load a new set of images into the gallery.
+        
+        Initializes the gallery with new image filenames, resets all process-pipes
+        and aesthetics models, then loads the first page.
+        
+        Args:
+            filenames (list[str]): List of image file paths to load
+        """
         if pref.verbose: print(" [MODEL] >> ImageGalleryModel.setImages(",len(list(copy.deepcopy(filenames))), "images)")
 
         self.imageFilenames = list(filenames)
@@ -119,10 +217,15 @@ class ImageGalleryModel:
         self.loadPage(0)
 
     def loadPage(self,nb):
-        """loadPage: 
-            Args:
-                nb(int): page number
-            Returns:
+        """
+        Load and process images for a specific page.
+        
+        Loads images for the specified page number, creating ProcessPipes
+        for new images and updating existing ones. Uses threading for
+        efficient parallel loading.
+        
+        Args:
+            nb (int): Page number to load (0-indexed)
         """
         if pref.verbose:  print(" [MODEL] >> ImageGalleryModel.loadPage(",nb,")")
         nbImagePage = controller.GalleryMode.nbRow(self.controller.view.shapeMode)*controller.GalleryMode.nbCol(self.controller.view.shapeMode)
@@ -139,6 +242,12 @@ class ImageGalleryModel:
                 self.controller.view.updateImage(i, self.processPipes[min_+i], f)
 
     def save(self):
+        """
+        Save all ProcessPipe configurations to their associated image metadata.
+        
+        Iterates through all ProcessPipes and saves their parameters as metadata
+        in the corresponding image files for persistence.
+        """
         if pref.verbose:  print(" [MODEL] >> ImageGalleryModel.save()")
 
         for i,p in enumerate(self.processPipes):
@@ -147,19 +256,55 @@ class ImageGalleryModel:
                 p.getImage().metadata.save()
 
     def getFilenamesOfCurrentPage(self):
+        """
+        Get the filenames for images on the current page.
+        
+        Returns:
+            list[str]: Filenames of images currently displayed
+        """
         minIdx, maxIdx = self.controller.pageIdx()
         return copy.deepcopy(self.imageFilenames[minIdx:maxIdx])
 
     def getProcessPipeById(self,i):
+        """
+        Get ProcessPipe by index.
+        
+        Args:
+            i (int): Index of desired ProcessPipe
+            
+        Returns:
+            ProcessPipe: Processing pipeline at specified index
+        """
         return self.processPipes[i]
 
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class AppModel(object):
-    """ class for main window model """
+    """
+    Main application model managing global state.
+    
+    Handles the top-level application state including current working directory,
+    image file lists, and HDR display configuration.
+    
+    Attributes:
+        controller: Reference to parent AppController
+        directory (str): Current working directory path
+        imageFilenames (list[str]): List of image files in directory
+        displayHDRProcess: HDR display process reference
+        displayModel (dict): HDR display configuration with scaling and shape
+    
+    Methods:
+        setDirectory: Change working directory and scan for images
+    """
 
     def __init__(self, controller):
+        """
+        Initialize the application model.
+        
+        Args:
+            controller: Parent AppController instance
+        """
         # attributes
         self.controller = controller
         self.directory = pref.getImagePath()
@@ -169,6 +314,15 @@ class AppModel(object):
         self.displayModel = {'scaling':12, 'shape':(2160,3840)}
 
     def setDirectory(self,path):
+        """
+        Set working directory and scan for supported image files.
+        
+        Args:
+            path (str): Directory path to scan
+            
+        Returns:
+            iterator: Image filenames found in directory
+        """
         # read directory and return image filename list
         self.directory =path
         pref.setImagePath(path)
@@ -181,33 +335,49 @@ class AppModel(object):
 # ------------------------------------------------------------------------------------------
 class EditImageModel(object):
     """
-    xxxx xxxx xxxx.
+    Model for comprehensive HDR image editing pipeline.
+    
+    Manages the complete HDR image editing workflow including exposure adjustment,
+    contrast control, tone curve manipulation, color editing, and geometric 
+    transformations. Coordinates with threading system for real-time preview.
+    
+    The model builds and manages a ProcessPipe containing:
+    - Exposure adjustment
+    - Contrast control
+    - B-spline tone curve editing
+    - Lightness masking for selective editing
+    - Saturation adjustment
+    - Five independent color editors for targeted color correction
+    - Geometric transformations (rotation, cropping)
     
     Attributes:
-        controller: 
-            reference to controller 
-        autoPreviewHDR: boolean
-        processPipe: processing.ProcessPipe
-            current selected ProcessPipe
-
+        controller: Reference to EditImageController
+        autoPreviewHDR (bool): Enable automatic HDR preview updates
+        processpipe (ProcessPipe): Current HDR processing pipeline
+        requestCompute (RequestCompute): Threading coordinator for real-time updates
+    
     Methods:
-        __init__(...):
-        getProcessPipe(...):
-        setProcessPipe(...):
-        buildProcessPipe(...):
-        autoExpousre(...): called when autoExpouse is clicked
-        changeExposure(...): called when exposure value has been changed by user in gui
-        getEV(..): 
-        changeContrast(...): called when contrast value has been changed by user in gui
-        changeToneCurve(...): called when tone-curve values have been changed by user in gui
-        changeLightnessMask(...): called when lightness mask parameters have been changed by user in gui
-        changeSaturation(...): called when contrast value has been changed by user in gui
-        changeColorEditor(...): called when color editor parameters have been changed by user in gui
-        changeGeometry(...): called when geometry value has been changed by user in gui    
-
+        getProcessPipe: Get current processing pipeline
+        setProcessPipe: Set new processing pipeline
+        buildProcessPipe: Create default processing pipeline [Static]
+        autoExposure: Automatically adjust exposure
+        changeExposure: Manual exposure adjustment
+        getEV: Get current exposure value
+        changeContrast: Adjust contrast parameters
+        changeToneCurve: Update tone curve control points
+        changeLightnessMask: Modify lightness masking
+        changeSaturation: Adjust global saturation
+        changeColorEditor: Update color editor parameters
+        changeGeometry: Modify geometric transformations
+        updateImage: Update view with processed image
     """
     def __init__(self,controller):
-
+        """
+        Initialize the HDR image editing model.
+        
+        Args:
+            controller: Parent EditImageController instance
+        """
         self.controller = controller
 
         self.autoPreviewHDR = False
@@ -218,9 +388,25 @@ class EditImageModel(object):
         # create a RequestCompute
         self.requestCompute  = thread.RequestCompute(self)
 
-    def getProcessPipe(self): return self.processpipe
+    def getProcessPipe(self): 
+        """
+        Get the current processing pipeline.
+        
+        Returns:
+            ProcessPipe: Current HDR processing pipeline
+        """
+        return self.processpipe
 
     def setProcessPipe(self, processPipe): 
+        """
+        Set a new processing pipeline and trigger computation.
+        
+        Args:
+            processPipe (ProcessPipe): New processing pipeline to use
+            
+        Returns:
+            bool: True if pipeline was set successfully, False if system busy
+        """
         if self.requestCompute.readyToRun:
             self.processpipe = processPipe
             self.requestCompute.setProcessPipe(self.processpipe)
@@ -235,10 +421,17 @@ class EditImageModel(object):
     @staticmethod
     def buildProcessPipe():
         """
-        WARNING: 
-            here the process-pipe is built
-            initial pipe does not have input image
-            initial pipe has processes node according to EditImageView 
+        Create a default HDR processing pipeline.
+        
+        Builds a complete ProcessPipe with all editing stages configured
+        with default parameters. The pipeline includes exposure, contrast,
+        tone curve, masking, saturation, color editors, and geometry.
+        
+        WARNING: The initial pipe does not have an input image and must be
+        configured with setImage() before use.
+        
+        Returns:
+            ProcessPipe: Configured processing pipeline with default parameters
         """
         processPipe = hdrCore.processing.ProcessPipe()
 
@@ -321,6 +514,15 @@ class EditImageModel(object):
         return processPipe
 
     def autoExposure(self):
+        """
+        Automatically calculate and apply optimal exposure settings.
+        
+        Uses the exposure process's automatic calculation method to determine
+        optimal exposure value based on image content and applies it to the pipeline.
+        
+        Returns:
+            numpy.ndarray: Processed image with auto-exposure applied
+        """
         if pref.verbose:  print(" [MODEL] >> EditImageModel.autoExposure(",")")
 
         id = self.processpipe.getProcessNodeByName("exposure")
@@ -339,77 +541,169 @@ class EditImageModel(object):
 
     def changeExposure(self,value):
         """
-        changeExposure: XXX
-
+        Manually adjust exposure value.
+        
         Args:
-            XXX
-        Returns:
-            XXX
+            value (float): Exposure adjustment in EV stops
         """
-
         if pref.verbose:  print(" [MODEL] >> EditImageModel.changeExposure(",value,")")
 
         id = self.processpipe.getProcessNodeByName("exposure")
         self.requestCompute.requestCompute(id,{'EV': value})
 
     def getEV(self):
+        """
+        Get current exposure value settings.
+        
+        Returns:
+            dict: Current exposure parameters
+        """
         if pref.verbose:  print(" [MODEL] >> EditImageModel.getEV(",")")
         id = self.processpipe.getProcessNodeByName("exposure")
         return self.processpipe.getParameters(id)
 
     def changeContrast(self,value):
+        """
+        Adjust contrast parameters.
+        
+        Args:
+            value (float): Contrast adjustment value
+        """
         if pref.verbose:  print(" [MODEL] >> EditImageModel.changeContrast(",value,")")
 
         id = self.processpipe.getProcessNodeByName("contrast")
         self.requestCompute.requestCompute(id,{'contrast': value})
 
     def changeToneCurve(self,controlPoints):
+        """
+        Update tone curve control points.
+        
+        Args:
+            controlPoints (dict): B-spline control point dictionary
+        """
         if pref.verbose: print(" [MODEL] >> EditImageModel.changeToneCurve(",")")
 
         id = self.processpipe.getProcessNodeByName("tonecurve")
         self.requestCompute.requestCompute(id,controlPoints)
 
     def changeLightnessMask(self, maskValues):
+        """
+        Modify lightness masking parameters.
+        
+        Args:
+            maskValues (dict): Mask configuration for different tone ranges
+        """
         if pref.verbose: print(" [MODEL] >> EditImageModel.changeLightnessMask(",maskValues,")")
 
         id = self.processpipe.getProcessNodeByName("lightnessmask")
         self.requestCompute.requestCompute(id,maskValues)
 
     def changeSaturation(self,value):
+        """
+        Adjust global saturation.
+        
+        Args:
+            value (float): Saturation adjustment value
+        """
         if pref.verbose:  print(" [MODEL] >> EditImageModel.changeSaturation(",value,")")
 
         id = self.processpipe.getProcessNodeByName("saturation")
         self.requestCompute.requestCompute(id,{'saturation': value, 'method': 'gamma'})
 
     def changeColorEditor(self, values, idName):
+        """
+        Update color editor parameters.
+        
+        Args:
+            values (dict): Color editor configuration
+            idName (str): Name of color editor process node
+        """
         if pref.verbose:  print(" [MODEL] >> EditImageModel.changeColorEditor(",values,")")
 
         id = self.processpipe.getProcessNodeByName(idName)
         self.requestCompute.requestCompute(id,values)
 
     def changeGeometry(self, values):
+        """
+        Modify geometric transformation parameters.
+        
+        Args:
+            values (dict): Geometry configuration including rotation and cropping
+        """
         if pref.verbose:  print(" [MODEL] >> EditImageModel.changeGeometry(",values,")")
 
         id = self.processpipe.getProcessNodeByName("geometry")
         self.requestCompute.requestCompute(id,values)
 
     def updateImage(self, imgTM):
+        """
+        Update view with newly processed image.
+        
+        Args:
+            imgTM (numpy.ndarray): Tone-mapped image for display
+        """
         self.controller.updateImage(imgTM)
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class AdvanceSliderModel():
+    """
+    Simple model for advanced slider controls.
+    
+    Manages state for slider widgets with additional functionality like
+    auto adjustment and value persistence.
+    
+    Attributes:
+        controller: Reference to parent controller
+        value (float): Current slider value
+    
+    Methods:
+        setValue: Update slider value
+        toDict: Export state as dictionary
+    """
     def __init__(self, controller, value):
+        """
+        Initialize advanced slider model.
+        
+        Args:
+            controller: Parent controller instance
+            value (float): Initial slider value
+        """
         self.controller = controller
         self.value = value
-    def setValue(self, value): self.value =  value
-    def toDict(self): return {'value': self.value}
+    def setValue(self, value): 
+        """
+        Set new slider value.
+        
+        Args:
+            value (float): New slider value
+        """
+        self.value =  value
+    def toDict(self): 
+        """
+        Export slider state as dictionary.
+        
+        Returns:
+            dict: Slider state with 'value' key
+        """
+        return {'value': self.value}
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ToneCurveModel():
     """
-
+    Model for B-spline tone curve editing with multiple control points.
+    
+    Manages a tone curve represented as a B-spline with seven control points:
+    start, shadows, blacks, mediums, whites, highlights, and end. Provides
+    automatic scaling and constraint validation to maintain curve monotonicity.
+    
+    The tone curve operates on a coordinate system where:
+    - X-axis: Input luminance (0-100)
+    - Y-axis: Output luminance (0-100) 
+    - Control points define the curve shape
+    
+    Grid representation:
         +-------+-------+-------+-------+-------+                             [o]
         |       |       |       |       |       |                              ^
         |       |       |       |       |   o   |                              |
@@ -433,10 +727,21 @@ class ToneCurveModel():
        [o]-------+-------+-------+-------+-------+-----------------------------+ 
   zeros ^ shadows  black   medium  white  highlights                          200
 
-
-
+    Attributes:
+        control (dict): Current control point positions
+        default (dict): Default control point positions for reset
+        curve (BSpline.Curve): B-spline curve object
+        points (numpy.ndarray): Evaluated curve points
+    
+    Methods:
+        evaluate: Compute B-spline curve from control points
+        setValue: Update control point with constraints and auto-scaling
+        setValues: Set all control points from dictionary
     """
     def __init__(self):
+        """
+        Initialize tone curve model with default control points.
+        """
         if pref.verbose: print(" [MODEL] >> ToneCourveModel.__init__()")
 
         #  start
@@ -448,6 +753,15 @@ class ToneCurveModel():
         self.points =None
 
     def evaluate(self):
+        """
+        Evaluate B-spline curve from current control points.
+        
+        Constructs a degree-2 B-spline curve using the current control points,
+        generates appropriate knot vector, and evaluates the curve.
+        
+        Returns:
+            numpy.ndarray: Array of (x,y) points representing the evaluated curve
+        """
         if pref.verbose: print(" [MODEL] >> ToneCurveModel.evaluate(",")")
 
         #self.curve.ctrlpts = copy.deepcopy([self.control['start'],self.control['shadows'],self.control['blacks'],self.control['mediums'], self.control['whites'], self.control['highlights'], self.control['end']])
@@ -460,7 +774,22 @@ class ToneCurveModel():
         return self.points
 
     def setValue(self, key, value, autoScale=False):
-        if pref.verbose: print(" [MODEL] >> ToneCourveModel.setValue(",key,", ",value,", autoScale=",autoScale,")")
+        """
+        Update a control point value with constraints and optional auto-scaling.
+        
+        Updates the specified control point while maintaining curve monotonicity.
+        Optionally performs auto-scaling of adjacent points to maintain smooth
+        transitions when constraints would be violated.
+        
+        Args:
+            key (str): Control point name ('shadows', 'blacks', etc.)
+            value (int): New Y-coordinate value for the control point
+            autoScale (bool): Enable automatic scaling of adjacent points
+            
+        Returns:
+            dict: Updated control points dictionary
+        """
+        if pref.verbose: print(" [MODEL] >> ToneCurveModel.setValue(",key,", ",value,", autoScale=",autoScale,")")
         value = int(value)
         # check key
         if key in self.control.keys():
@@ -506,37 +835,134 @@ class ToneCurveModel():
         return self.control
 
     def setValues(self, controlPointsDict):
+        """
+        Set all control points from dictionary.
+        
+        Args:
+            controlPointsDict (dict): Dictionary of control point coordinates
+        """
         self.control = copy.deepcopy(controlPointsDict)
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class LightnessMaskModel():
+    """
+    Model for lightness-based masking to enable selective tone range editing.
+    
+    Manages boolean masks for different luminance ranges allowing selective
+    application of adjustments to specific tonal areas of the image.
+    
+    Tone ranges:
+    - shadows: Darkest areas
+    - blacks: Dark areas 
+    - mediums: Mid-tones
+    - whites: Bright areas
+    - highlights: Brightest areas
+    
+    Attributes:
+        controller: Reference to parent controller
+        masks (dict): Boolean mask state for each tone range
+    
+    Methods:
+        maskChange: Toggle mask for specific tone range
+        setValues: Set all mask values from dictionary
+    """
     def __init__(self, _controller):
+        """
+        Initialize lightness mask model.
+        
+        Args:
+            _controller: Parent LightnessMaskController instance
+        """
         self.controller = _controller
 
         self.masks = {'shadows': False, 'blacks':False, 'mediums':False, 'whites':False, 'highlights':False}
 
     def maskChange(self, key, on_off):
+        """
+        Toggle mask state for a specific tone range.
+        
+        Args:
+            key (str): Tone range name ('shadows', 'blacks', etc.)
+            on_off (bool): New mask state
+            
+        Returns:
+            dict: Updated mask dictionary
+        """
         if key in self.masks.keys(): self.masks[key] = on_off
         return copy.deepcopy(self.masks)
 
-    def setValues(self, values): self.masks = copy.deepcopy(values)
+    def setValues(self, values): 
+        """
+        Set all mask values from dictionary.
+        
+        Args:
+            values (dict): New mask configuration
+        """
+        self.masks = copy.deepcopy(values)
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageInfoModel(object):
+    """
+    Model for image information and metadata management.
+    
+    Handles display and editing of image metadata including EXIF data
+    and user-defined tags. Supports modification of custom metadata
+    fields for workflow management.
+    
+    Attributes:
+        controller: Reference to parent controller
+        processPipe (ProcessPipe): Current image processing pipeline
+    
+    Methods:
+        getProcessPipe: Get current processing pipeline
+        setProcessPipe: Set new processing pipeline
+        changeMeta: Update metadata field value
+    """
 
     def __init__(self,controller):
+        """
+        Initialize image info model.
+        
+        Args:
+            controller: Parent ImageInfoController instance
+        """
         self.controller = controller
 
         # ref to ImageGalleryModel.processPipes[ImageGalleryModel._selectedImage]
         self.processPipe = None 
 
-    def getProcessPipe(self): return self.processPipe
+    def getProcessPipe(self): 
+        """
+        Get current processing pipeline.
+        
+        Returns:
+            ProcessPipe or None: Current processing pipeline
+        """
+        return self.processPipe
 
-    def setProcessPipe(self, processPipe):  self.processPipe = processPipe
+    def setProcessPipe(self, processPipe):  
+        """
+        Set new processing pipeline.
+        
+        Args:
+            processPipe (ProcessPipe): New processing pipeline
+        """
+        self.processPipe = processPipe
 
     def changeMeta(self,tagGroup,tag, on_off): 
+        """
+        Update metadata field value.
+        
+        Modifies user-defined metadata tags within the processing pipeline
+        and updates the metadata structure accordingly.
+        
+        Args:
+            tagGroup (str): Metadata group name
+            tag (str): Specific tag name within group
+            on_off (bool): New tag value
+        """
         if pref.verbose:  print(" [MODEL] >> ImageInfoModel.changeMeta(",tagGroup,",",tag,",", on_off,")")
 
         if isinstance(self.processPipe, hdrCore.processing.ProcessPipe):
@@ -552,16 +978,45 @@ class ImageInfoModel(object):
             self.processPipe.updateUserMeta(tagRootName,updatedMeta)
             if pref.verbose: 
                 print(" [MODEL] >> ImageInfoModel.changeUseCase(",")")
-                for tt in updatedMeta: print(tt)     
+                for tt in updatedMeta: print(tt)
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
-class CurveControlModel(object): pass
+class CurveControlModel(object): 
+    """
+    Base model class for curve control interfaces.
+    
+    Placeholder model for potential curve control functionality.
+    Currently serves as a base class or interface definition.
+    """
+    pass
 # ------------------------------------------------------------------------------------------
 # ---- HDRviewerModel ----------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class HDRviewerModel(object):
+    """
+    Model for HDR display configuration and management.
+    
+    Manages HDR display settings including scaling and display dimensions
+    for external HDR monitor output. Handles configuration persistence
+    and current image reference for HDR preview.
+    
+    Attributes:
+        controller: Reference to parent HDRviewerController
+        currentIMG: Currently displayed HDR image
+        displayModel (dict): HDR display configuration with scaling and shape
+    
+    Methods:
+        scaling: Get current display scaling factor
+        shape: Get current display dimensions
+    """
     def __init__(self,_controller):
+        """
+        Initialize HDR viewer model.
+        
+        Args:
+            _controller: Parent HDRviewerController instance
+        """
         if pref.verbose: print(" [MODEL] >> HDRviewerModel.__init__(",")")
 
         self.controller = _controller
@@ -572,17 +1027,71 @@ class HDRviewerModel(object):
         self.displayModel = pref.getHDRdisplay()
 
     def scaling(self): 
+        """
+        Get current HDR display scaling factor.
+        
+        Returns:
+            float: Scaling factor for HDR display
+        """
         if pref.verbose: print(f" [MODEL] >> HDRviewerModel.scaling():{self.displayModel['scaling']}")
         return self.displayModel['scaling']
 
     def shape(self): 
+        """
+        Get current HDR display dimensions.
+        
+        Returns:
+            tuple: (height, width) of HDR display
+        """
         if pref.verbose: print(f" [MODEL] >> HDRviewerModel.shape():{self.displayModel['shape']}")        
         return self.displayModel['shape']
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class LchColorSelectorModel(object):
+    """
+    Model for LCH color space selection and editing.
+    
+    Manages color selection in LCH (Lightness, Chroma, Hue) color space
+    with independent range selection for each component and editing
+    parameters for targeted color adjustments.
+    
+    LCH Color Space Components:
+    - Lightness: 0-100 (brightness)
+    - Chroma: 0-100 (saturation/colorfulness)  
+    - Hue: 0-360 (color angle)
+    
+    Attributes:
+        controller: Reference to parent controller
+        lightnessSelection (tuple): (min, max) lightness range
+        chromaSelection (tuple): (min, max) chroma range
+        hueSelection (tuple): (min, max) hue range
+        exposure (float): Exposure adjustment for selected colors
+        hueShift (float): Hue shift for selected colors
+        contrast (float): Contrast adjustment for selected colors
+        saturation (float): Saturation adjustment for selected colors
+        mask (bool): Display selection mask
+        default (dict): Default values for reset
+    
+    Methods:
+        setHueSelection: Set hue range selection
+        setChromaSelection: Set chroma range selection  
+        setLightnessSelection: Set lightness range selection
+        setExposure: Set exposure adjustment
+        setHueShift: Set hue shift amount
+        setContrast: Set contrast adjustment
+        setSaturation: Set saturation adjustment
+        setMask: Toggle mask display
+        getValues: Get complete configuration
+        setValues: Set configuration from dictionary
+    """
     def __init__(self, _controller):
+        """
+        Initialize LCH color selector model.
+        
+        Args:
+            _controller: Parent LchColorSelectorController instance
+        """
         self.controller = _controller
 
         self.lightnessSelection =   (0,100)     # min, max
@@ -605,38 +1114,119 @@ class LchColorSelectorModel(object):
 
 
     def setHueSelection(self, hMin,hMax):
+        """
+        Set hue range selection.
+        
+        Args:
+            hMin (float): Minimum hue value (0-360)
+            hMax (float): Maximum hue value (0-360)
+            
+        Returns:
+            dict: Updated complete configuration
+        """
         self.hueSelection = hMin,hMax
         return self.getValues()
 
     def setChromaSelection(self, cMin, cMax):              
+        """
+        Set chroma range selection.
+        
+        Args:
+            cMin (float): Minimum chroma value (0-100)
+            cMax (float): Maximum chroma value (0-100)
+            
+        Returns:
+            dict: Updated complete configuration
+        """
         self.chromaSelection = cMin, cMax
         return self.getValues()
 
     def setLightnessSelection(self, lMin, lMax):              
+        """
+        Set lightness range selection.
+        
+        Args:
+            lMin (float): Minimum lightness value (0-100)
+            lMax (float): Maximum lightness value (0-100)
+            
+        Returns:
+            dict: Updated complete configuration
+        """
         self.lightnessSelection = lMin, lMax
         return self.getValues()
 
     def setExposure(self,ev):
+        """
+        Set exposure adjustment for selected colors.
+        
+        Args:
+            ev (float): Exposure adjustment in stops
+            
+        Returns:
+            dict: Updated complete configuration
+        """
         self.exposure = ev
         return self.getValues()
 
     def setHueShift(self,hs):
+        """
+        Set hue shift amount for selected colors.
+        
+        Args:
+            hs (float): Hue shift in degrees (-180 to +180)
+            
+        Returns:
+            dict: Updated complete configuration
+        """
         self.hueShift = hs
         return self.getValues()
 
     def setContrast(self, contrast):
+        """
+        Set contrast adjustment for selected colors.
+        
+        Args:
+            contrast (float): Contrast adjustment value
+            
+        Returns:
+            dict: Updated complete configuration
+        """
         self.contrast = contrast
         return self.getValues()
 
     def setSaturation(self, saturation): 
+        """
+        Set saturation adjustment for selected colors.
+        
+        Args:
+            saturation (float): Saturation adjustment value
+            
+        Returns:
+            dict: Updated complete configuration
+        """
         self.saturation = saturation
         return self.getValues()
 
     def setMask(self, value): 
+        """
+        Toggle selection mask display.
+        
+        Args:
+            value (bool): Enable/disable mask display
+            
+        Returns:
+            dict: Updated complete configuration
+        """
         self.mask = value
         return self.getValues()
 
     def getValues(self):
+        """
+        Get complete LCH color selector configuration.
+        
+        Returns:
+            dict: Complete configuration with selection ranges and edit parameters
+        """
         return {
             'selection':    {'lightness': self.lightnessSelection ,'chroma': self.chromaSelection,'hue':self.hueSelection}, 
             'edit':         {'hue':self.hueShift,'exposure':self.exposure,'contrast':self.contrast,'saturation':self.saturation}, 
@@ -644,6 +1234,12 @@ class LchColorSelectorModel(object):
             }
 
     def setValues(self, values):
+        """
+        Set configuration from dictionary with safe defaults.
+        
+        Args:
+            values (dict): Configuration dictionary with selection and edit parameters
+        """
         self.lightnessSelection =   values['selection']['lightness']    if 'lightness' in values['selection'].keys() else (0,100)
         self.chromaSelection =      values['selection']['chroma']       if 'chroma' in values['selection'].keys() else (0,100)
         self.hueSelection =         values['selection']['hue']          if 'hue' in values['selection'].keys() else (0,360)
@@ -658,7 +1254,31 @@ class LchColorSelectorModel(object):
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class GeometryModel(object):
+    """
+    Model for geometric transformations including rotation and cropping.
+    
+    Manages geometric transformation parameters for image processing
+    including aspect ratio cropping and rotation adjustments.
+    
+    Attributes:
+        controller: Reference to parent controller
+        ratio (tuple): Aspect ratio for cropping (width, height)
+        up (float): Vertical cropping adjustment
+        rotation (float): Rotation angle in degrees
+    
+    Methods:
+        setCroppingVerticalAdjustement: Set vertical cropping offset
+        setRotation: Set rotation angle
+        getValues: Get complete geometry configuration
+        setValues: Set configuration from dictionary
+    """
     def __init__(self, _controller):
+        """
+        Initialize geometry model.
+        
+        Args:
+            _controller: Parent GeometryController instance
+        """
         self.controller = _controller
 
         self.ratio =    (16,9)    
@@ -666,17 +1286,47 @@ class GeometryModel(object):
         self.rotation = 0.0 
 
     def setCroppingVerticalAdjustement(self,up):
+        """
+        Set vertical cropping adjustment.
+        
+        Args:
+            up (float): Vertical offset for cropping
+            
+        Returns:
+            dict: Updated geometry configuration
+        """
         self.up = up
         return self.getValues()
 
     def setRotation(self, rotation):              
+        """
+        Set rotation angle.
+        
+        Args:
+            rotation (float): Rotation angle in degrees
+            
+        Returns:
+            dict: Updated geometry configuration
+        """
         self.rotation = rotation
         return self.getValues()
 
     def getValues(self):
+        """
+        Get complete geometry configuration.
+        
+        Returns:
+            dict: Geometry parameters including ratio, vertical adjustment, and rotation
+        """
         return { 'ratio': self.ratio, 'up': self.up,'rotation': self.rotation}
 
     def setValues(self, values):
+        """
+        Set geometry configuration from dictionary.
+        
+        Args:
+            values (dict): Geometry configuration with ratio, up, and rotation
+        """
         self.ratio =    values['ratio']     if 'ratio'      in values.keys() else (16,9)
         self.up =       values['up']        if 'up'         in values.keys() else 0.0
         self.rotation = values['rotation']  if 'rotation'   in values.keys() else 0.0
@@ -684,17 +1334,32 @@ class GeometryModel(object):
 # ---- Class AestheticsImageModel ----------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageAestheticsModel:
-    """class ImageAesthetics: encapsulates color palette (and related parameters), convexHull composition (and related parameters), etc.
-
-        Attributes:
-            parent (guiQt.controller.ImageAestheticsController): controller
-            processPipe (hdrCore.processing.ProcessPipe): current selected process-pipe
-
-        Methods:
-
-
+    """
+    Model for image aesthetics analysis and color palette extraction.
+    
+    Manages aesthetic analysis of HDR images including color palette generation,
+    composition analysis, and visual quality assessment. Uses K-means clustering
+    for dominant color extraction and provides visual representations.
+    
+    Attributes:
+        parent (ImageAestheticsController): Parent controller reference
+        requireUpdate (bool): Flag indicating analysis needs refresh
+        processPipe (ProcessPipe): Current image processing pipeline
+        colorPalette (Palette): Extracted color palette from image
+    
+    Methods:
+        getProcessPipe: Get current processing pipeline
+        setProcessPipe: Set new pipeline and trigger analysis
+        endComputing: Mark analysis as complete
+        getPaletteImage: Get visual representation of color palette
     """
     def __init__(self, parent):
+        """
+        Initialize image aesthetics model.
+        
+        Args:
+            parent (ImageAestheticsController): Parent controller instance
+        """
         if pref.verbose: print(" [MODEL] >> ImageAestheticsModel.__init__(",")")
         
         self.parent = parent
@@ -712,9 +1377,25 @@ class ImageAestheticsModel:
                                                        hdrCore.image.ColorSpace.build('Lab'), 
                                                        hdrCore.image.imageType.SDR)
     # ------------------------------------------------------------------------------------------
-    def getProcessPipe(self): return self.processPipe
+    def getProcessPipe(self): 
+        """
+        Get current processing pipeline.
+        
+        Returns:
+            ProcessPipe or None: Current processing pipeline
+        """
+        return self.processPipe
     # ------------------------------------------------------------------------------------------
     def setProcessPipe(self, processPipe):  
+        """
+        Set new processing pipeline and trigger aesthetics analysis.
+        
+        If the pipeline has changed, triggers color palette extraction
+        and aesthetic analysis using K-means clustering on the image data.
+        
+        Args:
+            processPipe (ProcessPipe): New processing pipeline to analyze
+        """
         if pref.verbose: print(" [MODEL] >> ImageAestheticsModel.setProcessPipe(",")")
 
         if processPipe != self.processPipe:
@@ -733,22 +1414,78 @@ class ImageAestheticsModel:
         else: pass
     # ------------------------------------------------------------------------------------------
     def endComputing(self):
+        """
+        Mark aesthetics analysis as complete.
+        
+        Resets the requireUpdate flag to indicate that analysis is current.
+        """
         self.requireUpdate = False
     # ------------------------------------------------------------------------------------------
     def getPaletteImage(self):
+        """
+        Get visual representation of the extracted color palette.
+        
+        Returns:
+            numpy.ndarray: RGB image showing the color palette as colored bars
+        """
         return self.colorPalette.createImageOfPalette()
 # ------------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ColorEditorsAutoModel:
+    """
+    Model for automatic color editor configuration using K-means clustering.
+    
+    Automatically analyzes an image to extract dominant colors and configures
+    multiple color editors with appropriate LCH selection ranges for targeted
+    color correction. Uses K-means clustering in Lab color space.
+    
+    Attributes:
+        controller: Reference to parent controller
+        processStepId (str): Name of processing step to analyze
+        nbColors (int): Number of dominant colors to extract
+        removeBlack (bool): Whether to exclude dark/black regions from analysis
+    
+    Methods:
+        compute: Perform K-means analysis and generate color editor configurations
+    """
     def __init__(self,_controller, processStepName,nbColors, removeBlack= True):
+        """
+        Initialize automatic color editors model.
+        
+        Args:
+            _controller: Parent ColorEditorsAutoController instance
+            processStepName (str): Name of processing step to analyze
+            nbColors (int): Number of dominant colors to extract (2-8)
+            removeBlack (bool): Exclude dark regions from analysis
+        """
         self.controller = _controller
         self.processStepId = processStepName
         self.nbColors = nbColors
         self.removeBlack = removeBlack
 
     def compute(self):
+        """
+        Compute automatic color editor configurations using K-means clustering.
+        
+        Analyzes the image at the specified processing step using K-means clustering
+        in Lab color space to identify dominant colors. Generates LCH selection
+        ranges for each color editor with appropriate hue, chroma, and lightness
+        boundaries.
+        
+        Algorithm:
+        1. Extract image data from specified processing step
+        2. Convert to Lab color space if needed
+        3. Apply K-means clustering with (nbColors + 1) clusters
+        4. Remove darkest cluster if removeBlack is enabled
+        5. Convert cluster centers to LCH space
+        6. Sort by hue angle
+        7. Generate selection ranges with ±25 tolerance for each cluster
+        
+        Returns:
+            list[dict]: List of color editor configurations with selection and edit parameters
+        """
         # get image according to processId
         processPipe = self.controller.parent.controller.getProcessPipe()
         if processPipe != None:
@@ -808,7 +1545,6 @@ class ColorEditorsAutoModel:
                 dictValuesList.append(dictSegment)
 
             return dictValuesList
-# ------------------------------------------------------------------------------------------
 
 
 
