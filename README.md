@@ -28,16 +28,16 @@ python uHDR.py
 ## 🔎 Architecture
 ```bash
 uHDRv6
- |--guiQT # Graphical interface 
- | hdrCore # HDR processing
- | Preferences # User configuration
- |--Thumbnails # Temporary HDR thumbnail
- |-compOrigFinal.json # ...
- |-exiftool.exe # Software to retrieve image metadata
- |-grey.json # ...
- |-requirements.txt # List of required libraries
- |-temp.json # ...
- |-uHDR.py # Main application file
+ |--guiQT       # Graphical interface
+ |--hdrCore     # HDR processing
+ |--preferences # User configuration
+ |--thumbnails  # Temporary HDR thumbnail
+ |-compOrigFinal.json   # ...
+ |-exiftool.exe         # Software to retrieve image metadata
+ |-grey.json            # ...
+ |-requirements.txt     # List of required libraries
+ |-temp.json            # ...
+ |-uHDR.py              # Main application file
 ```
 
 ## ✉️ Contact
