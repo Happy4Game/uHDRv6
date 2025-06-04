@@ -16,25 +16,15 @@
     <nav class="pdoc">
         <label id="navtoggle" for="togglestate" class="pdoc-button"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><path stroke-linecap='round' stroke="currentColor" stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg></label>
         <input id="togglestate" type="checkbox" aria-hidden="true" tabindex="-1">
-        <div>            <a class="pdoc-button module-list-button" href="../index.html">
+        <div>            <a class="pdoc-button module-list-button" href="../hdrCore.html">
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-in-left" viewBox="0 0 16 16">
   <path fill-rule="evenodd" d="M10 3.5a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 1 1 0v2A1.5 1.5 0 0 1 9.5 14h-8A1.5 1.5 0 0 1 0 12.5v-9A1.5 1.5 0 0 1 1.5 2h8A1.5 1.5 0 0 1 11 3.5v2a.5.5 0 0 1-1 0v-2z"/>
   <path fill-rule="evenodd" d="M4.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H14.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3z"/>
-</svg>                &nbsp;
-                Module Index
-            </a>
+</svg>                &nbsp;hdrCore</a>
 
 
             <input type="search" placeholder="Search..." role="searchbox" aria-label="search"
                    pattern=".+" required>
-
-            <h2>Contents</h2>
-            <ul>
-  <li><a href="#srgb">sRGB</a>
-  <ul>
-    <li><a href="#references">References</a></li>
-  </ul></li>
-</ul>
 
 
 
@@ -60,32 +50,31 @@
     <main class="pdoc">
             <section class="module-info">
                     <h1 class="modulename">
-hdrCore<wbr>.srgb    </h1>
+<a href="./../hdrCore.html">hdrCore</a><wbr>.srgb    </h1>
 
-                        <div class="docstring"><h1 id="srgb">sRGB</h1>
+                        <div class="docstring"><p>HDR Core sRGB Transfer Functions Module</p>
 
-<p>Defines the <em>sRGB</em> electro-optical transfer function (EOTF / EOCF) and its
-inverse:</p>
+<p>This module provides sRGB electro-optical transfer function (EOTF/EOCF) implementations
+for HDR image processing workflows. It includes both forward and inverse sRGB transfer
+functions that are essential for proper color space conversions in HDR imaging.</p>
 
-<ul>
-<li><code>colour.models.eotf_inverse_sRGB()</code></li>
-<li><code>colour.models.eotf_sRGB()</code></li>
-</ul>
+<p>These functions are based on the IEC 61966-2-1:1999 standard and ITU-R BT.709-6
+recommendations, ensuring accurate color reproduction and display compatibility.</p>
 
-<h2 id="references">References</h2>
+<p>Functions:
+    eotf_inverse_sRGB: Convert linear luminance to gamma-corrected sRGB values
+    eotf_sRGB: Convert gamma-corrected sRGB values to linear luminance</p>
 
-<ul>
-<li>:cite:<code>InternationalElectrotechnicalCommission1999a</code> : International
-Electrotechnical Commission. (1999). IEC 61966-2-1:1999 - Multimedia
-systems and equipment - Colour measurement and management - Part 2-1:
-Colour management - Default RGB colour space - sRGB (p. 51).
-<a href="https://webstore.iec.ch/publication/6169">https://webstore.iec.ch/publication/6169</a></li>
-<li>:cite:<code>InternationalTelecommunicationUnion2015i</code> : International
-Telecommunication Union. (2015). Recommendation ITU-R BT.709-6 - Parameter
-values for the HDTV standards for production and international programme
-exchange BT Series Broadcasting service (pp. 1-32).
-<a href="https://www.itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.709-6-201506-I!!PDF-E.pdf">https://www.itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.709-6-201506-I!!PDF-E.pdf</a></li>
-</ul>
+<p>Note:
+    This module is derived from the Colour Science library and adapted for use
+    within the uHDR processing pipeline. It maintains compatibility with the
+    original Colour library interface while providing optimized implementations
+    for HDR imaging workflows.</p>
+
+<p>References:
+    - IEC 61966-2-1:1999 - sRGB colour space standard
+    - ITU-R BT.709-6 - HDTV parameter values
+    - Colour Science library (<a href="https://colour-science.org">https://colour-science.org</a>)</p>
 </div>
 
                         <input id="mod-srgb-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -94,145 +83,146 @@ exchange BT Series Broadcasting service (pp. 1-32).
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">  1</span></a><span class="c1"># -*- coding: utf-8 -*-</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="sd">sRGB</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a><span class="sd">====</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a>
-</span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a><span class="sd">Defines the *sRGB* electro-optical transfer function (EOTF / EOCF) and its</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="sd">inverse:</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="sd">HDR Core sRGB Transfer Functions Module</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="sd">This module provides sRGB electro-optical transfer function (EOTF/EOCF) implementations</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a><span class="sd">for HDR image processing workflows. It includes both forward and inverse sRGB transfer</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="sd">functions that are essential for proper color space conversions in HDR imaging.</span>
 </span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a>
-</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="sd">-   :func:`colour.models.eotf_inverse_sRGB`</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="sd">-   :func:`colour.models.eotf_sRGB`</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="sd">These functions are based on the IEC 61966-2-1:1999 standard and ITU-R BT.709-6</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="sd">recommendations, ensuring accurate color reproduction and display compatibility.</span>
 </span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a>
-</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="sd">References</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="sd">----------</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="sd">-   :cite:`InternationalElectrotechnicalCommission1999a` : International</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a><span class="sd">    Electrotechnical Commission. (1999). IEC 61966-2-1:1999 - Multimedia</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="sd">    systems and equipment - Colour measurement and management - Part 2-1:</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a><span class="sd">    Colour management - Default RGB colour space - sRGB (p. 51).</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="sd">    https://webstore.iec.ch/publication/6169</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a><span class="sd">-   :cite:`InternationalTelecommunicationUnion2015i` : International</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="sd">    Telecommunication Union. (2015). Recommendation ITU-R BT.709-6 - Parameter</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a><span class="sd">    values for the HDTV standards for production and international programme</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a><span class="sd">    exchange BT Series Broadcasting service (pp. 1-32).</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="sd">    https://www.itu.int/dms_pubrec/itu-r/rec/bt/\</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a><span class="sd">R-REC-BT.709-6-201506-I!!PDF-E.pdf</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>
-</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a>
-</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">colour.algebra</span><span class="w"> </span><span class="kn">import</span> <span class="n">spow</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">colour.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">as_float</span><span class="p">,</span> <span class="n">domain_range_scale</span><span class="p">,</span> <span class="n">from_range_1</span><span class="p">,</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a>                              <span class="n">to_domain_1</span><span class="p">)</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>
-</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a><span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Colour Developers&#39;</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="n">__copyright__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (C) 2013-2021 - Colour Developers&#39;</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="n">__license__</span> <span class="o">=</span> <span class="s1">&#39;New BSD License - https://opensource.org/licenses/BSD-3-Clause&#39;</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="n">__maintainer__</span> <span class="o">=</span> <span class="s1">&#39;Colour Developers&#39;</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="n">__email__</span> <span class="o">=</span> <span class="s1">&#39;colour-developers@colour-science.org&#39;</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="n">__status__</span> <span class="o">=</span> <span class="s1">&#39;Production&#39;</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>
-</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;eotf_inverse_sRGB&#39;</span><span class="p">,</span> <span class="s1">&#39;eotf_sRGB&#39;</span><span class="p">]</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>
+</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="sd">Functions:</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="sd">    eotf_inverse_sRGB: Convert linear luminance to gamma-corrected sRGB values</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="sd">    eotf_sRGB: Convert gamma-corrected sRGB values to linear luminance</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>
+</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="sd">Note:</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a><span class="sd">    This module is derived from the Colour Science library and adapted for use</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="sd">    within the uHDR processing pipeline. It maintains compatibility with the</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a><span class="sd">    original Colour library interface while providing optimized implementations</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="sd">    for HDR imaging workflows.</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a>
+</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a><span class="sd">References:</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="sd">    - IEC 61966-2-1:1999 - sRGB colour space standard</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a><span class="sd">    - ITU-R BT.709-6 - HDTV parameter values</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a><span class="sd">    - Colour Science library (https://colour-science.org)</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">colour.algebra</span><span class="w"> </span><span class="kn">import</span> <span class="n">spow</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">colour.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">as_float</span><span class="p">,</span> <span class="n">domain_range_scale</span><span class="p">,</span> <span class="n">from_range_1</span><span class="p">,</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>                              <span class="n">to_domain_1</span><span class="p">)</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Colour Developers&#39;</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="n">__copyright__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (C) 2013-2021 - Colour Developers&#39;</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="n">__license__</span> <span class="o">=</span> <span class="s1">&#39;New BSD License - https://opensource.org/licenses/BSD-3-Clause&#39;</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="n">__maintainer__</span> <span class="o">=</span> <span class="s1">&#39;Colour Developers&#39;</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="n">__email__</span> <span class="o">=</span> <span class="s1">&#39;colour-developers@colour-science.org&#39;</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="n">__status__</span> <span class="o">=</span> <span class="s1">&#39;Production&#39;</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;eotf_inverse_sRGB&#39;</span><span class="p">,</span> <span class="s1">&#39;eotf_sRGB&#39;</span><span class="p">]</span>
 </span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>
-</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="k">def</span><span class="w"> </span><span class="nf">eotf_inverse_sRGB</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="sd">    Defines the *IEC 61966-2-1:1999* *sRGB* inverse electro-optical transfer</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">    function (EOTF / EOCF).</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>
-</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">    Parameters</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">    ----------</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">    L : numeric or array_like</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="sd">        *Luminance* :math:`L` of the image.</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>
-</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="sd">    Returns</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">    -------</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a><span class="sd">    numeric or ndarray</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">        Corresponding electrical signal :math:`V`.</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>
-</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a><span class="sd">    Notes</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a><span class="sd">    -----</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>
-</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a><span class="sd">    | **Domain** | **Scale - Reference** | **Scale - 1** |</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a><span class="sd">    +============+=======================+===============+</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="sd">    | ``L``      | [0, 1]                | [0, 1]        |</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>
-</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="sd">    | **Range**  | **Scale - Reference** | **Scale - 1** |</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="sd">    +============+=======================+===============+</span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a><span class="sd">    | ``V``      | [0, 1]                | [0, 1]        |</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>
-</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a><span class="sd">    References</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="sd">    ----------</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="sd">    :cite:`InternationalElectrotechnicalCommission1999a`,</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">    :cite:`InternationalTelecommunicationUnion2015i`</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a>
-</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">    Examples</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">    --------</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="sd">    &gt;&gt;&gt; eotf_inverse_sRGB(0.18)  # doctest: +ELLIPSIS</span>
-</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="sd">    0.4613561...</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>
-</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>    <span class="n">L</span> <span class="o">=</span> <span class="n">to_domain_1</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
-</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>
-</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">L</span> <span class="o">&lt;=</span> <span class="mf">0.0031308</span><span class="p">,</span> <span class="n">L</span> <span class="o">*</span> <span class="mf">12.92</span><span class="p">,</span> <span class="mf">1.055</span> <span class="o">*</span> <span class="n">spow</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mf">2.4</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.055</span><span class="p">)</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>
-</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>    <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="n">from_range_1</span><span class="p">(</span><span class="n">V</span><span class="p">))</span>
-</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="k">def</span><span class="w"> </span><span class="nf">eotf_inverse_sRGB</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">    Defines the *IEC 61966-2-1:1999* *sRGB* inverse electro-optical transfer</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">    function (EOTF / EOCF).</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">    Parameters</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">    ----------</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="sd">    L : numeric or array_like</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a><span class="sd">        *Luminance* :math:`L` of the image.</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">    Returns</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a><span class="sd">    -------</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">    numeric or ndarray</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a><span class="sd">        Corresponding electrical signal :math:`V`.</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a><span class="sd">    Notes</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a><span class="sd">    -----</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a><span class="sd">    | **Domain** | **Scale - Reference** | **Scale - 1** |</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="sd">    +============+=======================+===============+</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="sd">    | ``L``      | [0, 1]                | [0, 1]        |</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="sd">    | **Range**  | **Scale - Reference** | **Scale - 1** |</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a><span class="sd">    +============+=======================+===============+</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a><span class="sd">    | ``V``      | [0, 1]                | [0, 1]        |</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="sd">    References</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="sd">    ----------</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">    :cite:`InternationalElectrotechnicalCommission1999a`,</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">    :cite:`InternationalTelecommunicationUnion2015i`</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">    Examples</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="sd">    --------</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="sd">    &gt;&gt;&gt; eotf_inverse_sRGB(0.18)  # doctest: +ELLIPSIS</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">    0.4613561...</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>    <span class="n">L</span> <span class="o">=</span> <span class="n">to_domain_1</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">L</span> <span class="o">&lt;=</span> <span class="mf">0.0031308</span><span class="p">,</span> <span class="n">L</span> <span class="o">*</span> <span class="mf">12.92</span><span class="p">,</span> <span class="mf">1.055</span> <span class="o">*</span> <span class="n">spow</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mf">2.4</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.055</span><span class="p">)</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>    <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="n">from_range_1</span><span class="p">(</span><span class="n">V</span><span class="p">))</span>
 </span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>
-</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a><span class="k">def</span><span class="w"> </span><span class="nf">eotf_sRGB</span><span class="p">(</span><span class="n">V</span><span class="p">):</span>
-</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="sd">    Defines the *IEC 61966-2-1:1999* *sRGB* electro-optical transfer function</span>
-</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="sd">    (EOTF / EOCF).</span>
-</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>
-</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="sd">    Parameters</span>
-</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="sd">    ----------</span>
-</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="sd">    V : numeric or array_like</span>
-</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">        Electrical signal :math:`V`.</span>
-</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>
-</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a><span class="sd">    Returns</span>
-</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a><span class="sd">    -------</span>
-</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a><span class="sd">    numeric or ndarray</span>
-</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a><span class="sd">        Corresponding *luminance* :math:`L` of the image.</span>
-</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>
-</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a><span class="sd">    Notes</span>
-</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a><span class="sd">    -----</span>
-</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>
-</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a><span class="sd">    | **Domain** | **Scale - Reference** | **Scale - 1** |</span>
-</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a><span class="sd">    +============+=======================+===============+</span>
-</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a><span class="sd">    | ``V``      | [0, 1]                | [0, 1]        |</span>
-</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>
-</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a><span class="sd">    | **Range**  | **Scale - Reference** | **Scale - 1** |</span>
-</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a><span class="sd">    +============+=======================+===============+</span>
-</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a><span class="sd">    | ``L``      | [0, 1]                | [0, 1]        |</span>
-</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>
-</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a><span class="sd">    References</span>
-</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a><span class="sd">    ----------</span>
-</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a><span class="sd">    :cite:`InternationalElectrotechnicalCommission1999a`,</span>
-</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a><span class="sd">    :cite:`InternationalTelecommunicationUnion2015i`</span>
-</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a>
-</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a><span class="sd">    Examples</span>
-</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a><span class="sd">    --------</span>
-</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a><span class="sd">    &gt;&gt;&gt; eotf_sRGB(0.461356129500442)  # doctest: +ELLIPSIS</span>
-</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a><span class="sd">    0.1...</span>
-</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a>
-</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a>    <span class="n">V</span> <span class="o">=</span> <span class="n">to_domain_1</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
-</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>
-</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a>    <span class="k">with</span> <span class="n">domain_range_scale</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
-</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>        <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>            <span class="n">V</span> <span class="o">&lt;=</span> <span class="n">eotf_inverse_sRGB</span><span class="p">(</span><span class="mf">0.0031308</span><span class="p">),</span>
-</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>            <span class="n">V</span> <span class="o">/</span> <span class="mf">12.92</span><span class="p">,</span>
-</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>            <span class="n">spow</span><span class="p">((</span><span class="n">V</span> <span class="o">+</span> <span class="mf">0.055</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1.055</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">),</span>
-</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a>        <span class="p">)</span>
-</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>
-</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>    <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="n">from_range_1</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a><span class="k">def</span><span class="w"> </span><span class="nf">eotf_sRGB</span><span class="p">(</span><span class="n">V</span><span class="p">):</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="sd">    Defines the *IEC 61966-2-1:1999* *sRGB* electro-optical transfer function</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a><span class="sd">    (EOTF / EOCF).</span>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="sd">    Parameters</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="sd">    ----------</span>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">    V : numeric or array_like</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a><span class="sd">        Electrical signal :math:`V`.</span>
+</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a><span class="sd">    Returns</span>
+</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a><span class="sd">    -------</span>
+</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a><span class="sd">    numeric or ndarray</span>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a><span class="sd">        Corresponding *luminance* :math:`L` of the image.</span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>
+</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a><span class="sd">    Notes</span>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a><span class="sd">    -----</span>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a><span class="sd">    | **Domain** | **Scale - Reference** | **Scale - 1** |</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a><span class="sd">    +============+=======================+===============+</span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a><span class="sd">    | ``V``      | [0, 1]                | [0, 1]        |</span>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a><span class="sd">    | **Range**  | **Scale - Reference** | **Scale - 1** |</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a><span class="sd">    +============+=======================+===============+</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a><span class="sd">    | ``L``      | [0, 1]                | [0, 1]        |</span>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a><span class="sd">    References</span>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a><span class="sd">    ----------</span>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a><span class="sd">    :cite:`InternationalElectrotechnicalCommission1999a`,</span>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="sd">    :cite:`InternationalTelecommunicationUnion2015i`</span>
+</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a>
+</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a><span class="sd">    Examples</span>
+</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a><span class="sd">    --------</span>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a><span class="sd">    &gt;&gt;&gt; eotf_sRGB(0.461356129500442)  # doctest: +ELLIPSIS</span>
+</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a><span class="sd">    0.1...</span>
+</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>    <span class="n">V</span> <span class="o">=</span> <span class="n">to_domain_1</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>    <span class="k">with</span> <span class="n">domain_range_scale</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>        <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>            <span class="n">V</span> <span class="o">&lt;=</span> <span class="n">eotf_inverse_sRGB</span><span class="p">(</span><span class="mf">0.0031308</span><span class="p">),</span>
+</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>            <span class="n">V</span> <span class="o">/</span> <span class="mf">12.92</span><span class="p">,</span>
+</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a>            <span class="n">spow</span><span class="p">((</span><span class="n">V</span> <span class="o">+</span> <span class="mf">0.055</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1.055</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">),</span>
+</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>        <span class="p">)</span>
+</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>
+</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>    <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="n">from_range_1</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
 </span></pre></div>
 
 
@@ -248,52 +238,52 @@ exchange BT Series Broadcasting service (pp. 1-32).
 
     </div>
     <a class="headerlink" href="#eotf_inverse_sRGB"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="eotf_inverse_sRGB-44"><a href="#eotf_inverse_sRGB-44"><span class="linenos">44</span></a><span class="k">def</span><span class="w"> </span><span class="nf">eotf_inverse_sRGB</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
-</span><span id="eotf_inverse_sRGB-45"><a href="#eotf_inverse_sRGB-45"><span class="linenos">45</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="eotf_inverse_sRGB-46"><a href="#eotf_inverse_sRGB-46"><span class="linenos">46</span></a><span class="sd">    Defines the *IEC 61966-2-1:1999* *sRGB* inverse electro-optical transfer</span>
-</span><span id="eotf_inverse_sRGB-47"><a href="#eotf_inverse_sRGB-47"><span class="linenos">47</span></a><span class="sd">    function (EOTF / EOCF).</span>
-</span><span id="eotf_inverse_sRGB-48"><a href="#eotf_inverse_sRGB-48"><span class="linenos">48</span></a>
-</span><span id="eotf_inverse_sRGB-49"><a href="#eotf_inverse_sRGB-49"><span class="linenos">49</span></a><span class="sd">    Parameters</span>
-</span><span id="eotf_inverse_sRGB-50"><a href="#eotf_inverse_sRGB-50"><span class="linenos">50</span></a><span class="sd">    ----------</span>
-</span><span id="eotf_inverse_sRGB-51"><a href="#eotf_inverse_sRGB-51"><span class="linenos">51</span></a><span class="sd">    L : numeric or array_like</span>
-</span><span id="eotf_inverse_sRGB-52"><a href="#eotf_inverse_sRGB-52"><span class="linenos">52</span></a><span class="sd">        *Luminance* :math:`L` of the image.</span>
-</span><span id="eotf_inverse_sRGB-53"><a href="#eotf_inverse_sRGB-53"><span class="linenos">53</span></a>
-</span><span id="eotf_inverse_sRGB-54"><a href="#eotf_inverse_sRGB-54"><span class="linenos">54</span></a><span class="sd">    Returns</span>
-</span><span id="eotf_inverse_sRGB-55"><a href="#eotf_inverse_sRGB-55"><span class="linenos">55</span></a><span class="sd">    -------</span>
-</span><span id="eotf_inverse_sRGB-56"><a href="#eotf_inverse_sRGB-56"><span class="linenos">56</span></a><span class="sd">    numeric or ndarray</span>
-</span><span id="eotf_inverse_sRGB-57"><a href="#eotf_inverse_sRGB-57"><span class="linenos">57</span></a><span class="sd">        Corresponding electrical signal :math:`V`.</span>
-</span><span id="eotf_inverse_sRGB-58"><a href="#eotf_inverse_sRGB-58"><span class="linenos">58</span></a>
-</span><span id="eotf_inverse_sRGB-59"><a href="#eotf_inverse_sRGB-59"><span class="linenos">59</span></a><span class="sd">    Notes</span>
-</span><span id="eotf_inverse_sRGB-60"><a href="#eotf_inverse_sRGB-60"><span class="linenos">60</span></a><span class="sd">    -----</span>
-</span><span id="eotf_inverse_sRGB-61"><a href="#eotf_inverse_sRGB-61"><span class="linenos">61</span></a>
-</span><span id="eotf_inverse_sRGB-62"><a href="#eotf_inverse_sRGB-62"><span class="linenos">62</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="eotf_inverse_sRGB-63"><a href="#eotf_inverse_sRGB-63"><span class="linenos">63</span></a><span class="sd">    | **Domain** | **Scale - Reference** | **Scale - 1** |</span>
-</span><span id="eotf_inverse_sRGB-64"><a href="#eotf_inverse_sRGB-64"><span class="linenos">64</span></a><span class="sd">    +============+=======================+===============+</span>
-</span><span id="eotf_inverse_sRGB-65"><a href="#eotf_inverse_sRGB-65"><span class="linenos">65</span></a><span class="sd">    | ``L``      | [0, 1]                | [0, 1]        |</span>
-</span><span id="eotf_inverse_sRGB-66"><a href="#eotf_inverse_sRGB-66"><span class="linenos">66</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="eotf_inverse_sRGB-67"><a href="#eotf_inverse_sRGB-67"><span class="linenos">67</span></a>
-</span><span id="eotf_inverse_sRGB-68"><a href="#eotf_inverse_sRGB-68"><span class="linenos">68</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="eotf_inverse_sRGB-69"><a href="#eotf_inverse_sRGB-69"><span class="linenos">69</span></a><span class="sd">    | **Range**  | **Scale - Reference** | **Scale - 1** |</span>
-</span><span id="eotf_inverse_sRGB-70"><a href="#eotf_inverse_sRGB-70"><span class="linenos">70</span></a><span class="sd">    +============+=======================+===============+</span>
-</span><span id="eotf_inverse_sRGB-71"><a href="#eotf_inverse_sRGB-71"><span class="linenos">71</span></a><span class="sd">    | ``V``      | [0, 1]                | [0, 1]        |</span>
-</span><span id="eotf_inverse_sRGB-72"><a href="#eotf_inverse_sRGB-72"><span class="linenos">72</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="eotf_inverse_sRGB-73"><a href="#eotf_inverse_sRGB-73"><span class="linenos">73</span></a>
-</span><span id="eotf_inverse_sRGB-74"><a href="#eotf_inverse_sRGB-74"><span class="linenos">74</span></a><span class="sd">    References</span>
-</span><span id="eotf_inverse_sRGB-75"><a href="#eotf_inverse_sRGB-75"><span class="linenos">75</span></a><span class="sd">    ----------</span>
-</span><span id="eotf_inverse_sRGB-76"><a href="#eotf_inverse_sRGB-76"><span class="linenos">76</span></a><span class="sd">    :cite:`InternationalElectrotechnicalCommission1999a`,</span>
-</span><span id="eotf_inverse_sRGB-77"><a href="#eotf_inverse_sRGB-77"><span class="linenos">77</span></a><span class="sd">    :cite:`InternationalTelecommunicationUnion2015i`</span>
-</span><span id="eotf_inverse_sRGB-78"><a href="#eotf_inverse_sRGB-78"><span class="linenos">78</span></a>
-</span><span id="eotf_inverse_sRGB-79"><a href="#eotf_inverse_sRGB-79"><span class="linenos">79</span></a><span class="sd">    Examples</span>
-</span><span id="eotf_inverse_sRGB-80"><a href="#eotf_inverse_sRGB-80"><span class="linenos">80</span></a><span class="sd">    --------</span>
-</span><span id="eotf_inverse_sRGB-81"><a href="#eotf_inverse_sRGB-81"><span class="linenos">81</span></a><span class="sd">    &gt;&gt;&gt; eotf_inverse_sRGB(0.18)  # doctest: +ELLIPSIS</span>
-</span><span id="eotf_inverse_sRGB-82"><a href="#eotf_inverse_sRGB-82"><span class="linenos">82</span></a><span class="sd">    0.4613561...</span>
-</span><span id="eotf_inverse_sRGB-83"><a href="#eotf_inverse_sRGB-83"><span class="linenos">83</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="eotf_inverse_sRGB-84"><a href="#eotf_inverse_sRGB-84"><span class="linenos">84</span></a>
-</span><span id="eotf_inverse_sRGB-85"><a href="#eotf_inverse_sRGB-85"><span class="linenos">85</span></a>    <span class="n">L</span> <span class="o">=</span> <span class="n">to_domain_1</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
-</span><span id="eotf_inverse_sRGB-86"><a href="#eotf_inverse_sRGB-86"><span class="linenos">86</span></a>
-</span><span id="eotf_inverse_sRGB-87"><a href="#eotf_inverse_sRGB-87"><span class="linenos">87</span></a>    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">L</span> <span class="o">&lt;=</span> <span class="mf">0.0031308</span><span class="p">,</span> <span class="n">L</span> <span class="o">*</span> <span class="mf">12.92</span><span class="p">,</span> <span class="mf">1.055</span> <span class="o">*</span> <span class="n">spow</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mf">2.4</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.055</span><span class="p">)</span>
-</span><span id="eotf_inverse_sRGB-88"><a href="#eotf_inverse_sRGB-88"><span class="linenos">88</span></a>
-</span><span id="eotf_inverse_sRGB-89"><a href="#eotf_inverse_sRGB-89"><span class="linenos">89</span></a>    <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="n">from_range_1</span><span class="p">(</span><span class="n">V</span><span class="p">))</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="eotf_inverse_sRGB-45"><a href="#eotf_inverse_sRGB-45"><span class="linenos">45</span></a><span class="k">def</span><span class="w"> </span><span class="nf">eotf_inverse_sRGB</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
+</span><span id="eotf_inverse_sRGB-46"><a href="#eotf_inverse_sRGB-46"><span class="linenos">46</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="eotf_inverse_sRGB-47"><a href="#eotf_inverse_sRGB-47"><span class="linenos">47</span></a><span class="sd">    Defines the *IEC 61966-2-1:1999* *sRGB* inverse electro-optical transfer</span>
+</span><span id="eotf_inverse_sRGB-48"><a href="#eotf_inverse_sRGB-48"><span class="linenos">48</span></a><span class="sd">    function (EOTF / EOCF).</span>
+</span><span id="eotf_inverse_sRGB-49"><a href="#eotf_inverse_sRGB-49"><span class="linenos">49</span></a>
+</span><span id="eotf_inverse_sRGB-50"><a href="#eotf_inverse_sRGB-50"><span class="linenos">50</span></a><span class="sd">    Parameters</span>
+</span><span id="eotf_inverse_sRGB-51"><a href="#eotf_inverse_sRGB-51"><span class="linenos">51</span></a><span class="sd">    ----------</span>
+</span><span id="eotf_inverse_sRGB-52"><a href="#eotf_inverse_sRGB-52"><span class="linenos">52</span></a><span class="sd">    L : numeric or array_like</span>
+</span><span id="eotf_inverse_sRGB-53"><a href="#eotf_inverse_sRGB-53"><span class="linenos">53</span></a><span class="sd">        *Luminance* :math:`L` of the image.</span>
+</span><span id="eotf_inverse_sRGB-54"><a href="#eotf_inverse_sRGB-54"><span class="linenos">54</span></a>
+</span><span id="eotf_inverse_sRGB-55"><a href="#eotf_inverse_sRGB-55"><span class="linenos">55</span></a><span class="sd">    Returns</span>
+</span><span id="eotf_inverse_sRGB-56"><a href="#eotf_inverse_sRGB-56"><span class="linenos">56</span></a><span class="sd">    -------</span>
+</span><span id="eotf_inverse_sRGB-57"><a href="#eotf_inverse_sRGB-57"><span class="linenos">57</span></a><span class="sd">    numeric or ndarray</span>
+</span><span id="eotf_inverse_sRGB-58"><a href="#eotf_inverse_sRGB-58"><span class="linenos">58</span></a><span class="sd">        Corresponding electrical signal :math:`V`.</span>
+</span><span id="eotf_inverse_sRGB-59"><a href="#eotf_inverse_sRGB-59"><span class="linenos">59</span></a>
+</span><span id="eotf_inverse_sRGB-60"><a href="#eotf_inverse_sRGB-60"><span class="linenos">60</span></a><span class="sd">    Notes</span>
+</span><span id="eotf_inverse_sRGB-61"><a href="#eotf_inverse_sRGB-61"><span class="linenos">61</span></a><span class="sd">    -----</span>
+</span><span id="eotf_inverse_sRGB-62"><a href="#eotf_inverse_sRGB-62"><span class="linenos">62</span></a>
+</span><span id="eotf_inverse_sRGB-63"><a href="#eotf_inverse_sRGB-63"><span class="linenos">63</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="eotf_inverse_sRGB-64"><a href="#eotf_inverse_sRGB-64"><span class="linenos">64</span></a><span class="sd">    | **Domain** | **Scale - Reference** | **Scale - 1** |</span>
+</span><span id="eotf_inverse_sRGB-65"><a href="#eotf_inverse_sRGB-65"><span class="linenos">65</span></a><span class="sd">    +============+=======================+===============+</span>
+</span><span id="eotf_inverse_sRGB-66"><a href="#eotf_inverse_sRGB-66"><span class="linenos">66</span></a><span class="sd">    | ``L``      | [0, 1]                | [0, 1]        |</span>
+</span><span id="eotf_inverse_sRGB-67"><a href="#eotf_inverse_sRGB-67"><span class="linenos">67</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="eotf_inverse_sRGB-68"><a href="#eotf_inverse_sRGB-68"><span class="linenos">68</span></a>
+</span><span id="eotf_inverse_sRGB-69"><a href="#eotf_inverse_sRGB-69"><span class="linenos">69</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="eotf_inverse_sRGB-70"><a href="#eotf_inverse_sRGB-70"><span class="linenos">70</span></a><span class="sd">    | **Range**  | **Scale - Reference** | **Scale - 1** |</span>
+</span><span id="eotf_inverse_sRGB-71"><a href="#eotf_inverse_sRGB-71"><span class="linenos">71</span></a><span class="sd">    +============+=======================+===============+</span>
+</span><span id="eotf_inverse_sRGB-72"><a href="#eotf_inverse_sRGB-72"><span class="linenos">72</span></a><span class="sd">    | ``V``      | [0, 1]                | [0, 1]        |</span>
+</span><span id="eotf_inverse_sRGB-73"><a href="#eotf_inverse_sRGB-73"><span class="linenos">73</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="eotf_inverse_sRGB-74"><a href="#eotf_inverse_sRGB-74"><span class="linenos">74</span></a>
+</span><span id="eotf_inverse_sRGB-75"><a href="#eotf_inverse_sRGB-75"><span class="linenos">75</span></a><span class="sd">    References</span>
+</span><span id="eotf_inverse_sRGB-76"><a href="#eotf_inverse_sRGB-76"><span class="linenos">76</span></a><span class="sd">    ----------</span>
+</span><span id="eotf_inverse_sRGB-77"><a href="#eotf_inverse_sRGB-77"><span class="linenos">77</span></a><span class="sd">    :cite:`InternationalElectrotechnicalCommission1999a`,</span>
+</span><span id="eotf_inverse_sRGB-78"><a href="#eotf_inverse_sRGB-78"><span class="linenos">78</span></a><span class="sd">    :cite:`InternationalTelecommunicationUnion2015i`</span>
+</span><span id="eotf_inverse_sRGB-79"><a href="#eotf_inverse_sRGB-79"><span class="linenos">79</span></a>
+</span><span id="eotf_inverse_sRGB-80"><a href="#eotf_inverse_sRGB-80"><span class="linenos">80</span></a><span class="sd">    Examples</span>
+</span><span id="eotf_inverse_sRGB-81"><a href="#eotf_inverse_sRGB-81"><span class="linenos">81</span></a><span class="sd">    --------</span>
+</span><span id="eotf_inverse_sRGB-82"><a href="#eotf_inverse_sRGB-82"><span class="linenos">82</span></a><span class="sd">    &gt;&gt;&gt; eotf_inverse_sRGB(0.18)  # doctest: +ELLIPSIS</span>
+</span><span id="eotf_inverse_sRGB-83"><a href="#eotf_inverse_sRGB-83"><span class="linenos">83</span></a><span class="sd">    0.4613561...</span>
+</span><span id="eotf_inverse_sRGB-84"><a href="#eotf_inverse_sRGB-84"><span class="linenos">84</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="eotf_inverse_sRGB-85"><a href="#eotf_inverse_sRGB-85"><span class="linenos">85</span></a>
+</span><span id="eotf_inverse_sRGB-86"><a href="#eotf_inverse_sRGB-86"><span class="linenos">86</span></a>    <span class="n">L</span> <span class="o">=</span> <span class="n">to_domain_1</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+</span><span id="eotf_inverse_sRGB-87"><a href="#eotf_inverse_sRGB-87"><span class="linenos">87</span></a>
+</span><span id="eotf_inverse_sRGB-88"><a href="#eotf_inverse_sRGB-88"><span class="linenos">88</span></a>    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">L</span> <span class="o">&lt;=</span> <span class="mf">0.0031308</span><span class="p">,</span> <span class="n">L</span> <span class="o">*</span> <span class="mf">12.92</span><span class="p">,</span> <span class="mf">1.055</span> <span class="o">*</span> <span class="n">spow</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mf">2.4</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.055</span><span class="p">)</span>
+</span><span id="eotf_inverse_sRGB-89"><a href="#eotf_inverse_sRGB-89"><span class="linenos">89</span></a>
+</span><span id="eotf_inverse_sRGB-90"><a href="#eotf_inverse_sRGB-90"><span class="linenos">90</span></a>    <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="n">from_range_1</span><span class="p">(</span><span class="n">V</span><span class="p">))</span>
 </span></pre></div>
 
 
@@ -351,57 +341,57 @@ function (EOTF / EOCF).</p>
 
     </div>
     <a class="headerlink" href="#eotf_sRGB"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="eotf_sRGB-92"><a href="#eotf_sRGB-92"><span class="linenos"> 92</span></a><span class="k">def</span><span class="w"> </span><span class="nf">eotf_sRGB</span><span class="p">(</span><span class="n">V</span><span class="p">):</span>
-</span><span id="eotf_sRGB-93"><a href="#eotf_sRGB-93"><span class="linenos"> 93</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="eotf_sRGB-94"><a href="#eotf_sRGB-94"><span class="linenos"> 94</span></a><span class="sd">    Defines the *IEC 61966-2-1:1999* *sRGB* electro-optical transfer function</span>
-</span><span id="eotf_sRGB-95"><a href="#eotf_sRGB-95"><span class="linenos"> 95</span></a><span class="sd">    (EOTF / EOCF).</span>
-</span><span id="eotf_sRGB-96"><a href="#eotf_sRGB-96"><span class="linenos"> 96</span></a>
-</span><span id="eotf_sRGB-97"><a href="#eotf_sRGB-97"><span class="linenos"> 97</span></a><span class="sd">    Parameters</span>
-</span><span id="eotf_sRGB-98"><a href="#eotf_sRGB-98"><span class="linenos"> 98</span></a><span class="sd">    ----------</span>
-</span><span id="eotf_sRGB-99"><a href="#eotf_sRGB-99"><span class="linenos"> 99</span></a><span class="sd">    V : numeric or array_like</span>
-</span><span id="eotf_sRGB-100"><a href="#eotf_sRGB-100"><span class="linenos">100</span></a><span class="sd">        Electrical signal :math:`V`.</span>
-</span><span id="eotf_sRGB-101"><a href="#eotf_sRGB-101"><span class="linenos">101</span></a>
-</span><span id="eotf_sRGB-102"><a href="#eotf_sRGB-102"><span class="linenos">102</span></a><span class="sd">    Returns</span>
-</span><span id="eotf_sRGB-103"><a href="#eotf_sRGB-103"><span class="linenos">103</span></a><span class="sd">    -------</span>
-</span><span id="eotf_sRGB-104"><a href="#eotf_sRGB-104"><span class="linenos">104</span></a><span class="sd">    numeric or ndarray</span>
-</span><span id="eotf_sRGB-105"><a href="#eotf_sRGB-105"><span class="linenos">105</span></a><span class="sd">        Corresponding *luminance* :math:`L` of the image.</span>
-</span><span id="eotf_sRGB-106"><a href="#eotf_sRGB-106"><span class="linenos">106</span></a>
-</span><span id="eotf_sRGB-107"><a href="#eotf_sRGB-107"><span class="linenos">107</span></a><span class="sd">    Notes</span>
-</span><span id="eotf_sRGB-108"><a href="#eotf_sRGB-108"><span class="linenos">108</span></a><span class="sd">    -----</span>
-</span><span id="eotf_sRGB-109"><a href="#eotf_sRGB-109"><span class="linenos">109</span></a>
-</span><span id="eotf_sRGB-110"><a href="#eotf_sRGB-110"><span class="linenos">110</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="eotf_sRGB-111"><a href="#eotf_sRGB-111"><span class="linenos">111</span></a><span class="sd">    | **Domain** | **Scale - Reference** | **Scale - 1** |</span>
-</span><span id="eotf_sRGB-112"><a href="#eotf_sRGB-112"><span class="linenos">112</span></a><span class="sd">    +============+=======================+===============+</span>
-</span><span id="eotf_sRGB-113"><a href="#eotf_sRGB-113"><span class="linenos">113</span></a><span class="sd">    | ``V``      | [0, 1]                | [0, 1]        |</span>
-</span><span id="eotf_sRGB-114"><a href="#eotf_sRGB-114"><span class="linenos">114</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="eotf_sRGB-115"><a href="#eotf_sRGB-115"><span class="linenos">115</span></a>
-</span><span id="eotf_sRGB-116"><a href="#eotf_sRGB-116"><span class="linenos">116</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="eotf_sRGB-117"><a href="#eotf_sRGB-117"><span class="linenos">117</span></a><span class="sd">    | **Range**  | **Scale - Reference** | **Scale - 1** |</span>
-</span><span id="eotf_sRGB-118"><a href="#eotf_sRGB-118"><span class="linenos">118</span></a><span class="sd">    +============+=======================+===============+</span>
-</span><span id="eotf_sRGB-119"><a href="#eotf_sRGB-119"><span class="linenos">119</span></a><span class="sd">    | ``L``      | [0, 1]                | [0, 1]        |</span>
-</span><span id="eotf_sRGB-120"><a href="#eotf_sRGB-120"><span class="linenos">120</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
-</span><span id="eotf_sRGB-121"><a href="#eotf_sRGB-121"><span class="linenos">121</span></a>
-</span><span id="eotf_sRGB-122"><a href="#eotf_sRGB-122"><span class="linenos">122</span></a><span class="sd">    References</span>
-</span><span id="eotf_sRGB-123"><a href="#eotf_sRGB-123"><span class="linenos">123</span></a><span class="sd">    ----------</span>
-</span><span id="eotf_sRGB-124"><a href="#eotf_sRGB-124"><span class="linenos">124</span></a><span class="sd">    :cite:`InternationalElectrotechnicalCommission1999a`,</span>
-</span><span id="eotf_sRGB-125"><a href="#eotf_sRGB-125"><span class="linenos">125</span></a><span class="sd">    :cite:`InternationalTelecommunicationUnion2015i`</span>
-</span><span id="eotf_sRGB-126"><a href="#eotf_sRGB-126"><span class="linenos">126</span></a>
-</span><span id="eotf_sRGB-127"><a href="#eotf_sRGB-127"><span class="linenos">127</span></a><span class="sd">    Examples</span>
-</span><span id="eotf_sRGB-128"><a href="#eotf_sRGB-128"><span class="linenos">128</span></a><span class="sd">    --------</span>
-</span><span id="eotf_sRGB-129"><a href="#eotf_sRGB-129"><span class="linenos">129</span></a><span class="sd">    &gt;&gt;&gt; eotf_sRGB(0.461356129500442)  # doctest: +ELLIPSIS</span>
-</span><span id="eotf_sRGB-130"><a href="#eotf_sRGB-130"><span class="linenos">130</span></a><span class="sd">    0.1...</span>
-</span><span id="eotf_sRGB-131"><a href="#eotf_sRGB-131"><span class="linenos">131</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="eotf_sRGB-132"><a href="#eotf_sRGB-132"><span class="linenos">132</span></a>
-</span><span id="eotf_sRGB-133"><a href="#eotf_sRGB-133"><span class="linenos">133</span></a>    <span class="n">V</span> <span class="o">=</span> <span class="n">to_domain_1</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
-</span><span id="eotf_sRGB-134"><a href="#eotf_sRGB-134"><span class="linenos">134</span></a>
-</span><span id="eotf_sRGB-135"><a href="#eotf_sRGB-135"><span class="linenos">135</span></a>    <span class="k">with</span> <span class="n">domain_range_scale</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
-</span><span id="eotf_sRGB-136"><a href="#eotf_sRGB-136"><span class="linenos">136</span></a>        <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-</span><span id="eotf_sRGB-137"><a href="#eotf_sRGB-137"><span class="linenos">137</span></a>            <span class="n">V</span> <span class="o">&lt;=</span> <span class="n">eotf_inverse_sRGB</span><span class="p">(</span><span class="mf">0.0031308</span><span class="p">),</span>
-</span><span id="eotf_sRGB-138"><a href="#eotf_sRGB-138"><span class="linenos">138</span></a>            <span class="n">V</span> <span class="o">/</span> <span class="mf">12.92</span><span class="p">,</span>
-</span><span id="eotf_sRGB-139"><a href="#eotf_sRGB-139"><span class="linenos">139</span></a>            <span class="n">spow</span><span class="p">((</span><span class="n">V</span> <span class="o">+</span> <span class="mf">0.055</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1.055</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">),</span>
-</span><span id="eotf_sRGB-140"><a href="#eotf_sRGB-140"><span class="linenos">140</span></a>        <span class="p">)</span>
-</span><span id="eotf_sRGB-141"><a href="#eotf_sRGB-141"><span class="linenos">141</span></a>
-</span><span id="eotf_sRGB-142"><a href="#eotf_sRGB-142"><span class="linenos">142</span></a>    <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="n">from_range_1</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="eotf_sRGB-93"><a href="#eotf_sRGB-93"><span class="linenos"> 93</span></a><span class="k">def</span><span class="w"> </span><span class="nf">eotf_sRGB</span><span class="p">(</span><span class="n">V</span><span class="p">):</span>
+</span><span id="eotf_sRGB-94"><a href="#eotf_sRGB-94"><span class="linenos"> 94</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="eotf_sRGB-95"><a href="#eotf_sRGB-95"><span class="linenos"> 95</span></a><span class="sd">    Defines the *IEC 61966-2-1:1999* *sRGB* electro-optical transfer function</span>
+</span><span id="eotf_sRGB-96"><a href="#eotf_sRGB-96"><span class="linenos"> 96</span></a><span class="sd">    (EOTF / EOCF).</span>
+</span><span id="eotf_sRGB-97"><a href="#eotf_sRGB-97"><span class="linenos"> 97</span></a>
+</span><span id="eotf_sRGB-98"><a href="#eotf_sRGB-98"><span class="linenos"> 98</span></a><span class="sd">    Parameters</span>
+</span><span id="eotf_sRGB-99"><a href="#eotf_sRGB-99"><span class="linenos"> 99</span></a><span class="sd">    ----------</span>
+</span><span id="eotf_sRGB-100"><a href="#eotf_sRGB-100"><span class="linenos">100</span></a><span class="sd">    V : numeric or array_like</span>
+</span><span id="eotf_sRGB-101"><a href="#eotf_sRGB-101"><span class="linenos">101</span></a><span class="sd">        Electrical signal :math:`V`.</span>
+</span><span id="eotf_sRGB-102"><a href="#eotf_sRGB-102"><span class="linenos">102</span></a>
+</span><span id="eotf_sRGB-103"><a href="#eotf_sRGB-103"><span class="linenos">103</span></a><span class="sd">    Returns</span>
+</span><span id="eotf_sRGB-104"><a href="#eotf_sRGB-104"><span class="linenos">104</span></a><span class="sd">    -------</span>
+</span><span id="eotf_sRGB-105"><a href="#eotf_sRGB-105"><span class="linenos">105</span></a><span class="sd">    numeric or ndarray</span>
+</span><span id="eotf_sRGB-106"><a href="#eotf_sRGB-106"><span class="linenos">106</span></a><span class="sd">        Corresponding *luminance* :math:`L` of the image.</span>
+</span><span id="eotf_sRGB-107"><a href="#eotf_sRGB-107"><span class="linenos">107</span></a>
+</span><span id="eotf_sRGB-108"><a href="#eotf_sRGB-108"><span class="linenos">108</span></a><span class="sd">    Notes</span>
+</span><span id="eotf_sRGB-109"><a href="#eotf_sRGB-109"><span class="linenos">109</span></a><span class="sd">    -----</span>
+</span><span id="eotf_sRGB-110"><a href="#eotf_sRGB-110"><span class="linenos">110</span></a>
+</span><span id="eotf_sRGB-111"><a href="#eotf_sRGB-111"><span class="linenos">111</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="eotf_sRGB-112"><a href="#eotf_sRGB-112"><span class="linenos">112</span></a><span class="sd">    | **Domain** | **Scale - Reference** | **Scale - 1** |</span>
+</span><span id="eotf_sRGB-113"><a href="#eotf_sRGB-113"><span class="linenos">113</span></a><span class="sd">    +============+=======================+===============+</span>
+</span><span id="eotf_sRGB-114"><a href="#eotf_sRGB-114"><span class="linenos">114</span></a><span class="sd">    | ``V``      | [0, 1]                | [0, 1]        |</span>
+</span><span id="eotf_sRGB-115"><a href="#eotf_sRGB-115"><span class="linenos">115</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="eotf_sRGB-116"><a href="#eotf_sRGB-116"><span class="linenos">116</span></a>
+</span><span id="eotf_sRGB-117"><a href="#eotf_sRGB-117"><span class="linenos">117</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="eotf_sRGB-118"><a href="#eotf_sRGB-118"><span class="linenos">118</span></a><span class="sd">    | **Range**  | **Scale - Reference** | **Scale - 1** |</span>
+</span><span id="eotf_sRGB-119"><a href="#eotf_sRGB-119"><span class="linenos">119</span></a><span class="sd">    +============+=======================+===============+</span>
+</span><span id="eotf_sRGB-120"><a href="#eotf_sRGB-120"><span class="linenos">120</span></a><span class="sd">    | ``L``      | [0, 1]                | [0, 1]        |</span>
+</span><span id="eotf_sRGB-121"><a href="#eotf_sRGB-121"><span class="linenos">121</span></a><span class="sd">    +------------+-----------------------+---------------+</span>
+</span><span id="eotf_sRGB-122"><a href="#eotf_sRGB-122"><span class="linenos">122</span></a>
+</span><span id="eotf_sRGB-123"><a href="#eotf_sRGB-123"><span class="linenos">123</span></a><span class="sd">    References</span>
+</span><span id="eotf_sRGB-124"><a href="#eotf_sRGB-124"><span class="linenos">124</span></a><span class="sd">    ----------</span>
+</span><span id="eotf_sRGB-125"><a href="#eotf_sRGB-125"><span class="linenos">125</span></a><span class="sd">    :cite:`InternationalElectrotechnicalCommission1999a`,</span>
+</span><span id="eotf_sRGB-126"><a href="#eotf_sRGB-126"><span class="linenos">126</span></a><span class="sd">    :cite:`InternationalTelecommunicationUnion2015i`</span>
+</span><span id="eotf_sRGB-127"><a href="#eotf_sRGB-127"><span class="linenos">127</span></a>
+</span><span id="eotf_sRGB-128"><a href="#eotf_sRGB-128"><span class="linenos">128</span></a><span class="sd">    Examples</span>
+</span><span id="eotf_sRGB-129"><a href="#eotf_sRGB-129"><span class="linenos">129</span></a><span class="sd">    --------</span>
+</span><span id="eotf_sRGB-130"><a href="#eotf_sRGB-130"><span class="linenos">130</span></a><span class="sd">    &gt;&gt;&gt; eotf_sRGB(0.461356129500442)  # doctest: +ELLIPSIS</span>
+</span><span id="eotf_sRGB-131"><a href="#eotf_sRGB-131"><span class="linenos">131</span></a><span class="sd">    0.1...</span>
+</span><span id="eotf_sRGB-132"><a href="#eotf_sRGB-132"><span class="linenos">132</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="eotf_sRGB-133"><a href="#eotf_sRGB-133"><span class="linenos">133</span></a>
+</span><span id="eotf_sRGB-134"><a href="#eotf_sRGB-134"><span class="linenos">134</span></a>    <span class="n">V</span> <span class="o">=</span> <span class="n">to_domain_1</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+</span><span id="eotf_sRGB-135"><a href="#eotf_sRGB-135"><span class="linenos">135</span></a>
+</span><span id="eotf_sRGB-136"><a href="#eotf_sRGB-136"><span class="linenos">136</span></a>    <span class="k">with</span> <span class="n">domain_range_scale</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+</span><span id="eotf_sRGB-137"><a href="#eotf_sRGB-137"><span class="linenos">137</span></a>        <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+</span><span id="eotf_sRGB-138"><a href="#eotf_sRGB-138"><span class="linenos">138</span></a>            <span class="n">V</span> <span class="o">&lt;=</span> <span class="n">eotf_inverse_sRGB</span><span class="p">(</span><span class="mf">0.0031308</span><span class="p">),</span>
+</span><span id="eotf_sRGB-139"><a href="#eotf_sRGB-139"><span class="linenos">139</span></a>            <span class="n">V</span> <span class="o">/</span> <span class="mf">12.92</span><span class="p">,</span>
+</span><span id="eotf_sRGB-140"><a href="#eotf_sRGB-140"><span class="linenos">140</span></a>            <span class="n">spow</span><span class="p">((</span><span class="n">V</span> <span class="o">+</span> <span class="mf">0.055</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1.055</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">),</span>
+</span><span id="eotf_sRGB-141"><a href="#eotf_sRGB-141"><span class="linenos">141</span></a>        <span class="p">)</span>
+</span><span id="eotf_sRGB-142"><a href="#eotf_sRGB-142"><span class="linenos">142</span></a>
+</span><span id="eotf_sRGB-143"><a href="#eotf_sRGB-143"><span class="linenos">143</span></a>    <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="n">from_range_1</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
 </span></pre></div>
 
 
