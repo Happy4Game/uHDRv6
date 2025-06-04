@@ -18,7 +18,16 @@
 # --- Package hdrCore ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrCore consists of the core classes for HDR imaging.
+HDR Core Metadata Management Module
+
+This module provides comprehensive metadata management capabilities for HDR images,
+including EXIF data extraction, tag management, and metadata persistence. It handles
+both reading existing metadata from image files and creating new metadata structures
+for processed images.
+
+Classes:
+    tags: Manages tag definitions and hierarchical tag organization
+    metadata: Complete metadata management for HDR images including EXIF data
 """
 
 
@@ -35,16 +44,39 @@ import preferences.preferences as pref
 # -----------------------------------------------------------------------------
 class tags:
     """
-    the class tags is use to defines tags that can be set to an image. The tags definition are defined in a json file (./preferences/tags.json).
-    tags are group in tags group (only one level of hierarchy !
+    Tag definition and management system for image categorization.
+    
+    This class manages the hierarchical tag system used to categorize and organize
+    images. Tag definitions are loaded from a JSON configuration file and provide
+    a structured way to classify images based on various criteria.
+    
+    Attributes:
+        tags (dict): Dictionary containing tag definitions loaded from JSON file
+        
+    Note:
+        Tags are organized in groups with only one level of hierarchy. The tag
+        definitions are loaded from './preferences/tags.json' if available.
     """
+    
     def __init__(self):
+        """
+        Initialize the tags system by loading tag definitions.
+        
+        Loads tag definitions from the preferences/tags.json file. If the file
+        doesn't exist, initializes with a default 'no-tag' category.
+        """
         if os.path.exists("./preferences/tags.json"):
             with open('./preferences/tags.json') as f: self.tags =  json.load(f)
         else:
             self.tags = {'no-tag':[]}
     # ---------------------------------------------------------------------------
     def getTagsRootName(self):
+        """
+        Get the root name of the tag hierarchy.
+        
+        Returns:
+            str: The name of the first (root) tag group in the hierarchy
+        """
         return list(self.tags.keys())[0]
     # ---------------------------------------------------------------------------
 
@@ -55,29 +87,39 @@ class tags:
 # -----------------------------------------------------------------------------
 class metadata:
     """
-    The metadatas of the image can be store in an object of this class. The informations
-    which can be stored are : filename, path, a description, the exif data, the category,
-    the processes to apply on the image.
+    Comprehensive metadata management for HDR images.
     
-    Atributes:
-        metadata: TODO
-            TODO
-        image: TODO
-            TODO
+    This class handles all metadata associated with an image, including filename,
+    path, description, EXIF data, categorization tags, and processing pipeline
+    information. Metadata can be persisted to JSON files alongside images.
+    
+    Attributes:
+        metadata (dict): Complete metadata dictionary containing:
+            - filename: Image filename
+            - path: File path
+            - description: User description
+            - exif: EXIF data including camera settings and technical info
+            - processpipe: Processing pipeline information
+            - display: Display settings
+        image (hdrCore.image.Image): Reference to the associated image object
+        otherTags (tags): Tag management system instance
+        
+    Class Attributes:
+        defaultColorSpaceName (str): Default color space name when undefined ('sRGB')
     """
 
     # colorspace used if unknown oe undefined color space
     defaultColorSpaceName = 'sRGB'
 
-    def __init__(self,_image):
+    def __init__(self, _image):
         """
-        TODO - Documentation de la méthode __init__
+        Initialize metadata object for an image.
         
-        /!\ - Les constructeurs n'apparaissent pas dans la doc générées par sphinx.
+        Creates a new metadata structure with default values and populates
+        basic information from the provided image object.
 
         Args:
-            _image: TODO
-                TODO
+            _image (hdrCore.image.Image): The image object to create metadata for
         """
 
         self.metadata =  {
@@ -136,15 +178,22 @@ class metadata:
     @staticmethod
     def build(_image):
         """
-        Build metadata object from an image.
+        Build a complete metadata object from an image file.
+
+        This method creates metadata either by loading existing JSON metadata
+        or by extracting EXIF data from the image file. It handles both cases
+        automatically and ensures proper metadata structure.
 
         Args:
-            _image: TODO
-                TODO
+            _image (hdrCore.image.Image): The image to build metadata for
                 
         Returns:
-            TODO
-                TODO
+            metadata: Fully populated metadata object with EXIF data and tags
+            
+        Note:
+            If a corresponding .json file exists, metadata is loaded from there.
+            Otherwise, EXIF data is extracted using exiftool and a new JSON file
+            is created.
         """
 
         res = metadata(_image)
@@ -180,7 +229,11 @@ class metadata:
     # ---------------------------------------------------------------------------
     def save(self):
         """
-        Save the metadata in a json file. The extension .json is added to the filename of the image.
+        Save the metadata to a JSON file alongside the image.
+        
+        Creates a JSON file with the same name as the image (but with .json extension)
+        containing all the metadata information. This allows metadata persistence
+        and sharing between sessions.
         """
         filenameNoExt = '.'.join(self.image.name.split('.')[:-1])
         filenameMetadata = filenameNoExt+'.json'
@@ -191,15 +244,21 @@ class metadata:
     @staticmethod
     def readExif(filename):
         """
-        Return exif (Dict) from image file
+        Extract EXIF data from an image file using exiftool.
+
+        Reads comprehensive EXIF metadata from image files using the external
+        exiftool utility. Falls back to imageio if exiftool is not available.
 
         Args:
-            filename: str
-                Name of the image file.
+            filename (str): Full path to the image file to read EXIF data from
                 
         Returns:
-            TODO
-                TODO
+            dict: Dictionary containing EXIF data with tag names as keys
+            
+        Note:
+            Requires exiftool.exe to be present in the current directory for
+            full functionality. Without exiftool, uses imageio with limited
+            EXIF support.
         """
         exifDict = dict()
         if os.path.isfile(filename): # check if filename exists
@@ -224,13 +283,21 @@ class metadata:
 
         return exifDict
     # ---------------------------------------------------------------------------
-    def recoverData(self,exif):
+    def recoverData(self, exif):
         """
-        TODO - Documentation de la méthode recoverData
+        Process and integrate EXIF data into the metadata structure.
+
+        Parses raw EXIF data and populates the metadata fields with properly
+        formatted values. Handles various EXIF tag naming conventions and
+        converts string values to appropriate data types.
 
         Args:
-            exif: TODO
-                TODO
+            exif (dict): Raw EXIF data dictionary as returned by readExif()
+            
+        Note:
+            This method handles multiple naming conventions for EXIF tags and
+            provides fallback values when specific tags are not available.
+            It also calculates dynamic range for the image.
         """
 
         # data from exif
@@ -327,21 +394,19 @@ class metadata:
     # ---------------------------------------------------------------------------
     def __repr__(self):
         """
-        Convert the metadata in string.
+        Return a string representation of the metadata.
         
         Returns:
-            str
-                The metadata in a string format.
+            str: JSON-formatted string containing all metadata information
         """
         return json.dumps(self.metadata)
     # ---------------------------------------------------------------------------
     def __str__(self):
         """
-        Convert the metadata in string.
+        Return a human-readable string representation of the metadata.
         
         Returns:
-            str
-                The metadata in a string format.
+            str: JSON-formatted string containing all metadata information
         """
         return self.__repr__()
 # ---------------------------------------------------------------------------

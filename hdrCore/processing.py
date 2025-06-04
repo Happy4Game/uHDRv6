@@ -18,8 +18,40 @@
 # --- Package hdrCore ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrCore consists of the core classes for HDR imaging.
+HDR Core Image Processing Module
 
+This module provides comprehensive image processing capabilities for HDR images,
+including tone mapping, exposure control, color space transformations, and advanced
+image editing operations. It implements a flexible processing pipeline architecture
+that allows for complex image manipulation workflows.
+
+The module includes both individual processing operations and pipeline management
+through the ProcessPipe system. It supports various color spaces, geometric
+transformations, and specialized HDR processing techniques.
+
+Classes:
+    Processing: Abstract base class for all processing operations
+    tmo_cctf: Tone mapping using color correction transfer functions
+    exposure: Exposure adjustment and auto-exposure calculation
+    contrast: Contrast control with gamma-based adjustments
+    clip: Value clipping for range control
+    ColorSpaceTransform: Color space conversion operations
+    resize: Image resizing with anti-aliasing options
+    Ycurve: Luminance curve adjustments using B-spline interpolation
+    saturation: Saturation control in LCH color space
+    colorEditor: Advanced color editing with selection masks
+    lightnessMask: Lightness-based masking for tone range selection
+    geometry: Geometric transformations including cropping and rotation
+    ProcessPipe: Complete processing pipeline management system
+
+Key Features:
+    - HDR-specific tone mapping operators
+    - Advanced color space conversions (sRGB, XYZ, Lab, LCH)
+    - Selective color editing with mask-based controls
+    - Geometric transformations with proper HDR handling
+    - Multi-threaded processing pipeline execution
+    - Auto-exposure and auto-contrast algorithms
+    - B-spline based tone curve adjustments
 """
 
 # -----------------------------------------------------------------------------
@@ -45,14 +77,15 @@ import hdrCore.coreC
 # --- package functions -------------------------------------------------------
 # -----------------------------------------------------------------------------
 def XYZ_to_sRGB(XYZ,apply_cctf_encoding=True):
-    """convert pixel array from XYZ to sRGB colorspace.
+    """
+    Convert pixel array from XYZ to sRGB color space.
 
     Args:
-        XYZ (numpy.ndarray, Required): array of pixels in XYZ colorspace.
-        apply_cctf_encoding (boolean, Optionnal): True to encode with sRGB cctf encoding function.
+        XYZ (numpy.ndarray): Array of pixels in XYZ color space
+        apply_cctf_encoding (bool, optional): Apply sRGB CCTF encoding function (default: True)
             
     Returns:
-        (numpy.ndarray): array of pixels in sRGB colorspace.
+        numpy.ndarray: Array of pixels in sRGB color space
     """
     return  colour.XYZ_to_sRGB(XYZ, 
                                illuminant=np.array([ 0.3127, 0.329 ]), 
@@ -60,14 +93,15 @@ def XYZ_to_sRGB(XYZ,apply_cctf_encoding=True):
                                apply_cctf_encoding=apply_cctf_encoding)
   
 def sRGB_to_XYZ(RGB,apply_cctf_decoding=True):
-    """convert pixel array from sRGB to XYZ colorspace.
+    """
+    Convert pixel array from sRGB to XYZ color space.
 
     Args:
-        RGB (numpy.ndarray, Required): array of pixels in sRGB colorspace.
-        apply_cctf_decoding (boolean, Optionnal): True to encode with sRGB cctf decoding function.
+        RGB (numpy.ndarray): Array of pixels in sRGB color space
+        apply_cctf_decoding (bool, optional): Apply sRGB CCTF decoding function (default: True)
             
     Returns:
-        (numpy.ndarray): array of pixels in XYZ colorspace.
+        numpy.ndarray: Array of pixels in XYZ color space
     """
     return colour.sRGB_to_XYZ(RGB, 
                               illuminant=np.array([ 0.3127, 0.329 ]), 
@@ -75,37 +109,40 @@ def sRGB_to_XYZ(RGB,apply_cctf_decoding=True):
                               apply_cctf_decoding=apply_cctf_decoding)           
 
 def Lab_to_XYZ(Lab):
-    """convert pixel array from Lab to XYZ colorspace.
+    """
+    Convert pixel array from Lab to XYZ color space.
 
     Args:
-        Lab (numpy.ndarray, Required): array of pixels in Lab colorspace.
+        Lab (numpy.ndarray): Array of pixels in Lab color space
             
     Returns:
-        (numpy.ndarray): array of pixels in XYZ colorspace.
+        numpy.ndarray: Array of pixels in XYZ color space
     """
     return colour.Lab_to_XYZ(Lab, illuminant=np.array([ 0.3127, 0.329 ]))
 
 def XYZ_to_Lab(XYZ):
-    """convert pixel array from Lab to Lab colorspace.
+    """
+    Convert pixel array from XYZ to Lab color space.
 
     Args:
-        XYZ (numpy.ndarray, Required): array of pixels in Lab colorspace.
+        XYZ (numpy.ndarray): Array of pixels in XYZ color space
             
     Returns:
-        (numpy.ndarray): array of pixels in Lab colorspace.
+        numpy.ndarray: Array of pixels in Lab color space
     """
     return colour.XYZ_to_Lab(XYZ, illuminant=np.array([ 0.3127, 0.329 ]))
 
 def Lab_to_sRGB(Lab, apply_cctf_encoding=True, clip = False):
-    """convert pixel array from Lab to sRGB colorspace.
+    """
+    Convert pixel array from Lab to sRGB color space.
 
     Args:
-        Lab (numpy.ndarray, Required): array of pixels in Lab colorspace.
-        apply_cctf_encoding (boolean, Optionnal): True to encode with sRGB cctf encoding function.
-        clip (boolean, Optionnal): False do not clip values beyond colorspace limits (RGB values < 0 or RGB values > 1).
+        Lab (numpy.ndarray): Array of pixels in Lab color space
+        apply_cctf_encoding (bool, optional): Apply sRGB CCTF encoding function (default: True)
+        clip (bool, optional): Clip values beyond color space limits (default: False)
             
     Returns:
-        (numpy.ndarray): array of pixels in sRGB colorspace.
+        numpy.ndarray: Array of pixels in sRGB color space
     """
     XYZ = colour.Lab_to_XYZ(Lab, illuminant=np.array([ 0.3127, 0.329 ]))
     RGB =  colour.XYZ_to_sRGB(XYZ,
@@ -118,16 +155,15 @@ def Lab_to_sRGB(Lab, apply_cctf_encoding=True, clip = False):
     return RGB
 
 def sRGB_to_Lab(RGB, apply_cctf_decoding=True):
-    """convert pixel array from sRGB to Lab colorspace.
+    """
+    Convert pixel array from sRGB to Lab color space.
 
     Args:
-        RGB (numpy.ndarray, Required): array of pixels in RGB colorspace.
-        apply_cctf_decoding (boolean, Optionnal): True to encode with sRGB cctf decoding function.
+        RGB (numpy.ndarray): Array of pixels in sRGB color space
+        apply_cctf_decoding (bool, optional): Apply sRGB CCTF decoding function (default: True)
             
     Returns:
-        (numpy.ndarray): array of pixels in sRGB colorspace.
-
-
+        numpy.ndarray: Array of pixels in Lab color space
     """
     XYZ = colour.sRGB_to_XYZ(RGB, 
                              illuminant=np.array([ 0.3127, 0.329 ]), 
@@ -137,15 +173,16 @@ def sRGB_to_Lab(RGB, apply_cctf_decoding=True):
     return Lab
 
 def Lch_to_sRGB(Lch,apply_cctf_encoding=True, clip=False):
-    """convert pixel array from Lch to sRGB colorspace.
+    """
+    Convert pixel array from LCH to sRGB color space.
 
     Args:
-        Lch (numpy.ndarray, Required): array of pixels in Lab colorspace.
-        apply_cctf_encoding (boolean, Optionnal): True to encode with sRGB cctf encoding function.
-        clip (boolean, Optionnal): False do not clip values beyond colorspace limits (RGB values < 0 or RGB values > 1).
+        Lch (numpy.ndarray): Array of pixels in LCH color space
+        apply_cctf_encoding (bool, optional): Apply sRGB CCTF encoding function (default: True)
+        clip (bool, optional): Clip values beyond color space limits (default: False)
             
     Returns:
-        (numpy.ndarray): array of pixels in sRGB colorspace.
+        numpy.ndarray: Array of pixels in sRGB color space
     """
     Lab = colour.LCHab_to_Lab(Lch)
     XYZ = colour.Lab_to_XYZ(Lab, illuminant=np.array([ 0.3127, 0.329 ]))
@@ -163,24 +200,30 @@ def Lch_to_sRGB(Lch,apply_cctf_encoding=True, clip=False):
 # -----------------------------------------------------------------------------
 class Processing(object):
     """
-    class Processing: abstract class for processing object
-
+    Abstract base class for all image processing operations.
+    
+    This class defines the standard interface that all processing operations
+    must implement within the uHDR system. It provides a consistent compute
+    method signature for pipeline integration.
+    
     Methods:
-        compute
+        compute: Abstract method for processing image data
     """
 
     def compute(self,image,**kwargs):
         """
-        TODO - Documentation de la méthode compute
+        Process an image with specified parameters.
+        
+        This abstract method must be implemented by all processing subclasses.
+        It takes an input image and optional parameters, then returns a
+        processed image.
 
         Args:
-            image (hdrCore.image.Image, Required): input image
-                
-            kwargs (dict, Optionnal): parameters of processing
+            image (hdrCore.image.Image): Input image to process
+            **kwargs: Processing-specific parameters
                 
         Returns:
-            (hdrCore.image.Image)
-
+            hdrCore.image.Image: Processed image
         """
         return copy.deepcopy(image)
 # -----------------------------------------------------------------------------
@@ -188,23 +231,31 @@ class Processing(object):
 # -----------------------------------------------------------------------------
 class tmo_cctf(Processing):
     """
-    TODO - Documentation de la classe tmo_cctf
+    Tone mapping operator using Color Correction Transfer Functions (CCTF).
+    
+    This class implements tone mapping for HDR images using standard color
+    correction transfer functions, primarily sRGB gamma encoding. It converts
+    HDR linear data to display-ready format suitable for standard monitors.
+    
+    The operator transforms HDR images from linear space to gamma-corrected
+    space, effectively creating SDR representations of HDR content.
     """
 
     def compute(self,img,**kwargs):
         """
-        CCTF tone mapping operator
+        Apply CCTF-based tone mapping to HDR images.
 
         Args:
-            img: hdrCore.image.Image
-                Required  : hdr image
-            kwargs: dict
-                Optionnal : parameters
-                'function'          : 'sRGB'        str
+            img (hdrCore.image.Image): Input HDR image
+            **kwargs: Processing parameters
+                function (str, optional): CCTF function to use (default: 'sRGB')
                 
         Returns:
-            TODO
-                TODO
+            hdrCore.image.Image: Tone-mapped SDR image with gamma correction applied
+            
+        Note:
+            Only processes HDR images. SDR images are returned unchanged.
+            The output image type is changed to SDR with non-linear encoding.
         """
         function = 'sRGB'
         if 'function' in kwargs: function = kwargs['function']
@@ -230,21 +281,32 @@ class tmo_cctf(Processing):
 # -----------------------------------------------------------------------------
 class exposure(Processing):
     """
-    TODO - Documentation de la classe exposure
+    Exposure adjustment processing with auto-exposure capabilities.
+    
+    This class provides exposure control for HDR images, allowing both manual
+    exposure adjustments in EV (Exposure Value) stops and automatic exposure
+    calculation based on histogram analysis.
+    
+    The exposure adjustment is performed in linear RGB space and uses standard
+    photographic exposure calculations (powers of 2).
     """
     
     def compute(self,img,**kwargs):
-        """exposure operator.
+        """
+        Apply exposure adjustment to the image.
 
         Args:
-            img (hdrCore.image.Image, Required)  : input image
-            kwargs( dict, Optionnal) : parameters
-                'EV': float
-                
-                default value: {'EV': 0.0}
+            img (hdrCore.image.Image): Input image
+            **kwargs: Processing parameters
+                EV (float, optional): Exposure adjustment in stops (default: 0.0)
                 
         Returns:
-            (hdrCore.image.Image): output image
+            hdrCore.image.Image: Image with exposure adjustment applied
+            
+        Note:
+            Exposure adjustment is performed in linear RGB space. Non-linear
+            images are automatically converted to linear, processed, and
+            returned in linear space.
         """
         start= timer()
         defaultEV = 0.0
@@ -286,15 +348,23 @@ class exposure(Processing):
 
     def auto(self,img):
         """
-        TODO - Documentation de la méthode auto
+        Calculate optimal exposure using histogram analysis.
+        
+        This method analyzes the image histogram to determine the optimal
+        exposure value that maximizes the use of the available dynamic range
+        while avoiding overexposure.
 
         Args:
-            img: TODO
-                TODO
+            img (hdrCore.image.Image): Input image for analysis
                 
         Returns:
-            TODO
-                TODO
+            dict: Dictionary containing the optimal exposure value
+                  {'EV': optimal_exposure_value}
+                  
+        Note:
+            Uses multi-threaded histogram analysis across multiple exposure
+            values to find the exposure that maximizes histogram spread
+            without clipping highlights.
         """
         minEV, maxEV, step =  -10,10,0.25
         evs = np.linspace(minEV,maxEV,num=int((maxEV-minEV)/step)+1)
@@ -310,15 +380,13 @@ class exposure(Processing):
         # local method for pool (not static!)
         def evEval(ev):
             """
-            TODO - Documentation de la méthode evEval
+            Evaluate exposure value by histogram analysis.
 
             Args:
-                ev: TODO
-                    TODO
+                ev (float): Exposure value to evaluate
                     
             Returns:
-                TODO
-                    TODO
+                float: Quality metric for this exposure value
             """
             rgb_ev = rgbLinear*math.pow(2,ev)
             rgb_ev_prime = colour.cctf_encoding(rgb_ev,function='sRGB')
@@ -344,21 +412,33 @@ class exposure(Processing):
 # -----------------------------------------------------------------------------
 class contrast(Processing):
     """
-    TODO - Documentation de la classe contrast
+    Contrast adjustment processing with gamma-based scaling.
+    
+    This class provides contrast control by scaling pixel values around a
+    midpoint using a configurable scaling factor. The contrast adjustment
+    is performed in gamma-corrected space for perceptually uniform results.
+    
+    Positive contrast values increase contrast, while negative values decrease
+    contrast. The scaling is applied around the 0.5 midpoint value.
     """
     
     def compute(self,img,**kwargs):
-        """contrast operator.
+        """
+        Apply contrast adjustment to the image.
 
         Args:
-            img (hdrCore.image.Image,  Required): input image
-            kwargs (dict, Optionnal) : parameters
-                "contrast": float
+            img (hdrCore.image.Image): Input image
+            **kwargs: Processing parameters
+                contrast (float, optional): Contrast adjustment value (default: 0)
+                                          Range typically -100 to +100
 
-                default value: { "contrast": 0 }
-                
         Returns:
-            (hdrCore.image.Image,  Required): output image
+            hdrCore.image.Image: Image with contrast adjustment applied
+            
+        Note:
+            Contrast adjustment is performed in gamma-corrected space.
+            Linear images are automatically converted to gamma space,
+            processed, and returned in gamma space.
         """
         start = timer()
         defaultContrast =   0.0
@@ -411,19 +491,28 @@ class contrast(Processing):
 # -----------------------------------------------------------------------------
 class clip(Processing):
     """
-    TODO - Documentation de la classe clip
+    Value clipping processing for range control.
+    
+    This class provides hard clipping of pixel values to specified minimum
+    and maximum bounds. It's commonly used to ensure pixel values remain
+    within valid ranges after processing operations.
+    
+    The clipping operation is applied uniformly across all color channels
+    and is performed in the current color space of the image.
     """
 
     def compute(self,img,**kwargs):
-        """clip image color data
+        """
+        Clip image pixel values to specified range.
 
         Args:
-            img (hdrCore.image.Image, Required): input image image
-            kwargs(dict, Optionnal) : parameters
-                'min', 'max' : float, float
+            img (hdrCore.image.Image): Input image
+            **kwargs: Processing parameters
+                min (float, optional): Minimum clipping value (default: 0.0)
+                max (float, optional): Maximum clipping value (default: 1.0)
                 
         Returns:
-            (hdrCore.image.Image): output image
+            hdrCore.image.Image: Image with values clipped to specified range
         """ 
 
         min, max = 0.0, 1.0
@@ -440,21 +529,32 @@ class clip(Processing):
 # -----------------------------------------------------------------------------
 class ColorSpaceTransform(Processing):
     """
-    TODO - Documentation de la colorspace transorm processing
+    Color space transformation processing for HDR imaging.
+    
+    This class provides comprehensive color space conversions between sRGB,
+    XYZ, Lab, and other color spaces. It handles proper gamma correction
+    and maintains HDR/SDR image type compatibility during transformations.
+    
+    The transformations are performed using standard illuminants and
+    chromatic adaptation transforms for accurate color reproduction.
     """
 
     def compute(self,img,**kwargs):
         """
-        Color space transform operator
+        Transform image between color spaces.
 
         Args:
-            img (hdrCore.image.Image, Required)  : input image
-            kwargs (dict,Optionnal) : parameters
-                TODO
+            img (hdrCore.image.Image): Input image
+            **kwargs: Processing parameters
+                dest (str): Destination color space ('Lab', 'sRGB', 'XYZ')
                 
         Returns:
-            TODO
-                TODO
+            hdrCore.image.Image: Image transformed to destination color space
+            
+        Note:
+            Supports conversions between sRGB, XYZ, and Lab color spaces.
+            Automatically handles gamma correction based on image type and
+            maintains proper linear/non-linear encoding.
         """ 
         # first create a copy
         res = copy.deepcopy(img)
@@ -523,24 +623,33 @@ class ColorSpaceTransform(Processing):
 # -----------------------------------------------------------------------------
 class resize(Processing):
     """
-    TODO - Documentation de la classe Resize image processing
+    Image resizing processing with anti-aliasing support.
+    
+    This class provides image resizing capabilities while maintaining aspect
+    ratio or allowing arbitrary scaling. It includes anti-aliasing options
+    to prevent artifacts during resizing operations.
+    
+    The resizing can be constrained to width, height, or both dimensions
+    with automatic aspect ratio calculation when only one dimension is specified.
     """
     
     def compute(self,img, size=(None,None),anti_aliasing=False):
         """
-        Resize operator.
+        Resize the image to specified dimensions.
 
         Args:
-            img: hdrCore.image.Image
-                Required : hdr image
-            size: TODO
-                TODO
-            anti_aliasing: boolean
-                TODO
+            img (hdrCore.image.Image): Input image
+            size (tuple, optional): Target size as (height, width) (default: (None, None))
+                                   None values trigger aspect ratio preservation
+            anti_aliasing (bool, optional): Enable anti-aliasing during resize (default: False)
                 
         Returns:
-            TODO
-                TODO
+            hdrCore.image.Image: Resized image with updated dimensions
+            
+        Note:
+            - If only width specified: height calculated to preserve aspect ratio
+            - If only height specified: width calculated to preserve aspect ratio  
+            - If both None: defaults to height=400 with preserved aspect ratio
         """
         res = copy.deepcopy(img)
         y, x, c =  tuple(res.colorData.shape)

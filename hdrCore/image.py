@@ -18,7 +18,30 @@
 # --- Package hdrCore ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrCoreconsists of the core classes for HDR imaging.
+HDR Core Image Module
+
+This module provides the fundamental image classes and utilities for HDR image processing
+within the uHDR system. It includes comprehensive image data structures, color space
+management, histogram computation, and image manipulation capabilities.
+
+The module supports multiple image types (SDR, RAW, HDR) and provides robust color space
+conversion and channel management. It integrates with various image formats and metadata
+systems for complete HDR imaging workflows.
+
+Classes:
+    imageType: Enumeration for different image types (SDR, ARW, HDR)
+    channel: Channel identification and color space management
+    Image: Core image data structure with processing capabilities
+    ColorSpace: Color space definitions and transformations
+    Histogram: Image histogram computation and analysis
+
+Key Features:
+    - Multi-format image loading (HDR, RAW, JPEG)
+    - Color space conversions (sRGB, XYZ, Lab, LCH)
+    - HDR-specific processing and metadata handling
+    - Thumbnail generation and caching
+    - Dynamic range computation
+    - Image splitting and merging operations
 """
 
 # -----------------------------------------------------------------------------
@@ -36,9 +59,15 @@ imageio.plugins.freeimage.download()
 # -----------------------------------------------------------------------------
 class imageType(enum.Enum):
     """
-    This class contains a list of constant values for different type of images.
+    Enumeration for different image file types supported by uHDR.
     
-    The constants are : SDR, RAW, HDR.
+    This enumeration defines the standard image types that can be processed
+    within the HDR imaging pipeline, each with specific handling requirements.
+    
+    Attributes:
+        SDR (int): Standard Dynamic Range images (.jpg, .png)
+        ARW (int): Sony RAW image files (.arw)
+        HDR (int): High Dynamic Range images (.hdr, .exr)
     """
 
     SDR = 0 # SDR image:                (.jpg)
@@ -50,12 +79,19 @@ class imageType(enum.Enum):
 # -----------------------------------------------------------------------------
 class channel(enum.Enum):
     """
-    This class groups constant values and methods relative to a channel of an image together. This class is an easy definition of channel.
+    Channel identification and color space management enumeration.
     
-    Attributes :
-        value: int
-            Store the type of channel.
-            
+    This class provides constants and methods for managing individual color channels
+    across different color spaces (sRGB, XYZ, Lab). It supports both single channel
+    access and full color space operations.
+    
+    Attributes:
+        sR, sG, sB (int): Individual sRGB color channels (0, 1, 2)
+        sRGB (int): Full sRGB color space identifier (3)
+        X, Y, Z (int): Individual XYZ color channels (4, 5, 6)
+        XYZ (int): Full XYZ color space identifier (7)
+        L, a, b (int): Individual Lab color channels (8, 9, 10)
+        Lab (int): Full Lab color space identifier (11)
     """
     
     sR      = 0
@@ -78,11 +114,10 @@ class channel(enum.Enum):
 
     def colorSpace(self):
         """
-        Retrieve the channel as a string.
+        Retrieve the color space name for this channel.
         
         Returns:
-            str
-                Colorspace type of the channel : 'sRGB', 'XYZ' or 'Lab'.
+            str: Color space type ('sRGB', 'XYZ', or 'Lab')
         """
         csIdx = self.value // 4
         res = None
@@ -94,26 +129,23 @@ class channel(enum.Enum):
 
     def getValue(self):
         """
-        Retrieve the channel index.
+        Retrieve the channel index within its color space.
         
         Returns:
-            int
-                Index of the channel.
+            int: Channel index (0-3) within the color space
         """
         return self.value % 4
 
     @staticmethod
     def toChannel(s):
         """
-        Convert a channel name as a constant value defined in this class.
+        Convert a channel name string to its corresponding channel constant.
         
         Args:
-            s: str
-                Name of the desired channel. This argument have to be in the list : 'sR', 'sG', 'sB', 'X', 'Y', 'Z', 'L', 'a' or 'b'.
+            s (str): Channel name ('sR', 'sG', 'sB', 'X', 'Y', 'Z', 'L', 'a', 'b')
             
         Returns:
-            int
-                Index of the channel.
+            channel: Corresponding channel enumeration value
         """
         if s=='sR' :    return channel.sR
         elif s=='sG' :  return channel.sG
@@ -133,50 +165,53 @@ class channel(enum.Enum):
 # -----------------------------------------------------------------------------
 class Image(object):
     """
-    class hdrCore.image.Image: the basic class that models HDR image and associated data
+    Core HDR image data structure with comprehensive processing capabilities.
+    
+    This class represents the fundamental image object in the uHDR system, containing
+    pixel data, metadata, and all necessary information for HDR image processing.
+    It supports various image formats, color spaces, and provides methods for
+    image manipulation, analysis, and processing pipeline integration.
     
     Attributes:
-        path (str):                 path to access image
-        name (str):                 image filename
-        colorData (numpy.ndarray):  numpy array of pixels
-        type (image.imageType):     type of image
-        linear (boolean):           image encoding is linear
-        colorSpace (colour.models.RGB_COLOURSPACES): colorspace
-        scalingFactor (float):      scaling factor to range[0..1]
-        metadata (hdrCore.metadatametadata): metadata
-        histogram(hdrCore.image.Histogram): image histogram   
+        path (str): Directory path to the image file
+        name (str): Image filename with extension
+        colorData (numpy.ndarray): Image pixel data as 3D array (height, width, channels)
+        shape (tuple): Image dimensions (height, width, channels)
+        type (imageType): Image type classification (SDR, ARW, HDR)
+        linear (bool): Whether image data is in linear color space
+        colorSpace (colour.models.RGB_COLOURSPACES): Current color space definition
+        scalingFactor (float): Scaling factor for normalizing to [0,1] range
+        metadata (hdrCore.metadata.metadata): Associated metadata object
+        histogram (Histogram): Image histogram data
     
     Methods:
-        isHDR:                      (boolean) returns True if image is HDR
-        process:                    (hdrCore.image.Image) computes a processing and returns a new Image 
-        write:                      () write image and json metadata on disk (HDR image only)
-        getChannel:                 ()
-        getDynamicRange:
-        buildHistogram:
-        plot:
-        __repr__:                   (str)
-        split:                      (list[[hdrCore.image.Image]]) split an image into sub-images
-
-    Static methods:
-       read:                        (hdrCore.image.Image) read an image from file
-       toOne:                       /!\ not used in uHDR
-       buildLchColorData:
+        isHDR: Check if image is HDR type
+        process: Apply processing operations
+        write: Save image and metadata to disk
+        getChannel: Extract specific color channel
+        getDynamicRange: Calculate image dynamic range
+        buildHistogram: Generate image histogram
+        plot: Display image with optional tone mapping
+        split: Divide image into sub-images
+        
+    Static Methods:
+        read: Load image from file with format detection
+        merge: Combine sub-images into single image
+        buildLchColorData: Generate synthetic LCH color data
     """
 
     def __init__(self, path, name, colorData, type, linear, colorspace, scalingFactor=1.0):
-        """__init__(): constrctor of class image.Image
+        """
+        Initialize a new Image object with specified parameters.
             
         Args:
-            path(str):              path to iamge file.
-            name(str):              image filename.
-            colorData(numpy.ndarray): array of pixels
-            type(hdrCore.image.imageType): image type.
-            linear(boolean):        True is image is boolean.
-                after reading image from file:  .hdr image is linear
-                                                .jpg image is not linear
-            colorspace(colour.models.RGB_COLOURSPACES): image color space   
-            scalingFactor(float, optional): scaling to factor to range [0,1] 
-                /!\ not used in uHDR
+            path (str): Directory path to the image file
+            name (str): Image filename with extension
+            colorData (numpy.ndarray): Pixel data array with shape (height, width, channels)
+            type (imageType): Image type classification
+            linear (bool): True if image data is in linear color space
+            colorspace (colour.models.RGB_COLOURSPACES): Color space definition
+            scalingFactor (float, optional): Scaling factor for [0,1] normalization (default: 1.0)
         """
 
         self.path           = path                          # path to file          (str)
@@ -191,51 +226,52 @@ class Image(object):
         self.histogram      = None                          # histogram             (hdrCore.image.Histogram)
 
     def isHDR(self):
-        """isHDR: return True is image is HDR
+        """
+        Check if the image is of HDR type.
         
-        Args:
-
         Returns:
-            (boolean)
-                True if the image is an HDR image, False otherwise
+            bool: True if the image is HDR, False otherwise
         """
         return self.type == imageType.HDR
 
     def process(self, process, **kwargs):
         """
-        compute a process according to the Processing object parameter.
+        Apply a processing operation to the image.
         
-        process, instance of Processing class, has a compute(image, \*\*kwargs) method
+        This method applies a Processing object to the current image and returns
+        a new processed image. The processing operation is defined by the process
+        parameter and its compute method.
         
         Args:
-            process: Processing object (see processing.Processing)
+            process (Processing): Processing object with compute method
+            **kwargs: Additional parameters passed to the processing operation
                 
-            kwargs: optionnal parameters packed as dict
-                parameters of the compute method of the Processing object
+        Returns:
+            Image: New image object with processing applied
         """
         return process.compute(self,**kwargs)
 
     @staticmethod
     def read(filename, thumb = False):
         """
-        Method to read image from its filename. blablabla TODO à compléter.
+        Load an image from file with automatic format detection.
+        
+        This method provides comprehensive image loading with support for various
+        formats including HDR (.hdr), RAW (.arw), and standard formats (.jpg).
+        It handles thumbnail generation, metadata extraction, and color space
+        configuration automatically.
         
         Args:
-            filename: str
-                Filename of the file to read.
-            thumb: boolean
-                This flag indicates us if soft have to read the thumbnail or the original file for what the thumbnail will be created.
+            filename (str): Complete path to the image file
+            thumb (bool, optional): Whether to load/create thumbnail version (default: False)
                 
         Returns:
-            image.Image
-                the image object build from file.
-
-        Example:
-        
-        >>> import uhdCore
-        >>> img = Image.read(filename = "test.hdr", thumb = True)
-        
-        TODO - Exemple à modifier
+            Image: Loaded image object with metadata and proper color space configuration
+            
+        Note:
+            - For HDR images: Creates thumbnails in ./thumbnails/ directory when requested
+            - For RAW images: Uses rawpy with sRGB output and camera white balance
+            - Automatically loads existing metadata from .json files if available
         """
 
         imgDouble, imgDoubleFull = None, None
@@ -335,11 +371,18 @@ class Image(object):
 
     def write(self,filename):
         """
-        Method to write the image in a file.
+        Save the image and its metadata to disk.
+        
+        This method saves HDR images to disk along with their associated metadata
+        in a JSON file. It updates the image's path and filename information
+        before saving.
 
         Args:
-            filename: str
-                Filename of the file to read.
+            filename (str): Target filename for saving the image
+            
+        Note:
+            Only HDR images can be written using this method. The metadata
+            is automatically saved to a corresponding .json file.
         """
         if self.isHDR():
 
@@ -358,15 +401,18 @@ class Image(object):
     @staticmethod
     def toOne(colorData):
         """
-        This method scale the image colorData in [0, 1] space
+        Scale image color data to [0, 1] range based on maximum RGB values.
+        
+        This utility method normalizes image data by finding the maximum value
+        across all RGB channels and scaling accordingly.
 
         Args:
-            colorData: TODO
-                TODO
+            colorData (numpy.ndarray): Input image color data
                 
         Returns:
-            TODO
-                TODO
+            tuple: (scaled_color_data, scaling_factor)
+                - scaled_color_data: Normalized image data in [0,1] range
+                - scaling_factor: Applied scaling factor (1/max_value)
         """
 
         imgVector = utils.ndarray2vector(colorData)
@@ -377,11 +423,16 @@ class Image(object):
 
     def getChannel(self,channel):
         """
-        To get channel : works only for sR|sG|sB, X|Y|Z and L|a|b
+        Extract a specific color channel from the image.
+        
+        This method extracts individual color channels (R, G, B, X, Y, Z, L, a, b)
+        by converting to the appropriate color space and returning the requested channel.
 
         Args:
-            channel: TODO
-                TODO
+            channel (channel): Channel identifier (e.g., channel.sR, channel.Y, channel.L)
+        
+        Returns:
+            numpy.ndarray or None: 2D array containing the channel data, or None for invalid channels
         """
 
         # take into account colorSpace
@@ -395,15 +446,17 @@ class Image(object):
 
     def getDynamicRange(self,percentile=None):
         """
-        Retrieve the dynamic range of image
+        Calculate the dynamic range of the image in stops.
+        
+        Computes the dynamic range by analyzing the Y (luminance) channel
+        and calculating the log2 ratio between maximum and minimum values.
 
         Args:
-            percentile: float
-                Optional  : percentile if None: just remove zero values
+            percentile (float, optional): Percentile for robust min/max calculation.
+                                        If None, uses actual min/max excluding zeros.
                 
         Returns:
-            float
-                The dynamic range of the image
+            float: Dynamic range in stops (log2 scale)
         """
 
         Y_min,Y_max = None, None
@@ -414,43 +467,31 @@ class Image(object):
 
         return np.log2(Y_max)-np.log2(Y_min)
 
-    #def getMinMaxPerChannel(self):
-    #    """TODO - documentation de la méthode getMinMaxPerChannel
-    #    """
-
-    #    img = self.colorData
-    #    R, G, B = img[:,:,0], img[:,:,1], img[:,:,2]
-
-    #    minR, minG, minB = np.amin(R), np.amin(G), np.amin(B)
-    #    maxR, maxG, maxB = np.amax(R), np.amax(G), np.amax(B)
-
-    #    return ((minR,maxR),(minG,maxG),(minB,maxB))
-    
     def buildHistogram(self,channel):
         """
-        Build the histogram of the image
+        Generate a histogram for the specified image channel.
+        
+        Creates and stores a histogram object for the given channel, which can
+        be used for analysis and display purposes.
 
         Args:
-            channel: TODO
-                TODO
+            channel (channel): Channel to analyze for histogram generation
         """
-        self.histogram = Histogram.buildbuild(self, channel, nbBins=100, range= None, logSpace = self.isHDR())
+        self.histogram = Histogram.build(self, channel, nbBins=100, range= None, logSpace = self.isHDR())
 
     def plot(self,ax,displayTitle=False,title=None,forceToneMapping=True,TMO=None):
         """
-	Method to plot the image.
+        Display the image on a matplotlib axis with optional tone mapping.
+        
+        This method handles proper display of both SDR and HDR images, applying
+        tone mapping when necessary for HDR content.
 
         Args:
-            ax: TODO
-                TODO
-            displayTitle: boolean
-                Indicates if the name and colorSpace must be displayed above the image.
-            title: str
-                Title for the image. If None, the title will be the name of the image and its colorspace.
-            forceToneMapping: boolean
-                TODO
-            TMO: TODO
-                TODO
+            ax (matplotlib.axes.Axes): Matplotlib axis for displaying the image
+            displayTitle (bool, optional): Whether to show title (default: False)
+            title (str, optional): Custom title text (default: auto-generated)
+            forceToneMapping (bool, optional): Apply tone mapping to HDR images (default: True)
+            TMO (Processing, optional): Custom tone mapping operator (default: CCTF encoding)
         """
         # default values
         if not title: title= self.name+"("+self.colorSpace.name +" | "+ str(self.type)+")"
@@ -465,7 +506,10 @@ class Image(object):
 
     def __repr__(self):
         """
-        Converts an image as a string. This method dive all the informations of the image.
+        Generate a detailed string representation of the image object.
+        
+        Returns:
+            str: Comprehensive description including all image properties
         """
         if not self.colorSpace:
             colorSpaceSTR = "None"
@@ -484,25 +528,22 @@ class Image(object):
     @staticmethod
     def buildLchColorData(L,c,h,size,width,height):
         """
-        TODO - Documentation de la méthode buildLchColorData
+        Generate synthetic LCH color data for visualization and testing.
+        
+        Creates artificial color data in LCH space with specified lightness,
+        chroma, and hue ranges. Useful for color space visualization and
+        testing color transformations.
 
         Args:
-            L: TODO
-                TODO
-            c: TODO
-                TODO
-            h: TODO
-                TODO
-            size: TODO
-                TODO
-            width: TODO
-                TODO
-            height: TODO
-                TODO
+            L (tuple): Lightness range (min, max)
+            c (tuple): Chroma range (min, max) 
+            h (tuple): Hue range (min, max)
+            size (tuple): Output image dimensions (height, width)
+            width (str): Primary axis for width ('L', 'c', or 'h')
+            height (str): Primary axis for height ('L', 'c', or 'h')
                 
         Returns:
-            TODO
-                TODO
+            numpy.ndarray: Generated LCH color data with shape (height, width, 3)
         """
 
         colorData = np.zeros((size[0], size[1],3))
@@ -612,14 +653,19 @@ class Image(object):
         return colorData
 
     def split(self,widthSegment,heightSegment):
-        """split: split an image widthSegment x heightSegment sub-images.
+        """
+        Divide the image into a grid of sub-images.
+        
+        Splits the current image into widthSegment × heightSegment sub-images,
+        each maintaining the same properties as the original image.
 
-            Args:
-                widthSegment (int, Required): number of horizonatal segments
-                heightSegment (int required): number of vertical segments
+        Args:
+            widthSegment (int): Number of horizontal segments
+            heightSegment (int): Number of vertical segments
 
-            Returns
-                list[[hdrCore.image.Image]] : list of sub-images
+        Returns:
+            list: 2D list of Image objects representing the sub-images
+                 Arranged as [row][column] where each element is an Image
         """
         imageHeight,imageWidth, _ = self.colorData.shape
         widthLimit = [(i*(imageWidth//widthSegment))  for i in range(widthSegment)]+[imageWidth]
@@ -640,13 +686,17 @@ class Image(object):
 
     @staticmethod
     def merge(imgList):
-        """merge: merge 2D list of images into a single image (same size, same characteristics)
+        """
+        Combine a 2D list of images into a single merged image.
+        
+        Reconstructs a complete image from sub-images that were previously split,
+        assuming all sub-images have compatible dimensions and properties.
 
-            Args:
-                imgList (list[[hdrCore.image.Image]], Required): 2D list of images
+        Args:
+            imgList (list): 2D list of Image objects to merge
 
-            Returns:
-                (hdrCore.image.Image)
+        Returns:
+            Image: Single merged image with combined pixel data
         """
         totalWidth= functools.reduce(lambda x,y: x+y, map(lambda img: img.colorData.shape[1],imgList[0]),0)
         totalHeight= functools.reduce(lambda x,y: x+y,map(lambda imgList: imgList[0].shape[0],imgList),0)
@@ -666,34 +716,61 @@ class Image(object):
 # -----------------------------------------------------------------------------
 class ColorSpace(object):
     """
-    Mapping to colour.models.RGB_COLOURSPACES
+    Color space definitions and factory methods for HDR imaging.
+    
+    This class provides static methods for creating and managing various color
+    spaces used in HDR image processing. It serves as a centralized interface
+    for color space creation and configuration.
+    
+    Static Methods:
+        Lab: Create Lab color space definition
+        Lch: Create LCH color space definition  
+        sRGB: Create standard sRGB color space
+        scRGB: Create extended sRGB color space for HDR
+        XYZ: Create XYZ color space definition
+        build: Factory method for creating color spaces by name
     """
 
     @staticmethod
     def Lab():
         """
-        TODO - Documentation de la méthode Lab
+        Create a Lab color space definition for HDR processing.
+        
+        Returns:
+            colour.RGB_Colourspace: Lab color space configuration
         """
         return colour.RGB_Colourspace('Lab', primaries=np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700]), whitepoint=np.array([0.32168, 0.33767]))
      
     @staticmethod                                 
     def Lch():
         """
-        TODO - Documentation de la méthode Lch
+        Create an LCH color space definition for HDR processing.
+        
+        Returns:
+            colour.RGB_Colourspace: LCH color space configuration
         """
         return colour.RGB_Colourspace('Lch', primaries=np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700]), whitepoint=np.array([0.32168, 0.33767]))
 
     @staticmethod
     def sRGB():
         """
-        TODO - Documentation de la méthode sRGB
+        Create a standard sRGB color space definition.
+        
+        Returns:
+            colour.RGB_Colourspace: sRGB color space configuration
         """
         return colour.models.RGB_COLOURSPACES['sRGB'].copy()
 
     @staticmethod
     def scRGB():
         """
-        TODO - Documentation de la méthode scRGB
+        Create an extended sRGB color space for HDR content.
+        
+        This variant of sRGB removes the gamma correction for HDR processing,
+        providing linear RGB values with extended range.
+        
+        Returns:
+            colour.RGB_Colourspace: Extended sRGB color space for HDR
         """
         colorSpace = colour.models.RGB_COLOURSPACES['sRGB'].copy()
         colorSpace.cctf_decoding=None
@@ -702,18 +779,24 @@ class ColorSpace(object):
     @staticmethod
     def XYZ():
         """
-        TODO - Documentation de la méthode XYZ
+        Create an XYZ color space definition.
+        
+        Returns:
+            colour.RGB_Colourspace: XYZ color space configuration
         """
         return colour.RGB_Colourspace('XYZ', primaries=np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700]), whitepoint=np.array([0.32168, 0.33767]))
 
     @staticmethod
     def build(name='sRGB'):
         """
-        TODO - Documentation de la méthode build
-
+        Factory method to create color spaces by name.
+        
         Args:
-            name='sRGB': str
-                TODO
+            name (str, optional): Color space name ('sRGB', 'scRGB', 'Lab', 'Lch', 'XYZ')
+                                 Defaults to 'sRGB'
+        
+        Returns:
+            colour.RGB_Colourspace or None: Requested color space or None if unknown
         """
         cs  = None
         if name== 'sRGB': cs =  ColorSpace.sRGB()
@@ -727,40 +810,38 @@ class ColorSpace(object):
 # -----------------------------------------------------------------------------
 class Histogram(object):
     """
-    TODO - documentation de la classe image.Histogram
+    Image histogram computation and analysis for HDR imaging.
     
-    description of class
+    This class provides comprehensive histogram generation and analysis capabilities
+    for HDR images, supporting both linear and logarithmic scales for different
+    dynamic ranges.
     
     Attributes:
-        name: str
-            TODO
-        channel: TODO
-            TODO
-        histValue: TODO
-            TODO
-        edgeValue: TODO
-            TODO
-        logSpace: TODO
-            TODO
+        name (str): Descriptive name for the histogram
+        channel (channel): Color channel analyzed
+        histValue (numpy.ndarray): Histogram bin values
+        edgeValue (numpy.ndarray): Histogram bin edges
+        logSpace (bool): Whether histogram uses logarithmic spacing
+    
+    Methods:
+        normalise: Normalize histogram values
+        plot: Display histogram on matplotlib axis
+        toNumpy: Convert histogram to numpy array
+        
+    Static Methods:
+        build: Generate histogram from image and channel
     """
     
     def __init__(self,histValue,edgeValue,name,channel,logSpace=False):
         """
-        TODO - Documentation de la méthode __init__
-        
-        /!\ - Les constructeurs n'apparaissent pas dans la doc générées par sphinx.
+        Initialize a histogram object with computed values.
 
         Args:
-            histValue: TODO
-                TODO
-            edgeValue: TODO
-                TODO
-            name: TODO
-                TODO
-            channel: TODO
-                TODO
-            logSpace: TODO
-                TODO
+            histValue (numpy.ndarray): Histogram bin counts
+            edgeValue (numpy.ndarray): Histogram bin edge positions
+            name (str): Descriptive name for the histogram
+            channel (channel): Color channel that was analyzed
+            logSpace (bool, optional): Whether bins use logarithmic spacing (default: False)
         """
         self.name           = name
         self.channel        = channel
@@ -770,7 +851,10 @@ class Histogram(object):
 
     def __repr__(self):
         """
-        TODO - Documentation de la méthode __repr__
+        Generate a detailed string representation of the histogram.
+        
+        Returns:
+            str: Comprehensive histogram description
         """
         res =   "<class Histogram: \n" + \
                 "t name:"               + self.name                 + "\n"  + \
@@ -781,21 +865,23 @@ class Histogram(object):
 
     def __str__(self):
         """
-        TODO - Documentation de la méthode __str__
+        Generate a human-readable string representation.
+        
+        Returns:
+            str: Same as __repr__ for consistency
         """
         return self.__repr__()
 
     def normalise(self,norm=None):
         """
-        Normalise histogram according to norm='probability' | 'dot'
+        Normalize histogram values according to specified norm.
 
         Args:
-            norm: str
-                Norm of the normalization
+            norm (str, optional): Normalization method ('probability' or 'dot')
+                                 Defaults to 'probability'
                 
         Returns:
-            TODO
-                TODO
+            Histogram: New normalized histogram object
         """
         res = copy.deepcopy(self)
         if not norm: norm = 'probability'
@@ -812,23 +898,19 @@ class Histogram(object):
     @staticmethod
     def build(img,channel,nbBins=100,range=None,logSpace=None):
         """
-        Build an Histogram object from image.
+        Generate a histogram from an image channel.
 
         Args:
-            img: Image
-                Required : input image from witch hsitogram will be build
-            channel: channel
-                Required : image channel used to build histogram
-            nbBins: int
-                Optional : histogram number of bins
-            range: (Float,Float)
-                Optional : range of histogram, if None min max of channel
-            logSpace: boolean
-                Optional : compute in log space if True, if None guess from image
+            img (Image): Source image for histogram generation
+            channel (channel): Color channel to analyze
+            nbBins (int, optional): Number of histogram bins (default: 100)
+            range (tuple, optional): Value range for histogram (min, max)
+                                   If None, determined automatically
+            logSpace (bool or str, optional): Use logarithmic bin spacing
+                                            'auto' determines from image type
                 
         Returns:
-            Histogram
-                Histogram of the image.
+            Histogram: Generated histogram object with computed values
         """
         # logSpace
         if not isinstance(logSpace,(bool, str)): logSpace = 'auto'
@@ -869,17 +951,13 @@ class Histogram(object):
 
     def plot(self,ax,color='r',shortName=True,title=True):
         """
-        Method to plot the histogram
+        Display the histogram on a matplotlib axis.
 
         Args:
-            ax: TODO
-                TODO
-            color: TODO
-                TODO
-            shortName: boolean
-                TODO
-            title: boolean
-                TODO
+            ax (matplotlib.axes.Axes): Matplotlib axis for plotting
+            color (str, optional): Plot color (default: 'r')
+            shortName (bool, optional): Use abbreviated name (default: True)
+            title (bool, optional): Show title (default: True)
         """
         if not color : color = 'r'
         ax.plot(self.edgeValue[1:],self.histValue,color)
@@ -889,10 +967,9 @@ class Histogram(object):
 
     def toNumpy(self):
         """
-        TODO - Documentation de la méthode toNumpy
+        Convert histogram values to numpy array.
         
         Returns:
-            TODO
-                TODO
+            numpy.ndarray: Histogram bin values as numpy array
         """
         return self.histValue

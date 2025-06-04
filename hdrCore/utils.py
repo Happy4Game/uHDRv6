@@ -18,8 +18,18 @@
 # --- Package hdrCore ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrCore consists of the core classes for HDR imaging.
+HDR Core Utilities Module
 
+This module provides essential utility functions for HDR image processing, including
+file operations, array manipulations, and mathematical transformations used throughout
+the hdrCore package.
+
+Functions:
+    filenamesplit: Parse filename into path, name, and extension components
+    filterlistdir: Filter directory contents by file extensions
+    ndarray2vector: Convert 2D image arrays to 1D vectors
+    NPlinearWeightMask: Generate linear weight masks for image blending
+    croppRotated: Calculate crop dimensions for rotated images
 """
 
 # -----------------------------------------------------------------------------
@@ -32,16 +42,21 @@ import numpy as np
 # --- Package functions -------------------------------------------------------
 # -----------------------------------------------------------------------------
 def filenamesplit(filename):
-    """retrieve path, name and extension from a filename.
+    """
+    Parse a filename into its constituent path, name, and extension components.
 
     Args:
-        filename (str,Required): filename
+        filename (str): Complete filename including path and extension
             
     Returns:
-        (str,str,str): (path,name,ext)
+        tuple: A tuple containing (path, name, extension) where:
+            - path (str): Directory path to the file
+            - name (str): Filename without extension
+            - extension (str): File extension in lowercase
             
     Example:
-        filenamesplit("./dir0/dir1/name.ext") returns ("./dir0/dir1/","name","ext")
+        >>> filenamesplit("./dir0/dir1/name.ext")
+        ("./dir0/dir1/", "name", "ext")
     """
     
     path, nameWithExt = os.path.split(filename)
@@ -50,18 +65,20 @@ def filenamesplit(filename):
     name = '.'.join(splits[:-1])
     return (path,name,ext)
 
-def filterlistdir(path,extList):
-    """return the files in path that end by one of the string in extList
+def filterlistdir(path, extList):
+    """
+    Filter directory contents to return only files with specified extensions.
 
     Args:
-        path (str, Required): path to directory
-        extList (tuple of str, Required)
+        path (str): Path to the directory to scan
+        extList (str, list, or tuple): File extension(s) to filter by
             
     Returns:
-        ([str])or (tuple of str) or (str): list, tuple or single str
+        list: Sorted list of filenames matching the specified extensions
            
     Example:
-        filterlistdir('./images/', ('.jpg', '.JPG', '.png'))
+        >>> filterlistdir('./images/', ('.jpg', '.JPG', '.png'))
+        ['image1.jpg', 'image2.png', 'photo.JPG']
     """ 
     
     ext = None
@@ -77,13 +94,17 @@ def filterlistdir(path,extList):
     return res
 
 def ndarray2vector(nda):
-    """transform 2D array of color data to vector
+    """
+    Transform a 2D or 3D image array into a 1D vector format.
+
+    This function reshapes image data from spatial dimensions (height, width, channels)
+    to a linear vector format (pixels, channels) for processing operations.
 
     Args:
-        nda (numpy.ndarray, Required): numpy array (2D of scalar or vector)
+        nda (numpy.ndarray): Input image array, either 2D (grayscale) or 3D (color)
             
     Returns:
-        (numpy.ndarray, Required): numpy array (1D of scalar or vector)
+        numpy.ndarray: Reshaped 1D array where each row represents a pixel
     """
     if len(nda.shape) ==2 :
         x,y = nda.shape
@@ -104,23 +125,30 @@ def ndarray2vector(nda):
 
 # ------------------------------------------------------------------------------------------
 
-def NPlinearWeightMask(x,xMin,xMax,xTolerance):
+def NPlinearWeightMask(x, xMin, xMax, xTolerance):
     """
-    TODO - Documentation de la méthode NPlinearWeightMask
+    Generate a linear weight mask with smooth transitions at boundaries.
+
+    Creates a trapezoidal weight function that transitions smoothly from 0 to 1
+    within the specified tolerance regions. Used for smooth image blending and
+    masking operations.
 
     Args:
-        x: TODO
-            TODO
-        xMin: TODO
-            TODO
-        xMax: TODO
-            TODO
-        xTolerance: TODO
-            TODO
+        x (numpy.ndarray): Input 2D array of values to generate mask for
+        xMin (float): Lower bound where mask transitions from 0 to 1
+        xMax (float): Upper bound where mask transitions from 1 to 0
+        xTolerance (float): Width of transition regions
             
     Returns:
-        TODO
-            TODO
+        numpy.ndarray: 2D weight mask with same dimensions as input x
+        
+    Note:
+        The mask has the following behavior:
+        - Values below (xMin - xTolerance): weight = 0
+        - Values between (xMin - xTolerance) and xMin: linear transition 0→1
+        - Values between xMin and xMax: weight = 1
+        - Values between xMax and (xMax + xTolerance): linear transition 1→0
+        - Values above (xMax + xTolerance): weight = 0
     """
     # reshape x
     h,w  = x.shape  # 2D array
@@ -134,21 +162,25 @@ def NPlinearWeightMask(x,xMin,xMax,xTolerance):
 
     return np.reshape(y,(h,w))
 
-def croppRotated(h,w,alpha):
+def croppRotated(h, w, alpha):
     """
-    TODO - Documentation de la méthode croppRotated
+    Calculate the crop dimensions for a rotated image to avoid black borders.
+
+    When an image is rotated by an arbitrary angle, black borders appear at the edges.
+    This function calculates the maximum rectangular crop that fits within the rotated
+    image bounds without including any black borders.
 
     Args:
-        h: TODO
-            TODO
-        w: TODO
-            TODO
-        alpha: TODO
-            TODO
+        h (float): Original image height
+        w (float): Original image width
+        alpha (float): Rotation angle in degrees
             
     Returns:
-        TODO
-            TODO
+        tuple: (new_height, new_width) of the maximum crop rectangle
+        
+    Note:
+        The calculation assumes rotation around the image center and uses
+        trigonometric relationships to find the largest inscribed rectangle.
     """
 
     cosA = math.cos(math.radians(alpha))

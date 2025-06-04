@@ -18,7 +18,20 @@
 # --- Package hdrCore ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrCore consists of the core classes for HDR imaging.
+HDR Core Image Aesthetics Module
+
+This module provides comprehensive image aesthetics analysis and modeling capabilities
+for HDR images. It includes color palette extraction, composition analysis, and
+multidimensional aesthetic modeling tools that help analyze and understand the
+visual properties of HDR images.
+
+The module implements advanced machine learning techniques including K-means clustering
+for color palette extraction and provides frameworks for extensible aesthetic analysis.
+
+Classes:
+    ImageAestheticsModel: Abstract base class for aesthetic modeling
+    Palette: Color palette extraction and analysis using K-means clustering
+    MultidimensionalImageAestheticsModel: Container for multiple aesthetic models
 """
 
 # -----------------------------------------------------------------------------
@@ -38,41 +51,72 @@ from timeit import default_timer as timer
 # --- Class ImageAestheticsModel ----------------------------------------------
 # -----------------------------------------------------------------------------
 class ImageAestheticsModel():
-    """class ImageAestheticsModel: abstract class for image aesthetics model
-
-        Static methods:
-            build
     """
-    def build(processPipe, **kwargs): return ImageAestheticsModel()
+    Abstract base class for image aesthetics modeling.
+    
+    This class provides the foundation for all aesthetic analysis models in the
+    uHDR system. It defines the basic interface that all aesthetic models should
+    implement for consistent integration with the processing pipeline.
+    
+    Static Methods:
+        build: Factory method to create aesthetic model instances
+    """
+    
+    def build(processPipe, **kwargs): 
+        """
+        Factory method to build an aesthetic model instance.
+        
+        Args:
+            processPipe (hdrCore.processing.ProcessPipe): Processing pipeline
+            **kwargs: Additional model-specific parameters
+            
+        Returns:
+            ImageAestheticsModel: Base model instance
+        """
+        return ImageAestheticsModel()
 
 # -----------------------------------------------------------------------------
 # --- Class Palette -----------------------------------------------------------
 # -----------------------------------------------------------------------------
 class Palette(ImageAestheticsModel):
-    """class Palette(ImageAestheticsModel):  color palette
-
-        Attributes:
-            name (str): palette name
-            colorSpace (colour.models.RGB_COLOURSPACES): colorspace): colorspace 
-            nbColors (int):   number of colors in the Palette
-            colors(numpy.ndarray): colors in the palette 
-                        colors[0:nbColors,0:2]
-                        sorted according to distance to black (in the palette colorSpace)
-            type (image.imageType): image type (SDR|HDR)
-
-        Methods:
-            createImageOfPalette
-            __repr__
-            __str__
-
-        Static methods:
-            build
+    """
+    Color palette extraction and analysis using advanced clustering techniques.
+    
+    This class provides sophisticated color palette extraction from HDR images using
+    K-means clustering in perceptually uniform color spaces. The extracted palettes
+    can be used for aesthetic analysis, color grading guidance, and visual style
+    transfer applications.
+    
+    The palette colors are automatically sorted by their distance from black in the
+    specified color space, providing a consistent ordering for analysis and display.
+    
+    Attributes:
+        name (str): Descriptive name for the palette
+        colorSpace (colour.models.RGB_COLOURSPACES): Color space of the palette
+        nbColors (int): Number of colors in the palette
+        colors (numpy.ndarray): Array of color values with shape (nbColors, 3),
+                               sorted by distance from black
+        type (hdrCore.image.imageType): Type of the source image (SDR/HDR)
+        
+    Methods:
+        createImageOfPalette: Generate a visual representation of the palette
+        __repr__: String representation of the palette
+        __str__: Human-readable string representation
+        
+    Static Methods:
+        build: Extract color palette from a processing pipeline
     """    
+    
     # constructor
     def __init__(self, name, colors, colorSpace, type):
         """
-        constructor of aesthetics.Palette:
-
+        Initialize a color palette with specified properties.
+        
+        Args:
+            name (str): Name identifier for this palette
+            colors (numpy.ndarray): Array of color values with shape (N, 3)
+            colorSpace (colour.models.RGB_COLOURSPACES): Color space definition
+            type (hdrCore.image.imageType): Source image type
         """
         self.name       = name
         self.colorSpace = colorSpace
@@ -82,18 +126,29 @@ class Palette(ImageAestheticsModel):
 
     @staticmethod    
     def build(processpipe, nbColors=5, method='kmean-Lab', processId=-1, **kwargs):
-        """build: create the Palette from an image
+        """
+        Extract a color palette from an image using clustering algorithms.
         
-            Args:
-                processpipe (hdrCore.processing.ProcessPipe, Required): processpipe
-                nbColors (int, Optionnal): number of colors in the palette (5 default values)
-                method (str, Optionnal): 'kmean-Lab' (default value)
-                processIdx (int, Optionnal): set the process after wihich computation of color palette is done
-                default= -1 at the end of editing
-                kwargs (dict, Otionnal): supplemental parameters according to method
-
-            Returns:
-                (hdrCore.aesthetics.Palette)
+        This method analyzes the image at a specific point in the processing pipeline
+        and extracts the most representative colors using advanced clustering techniques.
+        The default method uses K-means clustering in the perceptually uniform Lab
+        color space for optimal color separation.
+        
+        Args:
+            processpipe (hdrCore.processing.ProcessPipe): Image processing pipeline
+            nbColors (int, optional): Number of colors to extract (default: 5)
+            method (str, optional): Clustering method to use (default: 'kmean-Lab')
+            processId (int, optional): Pipeline stage to analyze (default: -1, final stage)
+            **kwargs: Additional method-specific parameters:
+                - removeBlack (bool): Whether to exclude dark colors (default: True)
+                
+        Returns:
+            hdrCore.aesthetics.Palette: Extracted color palette with specified number of colors
+            
+        Note:
+            The 'kmean-Lab' method converts the image to Lab color space before clustering
+            to ensure perceptually uniform color separation. When removeBlack=True,
+            the algorithm extracts nbColors+1 clusters and removes the darkest one.
         """
         # get image according to processId
         image_ = processpipe.processNodes[processId].outputImage
@@ -138,6 +193,22 @@ class Palette(ImageAestheticsModel):
 
     def createImageOfPalette(self, colorWidth=100):
         """
+        Generate a visual representation of the color palette.
+        
+        Creates an image showing all palette colors as horizontal bands, which is
+        useful for visualization and comparison of different palettes. The colors
+        are converted to sRGB for display while maintaining proper color management.
+        
+        Args:
+            colorWidth (int, optional): Width in pixels for each color band (default: 100)
+            
+        Returns:
+            hdrCore.image.Image: Visual representation of the palette with colors
+                                arranged as horizontal bands
+                                
+        Note:
+            The output image has dimensions (colorWidth, nbColors*colorWidth, 3)
+            and is created as an SDR image in sRGB color space for display compatibility.
         """
         if self.colorSpace.name =='Lab':
             if self.type == image.imageType.HDR :
@@ -168,7 +239,13 @@ class Palette(ImageAestheticsModel):
 
     # __repr__ and __str__
     def __repr__(self):
-   
+        """
+        Return a detailed string representation of the palette.
+        
+        Returns:
+            str: Formatted string containing all palette properties including
+                 name, color space, number of colors, color values, and image type
+        """
         res =   " Palette{ name:"           + self.name                 + "\n"  + \
                 "          colorSpace: "    + self.colorSpace.name      + "\n"  + \
                 "          nbColors: "      + str(self.nbColors)        + "\n"  + \
@@ -176,32 +253,90 @@ class Palette(ImageAestheticsModel):
                 "          type: "          + str(self.type)            + "\n }"  
         return res
 
-    def __str__(self) :  return self.__repr__()
+    def __str__(self):
+        """
+        Return a human-readable string representation of the palette.
+        
+        Returns:
+            str: Same as __repr__ for consistency
+        """
+        return self.__repr__()
+
 # -----------------------------------------------------------------------------
 # --- Class MultidimensionalImageAestheticsModel ------------------------------
 # -----------------------------------------------------------------------------
 class MultidimensionalImageAestheticsModel():
-    """class MultidimensionalImageAestheticsModel contains Multiple Image Aesthetics Model:
-            1 - color palette
-            2 - composition convex hull 
-            3 - composition strength lines
-    
     """
+    Container for multiple image aesthetic analysis models.
+    
+    This class manages a collection of different aesthetic analysis models for
+    comprehensive image evaluation. It supports various types of aesthetic analysis
+    including color palette extraction, composition analysis through convex hulls,
+    and composition strength line detection.
+    
+    The class provides a unified interface for managing multiple aesthetic models
+    and tracking changes in the processing pipeline that might affect the analysis.
+    
+    Attributes:
+        processpipe (hdrCore.processing.ProcessPipe): Associated processing pipeline
+        processPipeChanged (bool): Flag indicating if pipeline has been modified
+        imageAestheticsModels (dict): Collection of aesthetic models indexed by key
+        
+    Methods:
+        add: Add a new aesthetic model to the collection
+        get: Retrieve a specific aesthetic model by key
+        build: Create and add a new model using a builder function
+    """
+    
     def __init__(self, processpipe):
+        """
+        Initialize the multidimensional aesthetic model container.
+        
+        Args:
+            processpipe (hdrCore.processing.ProcessPipe): Processing pipeline to analyze
+        """
         self.processpipe = processpipe
         self.processPipeChanged = True
         self.imageAestheticsModels = {}
 
     def add(self, key, imageAestheticsModel):
+        """
+        Add an aesthetic model to the collection.
+        
+        Args:
+            key (str): Unique identifier for the model
+            imageAestheticsModel (ImageAestheticsModel): Model instance to add
+        """
         self.imageAestheticsModels[key] = imageAestheticsModel
 
     def get(self, key):
+        """
+        Retrieve an aesthetic model from the collection.
+        
+        Args:
+            key (str): Identifier of the model to retrieve
+            
+        Returns:
+            ImageAestheticsModel or None: The requested model if found, None otherwise
+        """
         iam = None
         if key in self.imageAestheticsModels: iam = self.imageAestheticsModels[key]
         return iam
 
     def build(self, key, builder, processpipe):
-        if not isintance(key,list):
+        """
+        Create and add new aesthetic models using builder functions.
+        
+        Args:
+            key (str or list): Model identifier(s)
+            builder (function or list): Builder function(s) to create models
+            processpipe (hdrCore.processing.ProcessPipe): Processing pipeline
+            
+        Note:
+            If key and builder are lists, they should have the same length and
+            corresponding elements will be paired for model creation.
+        """
+        if not isinstance(key,list):
             key, builder = [key],[builder]
         for k in key:
             self.add(k,builder.build(processpipe))
