@@ -110,15 +110,11 @@ class GalleryMode(enum.Enum):
     Each mode specifies the number of rows and columns for image display.
     
     Attributes:
-        _1x1 (int): Single image view (1 row, 1 column)
-        _3x2 (int): 3×2 grid layout (2 rows, 3 columns)
-        _6x4 (int): 6×4 grid layout (4 rows, 6 columns)
-        _9x6 (int): 9×6 grid layout (6 rows, 9 columns)
-        _2x1 (int): 2×1 layout (1 row, 2 columns) for side-by-side comparison
-    
-    Static Methods:
-        nbRow: Get number of rows for a gallery mode
-        nbCol: Get number of columns for a gallery mode
+        - _1x1 (int): Single image view (1 row, 1 column)
+        - _3x2 (int): 3×2 grid layout (2 rows, 3 columns)
+        - _6x4 (int): 6×4 grid layout (4 rows, 6 columns)
+        - _9x6 (int): 9×6 grid layout (6 rows, 9 columns)
+        - _2x1 (int): 2×1 layout (1 row, 2 columns) for side-by-side comparison
     """
 
     _1x1         = 0         # 
@@ -172,14 +168,9 @@ class ImageWidgetController:
     updates, and user interactions for single image components.
     
     Attributes:
-        model (model.ImageWidgetModel): Data model for the image widget
-        view (view.ImageWidgetView): View component for image display
-        _id (int): Unique identifier for the widget
-    
-    Methods:
-        setImage: Update the displayed image
-        setQPixmap: Set the display pixmap directly
-        id: Get the widget's unique identifier
+        - model (model.ImageWidgetModel): Data model for the image widget
+        - view (view.ImageWidgetView): View component for image display
+        - _id (int): Unique identifier for the widget
     """
 
     def __init__(self, image=None,id = -1):
@@ -245,28 +236,9 @@ class ImageGalleryController():
     handles pagination when there are more images than can fit in the current view.
     
     Attributes:
-        parent: Parent controller (typically AppController)
-        view (view.ImageGalleryView): Gallery view component
-        model (model.ImageGalleryModel): Gallery data model
-    
-    Methods:
-        setImages: Load images into the gallery
-        updateImages: Refresh the gallery display
-        selectImage: Handle image selection
-        getSelectedProcessPipe: Get the processing pipeline for selected image
-        save: Save the current selection
-        
-    Gallery Mode Methods:
-        callBackButton_1x1: Switch to single image view
-        callBackButton_3x2: Switch to 3×2 grid view
-        callBackButton_6x4: Switch to 6×4 grid view
-        callBackButton_9x6: Switch to 9×6 grid view
-        callBackButton_2x1: Switch to 2×1 comparison view
-        
-    Navigation Methods:
-        callBackButton_previousPage: Navigate to previous page
-        callBackButton_nextPage: Navigate to next page
-        computePageNumberOnGalleryModeChange: Calculate page after mode change
+        - parent: Parent controller (typically AppController)
+        - view (view.ImageGalleryView): Gallery view component
+        - model (model.ImageGalleryModel): Gallery data model
     """
 
     def __init__(self, parent):
@@ -495,25 +467,12 @@ class AppController(object):
     from image loading to final export operations.
     
     Attributes:
-        screenSize (list): Available screen dimensions for multi-monitor support
-        hdrDisplay (HDRviewerController): HDR image display controller
-        view (view.AppView): Main application view component
-        model (model.AppModel): Main application data model
-        dirName (str): Currently selected directory path
-        imagesName (list): List of image filenames in current directory
-    
-    Methods:
-        callBackSelectDir: Open directory selection dialog and load images
-        callBackSave: Save current image metadata and processing state
-        callBackQuit: Clean application shutdown with data preservation
-        callBackDisplayHDR: Display processed HDR image on HDR monitor
-        callBackEndDisplay: Complete HDR display processing workflow
-        callBackCloseDisplayHDR: Close HDR display and return to splash
-        callBackCompareRawEditedHDR: Side-by-side comparison of original vs edited
-        callBackExportHDR: Export single HDR image with processing applied
-        callBackEndExportHDR: Complete single HDR export workflow
-        callBackExportAllHDR: Batch export all processed HDR images
-        callBackEndAllExportHDR: Complete batch HDR export workflow
+        - screenSize (list): Available screen dimensions for multi-monitor support
+        - hdrDisplay (HDRviewerController): HDR image display controller
+        - view (view.AppView): Main application view component
+        - model (model.AppModel): Main application data model
+        - dirName (str): Currently selected directory path
+        - imagesName (list): List of image filenames in current directory
     """
 
     def __init__(self, app):
@@ -943,16 +902,9 @@ class MultiDockController():
     pipeline state across all panels.
     
     Attributes:
-        parent: Parent controller (typically AppController)
-        view (view.MultiDockView): Multi-panel view component
-        model: Data model (currently None, uses child controllers' models)
-    
-    Methods:
-        activateEDIT: Switch to image editing panel
-        activateINFO: Switch to image information/metadata panel  
-        activateMIAM: Switch to image aesthetics analysis panel
-        switch: Generic panel switching mechanism
-        setProcessPipe: Propagate processing pipeline to active panel
+        - parent: Parent controller (typically AppController)
+        - view (view.MultiDockView): Multi-panel view component
+        - model: Data model (currently None, uses child controllers' models)
     """
     def __init__(self,parent=None, HDRcontroller = None):
         """
@@ -1038,25 +990,11 @@ class EditImageController:
     feedback during the editing process.
     
     Attributes:
-        parent: Parent controller for coordination
-        previewHDR (bool): Enable/disable HDR preview updates
-        controllerHDR: HDR display controller for real-time preview
-        view (view.EditImageView): Image editing interface view
-        model (model.EditImageModel): Image editing data model and processing
-    
-    Methods:
-        setProcessPipe: Set the processing pipeline for editing
-        getProcessPipe: Get current processing pipeline
-        buildView: Rebuild the editing interface
-        autoExposure: Calculate and apply optimal exposure
-        changeExposure: Adjust image exposure in EV stops
-        changeContrast: Adjust image contrast
-        changeToneCurve: Modify tone curve with control points
-        changeLightnessMask: Configure lightness-based masking
-        changeSaturation: Adjust color saturation
-        changeColorEditor: Apply selective color editing
-        changeGeometry: Apply geometric transformations
-        updateImage: Handle processing completion and view updates
+        - parent: Parent controller for coordination
+        - previewHDR (bool): Enable/disable HDR preview updates
+        - controllerHDR: HDR display controller for real-time preview
+        - view (view.EditImageView): Image editing interface view
+        - model (model.EditImageModel): Image editing data model and processing
     """
 
     def __init__(self, parent=None, HDRcontroller = None):
@@ -1264,15 +1202,10 @@ class ImageInfoController:
     data integrity throughout the editing process.
     
     Attributes:
-        parent: Parent controller for coordination
-        view (view.ImageInfoView): Metadata display interface
-        model (model.ImageInfoModel): Metadata management model
-        callBackActive (bool): Enable/disable callback processing
-    
-    Methods:
-        setProcessPipe: Set processing pipeline for metadata display
-        buildView: Rebuild the information interface
-        metadataChange: Handle metadata visibility/editing changes
+        - parent: Parent controller for coordination
+        - view (view.ImageInfoView): Metadata display interface
+        - model (model.ImageInfoModel): Metadata management model
+        - callBackActive (bool): Enable/disable callback processing
     """
 
     def __init__(self, parent=None):
@@ -1355,21 +1288,15 @@ class AdvanceSliderController():
     automatic optimization algorithms.
     
     Attributes:
-        parent: Parent controller for coordination
-        view (view.AdvanceSliderView): Slider interface component
-        model (model.AdvanceSliderModel): Slider data model
-        step (float): Step size for slider increments
-        defaultValue (float): Default/reset value for the slider
-        range (tuple): Minimum and maximum values for the slider
-        callBackActive (bool): Enable/disable callback processing
-        callBackValueChange: Callback function for value changes
-        callBackAutoPush: Callback function for auto-adjustment
-    
-    Methods:
-        sliderChange: Handle manual slider value changes
-        setValue: Set slider value programmatically
-        reset: Reset slider to default value
-        auto: Trigger automatic value calculation
+        - parent: Parent controller for coordination
+        - view (view.AdvanceSliderView): Slider interface component
+        - model (model.AdvanceSliderModel): Slider data model
+        - step (float): Step size for slider increments
+        - defaultValue (float): Default/reset value for the slider
+        - range (tuple): Minimum and maximum values for the slider
+        - callBackActive (bool): Enable/disable callback processing
+        - callBackValueChange: Callback function for value changes
+        - callBackAutoPush: Callback function for auto-adjustment
     """
     def __init__(self, parent,name, defaultValue, range, step,callBackValueChange=None,callBackAutoPush= None):
         """
@@ -1476,23 +1403,16 @@ class ToneCurveController():
     and local contrast of the image.
     
     Attributes:
-        parent: Parent controller for coordination
-        model (model.ToneCurveModel): Tone curve mathematical model
-        view (view.ToneCurveView): Curve editing interface
-        callBackActive (bool): Enable/disable callback processing
-        showInput (bool): Display input image histogram
-        showbefore (bool): Display pre-curve histogram
-        showAfter (bool): Display post-curve histogram  
-        showOutput (bool): Display final output histogram
-        weightFile (str): Machine learning model file for auto-curve
-        networkModel: PyTorch neural network for automatic curve generation
-    
-    Methods:
-        sliderChange: Handle control point slider adjustments
-        setValues: Set all curve control points programmatically
-        autoCurve: Generate curve automatically using ML analysis
-        reset: Reset specific control point to default
-        plotCurve: Display curve and histogram overlays
+        - parent: Parent controller for coordination
+        - model (model.ToneCurveModel): Tone curve mathematical model
+        - view (view.ToneCurveView): Curve editing interface
+        - callBackActive (bool): Enable/disable callback processing
+        - showInput (bool): Display input image histogram
+        - showbefore (bool): Display pre-curve histogram
+        - showAfter (bool): Display post-curve histogram  
+        - showOutput (bool): Display final output histogram
+        - weightFile (str): Machine learning model file for auto-curve
+        - networkModel: PyTorch neural network for automatic curve generation
     """
     def __init__(self, parent):
         """
@@ -1747,14 +1667,10 @@ class LightnessMaskController():
     visually pleasing results.
     
     Attributes:
-        parent: Parent controller for coordination
-        model (model.LightnessMaskModel): Lightness mask data model
-        view (view.LightnessMaskView): Mask selection interface
-        callBackActive (bool): Enable/disable callback processing
-    
-    Methods:
-        maskChange: Handle mask enable/disable for tone ranges
-        setValues: Set all mask states programmatically
+        - parent: Parent controller for coordination
+        - model (model.LightnessMaskModel): Lightness mask data model
+        - view (view.LightnessMaskView): Mask selection interface
+        - callBackActive (bool): Enable/disable callback processing
     """
     def __init__(self, parent):
         """
@@ -1832,20 +1748,10 @@ class HDRviewerController():
     image editing workflows.
     
     Attributes:
-        parent: Parent controller for coordination
-        model (model.HDRviewerModel): HDR display data model
-        view: View component (set externally)
-        viewerProcess: External HDR viewer process handle
-    
-    Methods:
-        setView: Set the view component
-        callBackUpdate: Update HDR display with current image
-        callBackAuto: Toggle automatic HDR preview updates
-        callBackCompare: Display before/after comparison
-        displayFile: Show HDR file on external display
-        displayIMG: Display processed image on HDR monitor
-        displaySplash: Show default splash screen
-        close: Terminate HDR viewer process
+        - parent: Parent controller for coordination
+        - model (model.HDRviewerModel): HDR display data model
+        - view: View component (set externally)
+        - viewerProcess: External HDR viewer process handle
     """
     def __init__(self, parent):
         """
@@ -2035,24 +1941,11 @@ class LchColorSelectorController:
     overall image integrity. This is essential for professional HDR color grading.
     
     Attributes:
-        parent: Parent controller for coordination
-        model (model.LchColorSelectorModel): LCH color editing data model
-        view (view.LchColorSelectorView): LCH color editing interface
-        idName (str): Unique identifier for this color editor instance
-        callBackActive (bool): Enable/disable callback processing
-    
-    Methods:
-        sliderHueChange: Handle hue range selection changes
-        sliderChromaChange: Handle chroma range selection changes
-        sliderLightnessChange: Handle lightness range selection changes
-        sliderExposureChange: Handle exposure adjustment for selected colors
-        sliderSaturationChange: Handle saturation adjustment for selected colors
-        sliderContrastChange: Handle contrast adjustment for selected colors
-        sliderHueShiftChange: Handle hue shift for selected colors
-        checkboxMaskChange: Toggle mask visualization
-        setValues: Set all color editing parameters programmatically
-        resetSelection: Reset color selection to defaults
-        resetEdit: Reset editing parameters to defaults
+        - parent: Parent controller for coordination
+        - model (model.LchColorSelectorModel): LCH color editing data model
+        - view (view.LchColorSelectorView): LCH color editing interface
+        - idName (str): Unique identifier for this color editor instance
+        - callBackActive (bool): Enable/disable callback processing
     """
     def __init__(self, parent, idName = None):
         """
@@ -2266,15 +2159,10 @@ class GeometryController:
     photography or adjusting horizon lines.
     
     Attributes:
-        parent: Parent controller for coordination
-        model (model.GeometryModel): Geometric transformation data model
-        view (view.GeometryView): Geometry adjustment interface
-        callBackActive (bool): Enable/disable callback processing
-    
-    Methods:
-        sliderCroppingVerticalAdjustementChange: Handle vertical crop position
-        sliderRotationChange: Handle rotation angle adjustments
-        setValues: Set all geometry parameters programmatically
+        - parent: Parent controller for coordination
+        - model (model.GeometryModel): Geometric transformation data model
+        - view (view.GeometryView): Geometry adjustment interface
+        - callBackActive (bool): Enable/disable callback processing
     """
     def __init__(self, parent ):
         """
@@ -2358,13 +2246,9 @@ class ImageAestheticsController:
     the aesthetic properties of their HDR images and make informed editing decisions.
     
     Attributes:
-        parent: Parent controller for coordination
-        model (model.ImageAestheticsModel): Aesthetics analysis data model
-        view (view.ImageAestheticsView): Aesthetics display interface
-    
-    Methods:
-        buildView: Build or rebuild the aesthetics interface
-        setProcessPipe: Set processing pipeline for aesthetic analysis
+        - parent: Parent controller for coordination
+        - model (model.ImageAestheticsModel): Aesthetics analysis data model
+        - view (view.ImageAestheticsView): Aesthetics display interface
     """
     def __init__(self, parent=None, HDRcontroller = None):
         """
@@ -2474,15 +2358,12 @@ class  ColorEditorsAutoController:
     corrections by providing intelligent starting points for manual fine-tuning.
     
     Attributes:
-        parent: Parent controller for coordination
-        controlled (list): List of controlled color editor instances
-        stepName (str): Processing step name for this auto-controller
-        model (model.ColorEditorsAutoModel): Auto-color editing data model
-        view (view.ColorEditorsAutoView): Auto-color editing interface
-        callBackActive (bool): Enable/disable callback processing
-    
-    Methods:
-        auto: Trigger automatic color editor configuration
+        - parent: Parent controller for coordination
+        - controlled (list): List of controlled color editor instances
+        - stepName (str): Processing step name for this auto-controller
+        - model (model.ColorEditorsAutoModel): Auto-color editing data model
+        - view (view.ColorEditorsAutoView): Auto-color editing interface
+        - callBackActive (bool): Enable/disable callback processing
     """
     def __init__(self, parent, controlledColorEditors, stepName ):
         """

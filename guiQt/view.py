@@ -39,21 +39,21 @@ The module provides:
 - HDR display and external monitor support
 
 Key View Classes:
-    AppView: Main application window with menus and docking
-    ImageGalleryView: Grid-based image gallery with pagination
-    EditImageView: Complete HDR editing interface
-    ImageInfoView: Image metadata and information display
-    ToneCurveView: B-spline tone curve editing with matplotlib
-    LchColorSelectorView: LCH color space selection interface
-    HDRviewerView: HDR display controls and preview
-    ImageAestheticsView: Color palette and aesthetics visualization
+    - AppView: Main application window with menus and docking
+    - ImageGalleryView: Grid-based image gallery with pagination
+    - EditImageView: Complete HDR editing interface
+    - ImageInfoView: Image metadata and information display
+    - ToneCurveView: B-spline tone curve editing with matplotlib
+    - LchColorSelectorView: LCH color space selection interface
+    - HDRviewerView: HDR display controls and preview
+    - ImageAestheticsView: Color palette and aesthetics visualization
 
 Widget Utilities:
-    ImageWidgetView: Basic image display widget
-    FigureWidget: Matplotlib integration for curve editing
-    AdvanceSliderView: Enhanced slider with auto/reset functionality
-    AdvanceLineEdit: Labeled line edit widget
-    AdvanceCheckBox: Labeled checkbox widget
+    - ImageWidgetView: Basic image display widget
+    - FigureWidget: Matplotlib integration for curve editing
+    - AdvanceSliderView: Enhanced slider with auto/reset functionality
+    - AdvanceLineEdit: Labeled line edit widget
+    - AdvanceCheckBox: Labeled checkbox widget
 
 The views handle user interaction events and delegate business logic
 to their associated controllers while providing visual feedback and
@@ -100,16 +100,9 @@ class ImageWidgetView(QWidget):
     8-bit RGB for Qt display.
     
     Attributes:
-        controller: Reference to controlling ImageWidgetController
-        label (QLabel): Qt label widget for pixmap display
-        imagePixmap (QPixmap): Current pixmap for display
-    
-    Methods:
-        resize: Update widget and pixmap scaling
-        resizeEvent: Handle Qt resize events
-        setPixmap: Set image from numpy array with preprocessing
-        setQPixmap: Set pre-processed QPixmap directly
-        emptyImageColorData: Generate default placeholder image [Static]
+        - controller: Reference to controlling ImageWidgetController
+        - label (QLabel): Qt label widget for pixmap display
+        - imagePixmap (QPixmap): Current pixmap for display
     """
 
     def __init__(self,controller,colorData = None):
@@ -205,11 +198,8 @@ class FigureWidget(FigureCanvas):
     visualization and editing.
     
     Attributes:
-        fig (Figure): Matplotlib figure object
-        axes: Matplotlib axes for plotting
-    
-    Methods:
-        plot: Draw line plot with specified data and style
+        - fig (Figure): Matplotlib figure object
+        - axes: Matplotlib axes for plotting
     """
 
     def __init__(self, parent=None, width=5, height=5, dpi=100):
@@ -278,24 +268,14 @@ class ImageGalleryView(QSplitter):
         +-------------------------------------------+
     
     Attributes:
-        controller: Reference to ImageGalleryController
-        shapeMode: Current grid layout mode (GalleryMode enum)
-        pageNumber (int): Current page index (0-based)
-        imagesControllers (list): List of ImageWidgetController instances
-        images (QFrame): Frame containing image grid
-        imagesLayout (QGridLayout): Grid layout for images
-        buttons (QWidget): Navigation button container
-        pageNumberLabel (QLabel): Current page display
-    
-    Methods:
-        currentPage: Get current page number
-        changePageNumber: Navigate to different page
-        updateImages: Refresh image display for current page
-        updateImage: Update specific image in grid
-        resetGridLayoutWidgets: Clear current grid widgets
-        buildGridLayoutWidgets: Create new grid layout
-        wheelEvent: Handle mouse wheel navigation
-        mousePressEvent: Handle image selection clicks
+        - controller: Reference to ImageGalleryController
+        - shapeMode: Current grid layout mode (GalleryMode enum)
+        - pageNumber (int): Current page index (0-based)
+        - imagesControllers (list): List of ImageWidgetController instances
+        - images (QFrame): Frame containing image grid
+        - imagesLayout (QGridLayout): Grid layout for images
+        - buttons (QWidget): Navigation button container
+        - pageNumberLabel (QLabel): Current page display
     """
     def __init__(self,controller_=None,shapeMode=None):
         """
@@ -521,23 +501,12 @@ class AppView(QMainWindow):
     - Status Bar: Real-time operation feedback
     
     Attributes:
-        controller (AppController): Parent application controller
-        imageGalleryController (ImageGalleryController): Central gallery management
-        dock (MultiDockController): Right panel controller
-        topContainer (QWidget): Central widget container
-        menuExport (QAction): Export menu action reference
-        menuExportAll (QAction): Export all menu action reference
-    
-    Methods:
-        getImageGalleryController: Access gallery controller
-        resizeEvent: Handle window resize events
-        setWindowGeometry: Configure window size and position
-        buildFileMenu: Create file operations menu
-        buildPreferences: Create HDR display preferences menu
-        buildDisplayHDR: Create HDR display menu
-        buildExport: Create export functionality menu
-        buildDockMenu: Create dock panel switching menu
-        closeEvent: Handle application shutdown
+        - controller (AppController): Parent application controller
+        - imageGalleryController (ImageGalleryController): Central gallery management
+        - dock (MultiDockController): Right panel controller
+        - topContainer (QWidget): Central widget container
+        - menuExport (QAction): Export menu action reference
+        - menuExportAll (QAction): Export all menu action reference
     """
     def __init__(self, _controller = None, shapeMode=None, HDRcontroller=None):
         """
@@ -793,16 +762,12 @@ class ImageInfoView(QSplitter):
       * User-defined workflow tags (organized by groups)
     
     Attributes:
-        controller (ImageInfoController): Parent controller reference
-        imageWidgetController (ImageWidgetController): Image preview controller
-        layout (QFormLayout): Metadata fields layout
-        imageName, imagePath, imageSize, etc.: Technical metadata widgets
-        userDefinedTags (list[AdvanceCheckBox]): Custom metadata checkboxes
-        scroll (QScrollArea): Scrollable container for metadata fields
-    
-    Methods:
-        setProcessPipe: Update display with new image and metadata
-        metadataChange: Handle user changes to custom metadata
+        - controller (ImageInfoController): Parent controller reference
+        - imageWidgetController (ImageWidgetController): Image preview controller
+        - layout (QFormLayout): Metadata fields layout
+        - imageName, imagePath, imageSize, etc.: Technical metadata widgets
+        - userDefinedTags (list[AdvanceCheckBox]): Custom metadata checkboxes
+        - scroll (QScrollArea): Scrollable container for metadata fields
     """
     def __init__(self, _controller):
         """
@@ -961,11 +926,8 @@ class AdvanceLineEdit(object):
     layout management and optional change callbacks.
     
     Attributes:
-        label (QLabel): Display label for the field
-        lineEdit (QLineEdit): Text input widget
-    
-    Methods:
-        setText: Update the displayed text value
+        - label (QLabel): Display label for the field
+        - lineEdit (QLineEdit): Text input widget
     """
     def __init__(self, labelName, defaultText, layout, callBack=None):
         """
@@ -1002,15 +964,11 @@ class AdvanceCheckBox(object):
     and automatic layout management.
     
     Attributes:
-        parent (ImageInfoView): Parent view for callback delegation
-        leftText (str): Left label text (group name)
-        rightText (str): Right label text (tag name)
-        label (QLabel): Display label widget
-        checkbox (QCheckBox): Checkbox control
-    
-    Methods:
-        setState: Set checkbox checked state
-        toggled: Handle checkbox state changes
+        - parent (ImageInfoView): Parent view for callback delegation
+        - leftText (str): Left label text (group name)
+        - rightText (str): Right label text (tag name)
+        - label (QLabel): Display label widget
+        - checkbox (QCheckBox): Checkbox control
     """
     def __init__(self, parent, leftText, rightText, defaultValue, layout):
         """
@@ -1070,27 +1028,16 @@ class EditImageView(QSplitter):
       * HDR preview controls
     
     Attributes:
-        controller (EditImageController): Parent controller reference
-        imageWidgetController (ImageWidgetController): Image preview controller
-        exposure, contrast, saturation (AdvanceSliderController): Basic adjustment controls
-        tonecurve (ToneCurveController): B-spline tone curve editor
-        lightnessmask (LightnessMaskController): Tone range masking
-        colorEditor0-4 (LchColorSelectorController): Independent color editors
-        colorEditorsAuto (ColorEditorsAutoController): Automatic color selection
-        geometry (GeometryController): Rotation and cropping controls
-        hdrPreview (HDRviewerView): HDR display preview interface
-        scroll (QScrollArea): Scrollable container for all controls
-    
-    Methods:
-        setImage: Update image preview display
-        autoExposure: Trigger automatic exposure calculation
-        changeExposure: Handle manual exposure adjustments
-        autoContrast: Trigger automatic contrast calculation
-        changeContrast: Handle manual contrast adjustments
-        autoSaturation: Trigger automatic saturation calculation
-        changeSaturation: Handle manual saturation adjustments
-        plotToneCurve: Update tone curve visualization
-        setProcessPipe: Initialize interface with ProcessPipe parameters
+        - controller (EditImageController): Parent controller reference
+        - imageWidgetController (ImageWidgetController): Image preview controller
+        - exposure, contrast, saturation (AdvanceSliderController): Basic adjustment controls
+        - tonecurve (ToneCurveController): B-spline tone curve editor
+        - lightnessmask (LightnessMaskController): Tone range masking
+        - colorEditor0-4 (LchColorSelectorController): Independent color editors
+        - colorEditorsAuto (ColorEditorsAutoController): Automatic color selection
+        - geometry (GeometryController): Rotation and cropping controls
+        - hdrPreview (HDRviewerView): HDR display preview interface
+        - scroll (QScrollArea): Scrollable container for all controls
     """
 
     def __init__(self, _controller, build=False):
@@ -1413,17 +1360,13 @@ class MultiDockView(QDockWidget):
     with matplotlib components and HDR preview capabilities.
     
     Attributes:
-        controller (MultiDockController): Parent controller for dock management
-        childControllers (list): List of three child controllers:
+        - controller (MultiDockController): Parent controller for dock management
+        - childControllers (list): List of three child controllers:
             [0] EditImageController - editing interface
             [1] ImageInfoController - metadata interface  
             [2] ImageAestheticsController - aesthetics interface
-        childController: Currently active child controller
-        active (int): Index of currently displayed panel (0, 1, or 2)
-    
-    Methods:
-        switch: Change active panel and rebuild interface
-        setProcessPipe: Update current panel with new ProcessPipe data
+        - childController: Currently active child controller
+        - active (int): Index of currently displayed panel (0, 1, or 2)
     
     Usage Example:
         # Create multi-dock with HDR support
@@ -1599,15 +1542,15 @@ class AdvanceSliderView(QFrame):
     Value input changes are handled through slider synchronization.
     
     Attributes:
-        controller: Parent controller for callback delegation
-        firstrow (QFrame): Container for top row controls
-        label (QLabel): Parameter name display
-        auto (QPushButton): Automatic parameter calculation trigger
-        editValue (QLineEdit): Direct numerical input field with validation
-        reset (QPushButton): Default value restoration button
-        slider (QSlider): Main parameter adjustment control
-        vbox (QVBoxLayout): Vertical layout manager
-        hbox (QHBoxLayout): Horizontal layout for first row
+        - controller: Parent controller for callback delegation
+        - firstrow (QFrame): Container for top row controls
+        - label (QLabel): Parameter name display
+        - auto (QPushButton): Automatic parameter calculation trigger
+        - editValue (QLineEdit): Direct numerical input field with validation
+        - reset (QPushButton): Default value restoration button
+        - slider (QSlider): Main parameter adjustment control
+        - vbox (QVBoxLayout): Vertical layout manager
+        - hbox (QHBoxLayout): Horizontal layout for first row
     
     Example Usage:
         # Exposure control with ±10 EV range and 0.25 step
@@ -1735,29 +1678,17 @@ class ToneCurveView(QFrame):
     +------------------------------------------+
     
     Attributes:
-        controller (ToneCurveController): Parent controller for curve calculations
-        curve (FigureWidget): Matplotlib figure widget for curve display
-        autoCurve (QPushButton): Semi-automatic curve generation button
-        sliderShadows, sliderBlacks, sliderMediums, sliderWhites, sliderHighlights: 
+        - controller (ToneCurveController): Parent controller for curve calculations
+        - curve (FigureWidget): Matplotlib figure widget for curve display
+        - autoCurve (QPushButton): Semi-automatic curve generation button
+        - sliderShadows, sliderBlacks, sliderMediums, sliderWhites, sliderHighlights: 
             Individual tone range control sliders (0-100 range)
-        editShadows, editBlacks, editMediums, editWhites, editHighlights:
+        - editShadows, editBlacks, editMediums, editWhites, editHighlights:
             Text input fields showing current slider values
-        resetShadows, resetBlacks, resetMediums, resetWhites, resetHighlights:
+        - resetShadows, resetBlacks, resetMediums, resetWhites, resetHighlights:
             Reset buttons for individual tone ranges
-        labelShadows, labelBlacks, labelMediums, labelWhites, labelHighlights:
+        - labelShadows, labelBlacks, labelMediums, labelWhites, labelHighlights:
             Descriptive labels for each tone range
-    
-    Methods:
-        sliderShadowsChange: Handle shadows slider value changes
-        sliderBlacksChange: Handle blacks slider value changes
-        sliderMediumsChange: Handle mediums slider value changes
-        sliderWhitesChange: Handle whites slider value changes
-        sliderHighlightsChange: Handle highlights slider value changes
-        resetShadowsCB: Reset shadows to default value
-        resetBlacksCB: Reset blacks to default value
-        resetMediumsCB: Reset mediums to default value
-        resetWhitesCB: Reset whites to default value
-        resetHighlightsCB: Reset highlights to default value
     
     Usage Example:
         The tone curve allows precise control over image tonality:
@@ -2064,21 +1995,14 @@ class LightnessMaskView(QGroupBox):
     be enabled, adjusted, and disabled without losing editing progress.
     
     Attributes:
-        controller (LightnessMaskController): Parent controller for mask logic
-        checkboxShadows (QCheckBox): Shadows range mask toggle
-        checkboxBlacks (QCheckBox): Blacks range mask toggle  
-        checkboxMediums (QCheckBox): Mediums range mask toggle
-        checkboxWhites (QCheckBox): Whites range mask toggle
-        checkboxHighlights (QCheckBox): Highlights range mask toggle
-        hbox (QHBoxLayout): Horizontal layout for checkbox arrangement
-    
-    Methods:
-        clickShadows: Handle shadows mask toggle
-        clickBlacks: Handle blacks mask toggle
-        clickMediums: Handle mediums mask toggle
-        clickWhites: Handle whites mask toggle  
-        clickHighlights: Handle highlights mask toggle
-    
+        - controller (LightnessMaskController): Parent controller for mask logic
+        - checkboxShadows (QCheckBox): Shadows range mask toggle
+        - checkboxBlacks (QCheckBox): Blacks range mask toggle  
+        - checkboxMediums (QCheckBox): Mediums range mask toggle
+        - checkboxWhites (QCheckBox): Whites range mask toggle
+        - checkboxHighlights (QCheckBox): Highlights range mask toggle
+        - hbox (QHBoxLayout): Horizontal layout for checkbox arrangement
+
     Usage Example:
         # Enable shadow and highlight masking for targeted adjustment
         mask_view.checkboxShadows.setChecked(True)
@@ -2253,22 +2177,16 @@ class HDRviewerView(QFrame):
     for complex editing operations while maintaining preview capability.
     
     Attributes:
-        controller (HDRController): Parent controller managing HDR display hardware
-        label (QLabel): "hdr preview" identifier label
-        resetButton (QPushButton): Clear HDR display control
-        updateButton (QPushButton): Manual HDR preview refresh
-        compareButton (QPushButton): Raw/edited comparison display
-        autoCheckBox (QCheckBox): Automatic update toggle
-        vbox (QVBoxLayout): Main vertical layout container
-        hboxUp, hboxDown (QHBoxLayout): Top and bottom control row layouts
-        hboxUpContainer, hboxDownContainer (QFrame): Layout containers
-    
-    Methods:
-        reset: Clear HDR display and show splash screen
-        update: Refresh HDR display with current image state
-        compare: Display side-by-side raw/edited comparison
-        auto: Toggle automatic HDR preview updates
-    
+        - controller (HDRController): Parent controller managing HDR display hardware
+        - label (QLabel): "hdr preview" identifier label
+        - resetButton (QPushButton): Clear HDR display control
+        - updateButton (QPushButton): Manual HDR preview refresh
+        - compareButton (QPushButton): Raw/edited comparison display
+        - autoCheckBox (QCheckBox): Automatic update toggle
+        - vbox (QVBoxLayout): Main vertical layout container
+        - hboxUp, hboxDown (QHBoxLayout): Top and bottom control row layouts
+        - hboxUpContainer, hboxDownContainer (QFrame): Layout containers
+
     Usage Example:
         # Enable auto-preview for real-time editing feedback
         hdr_viewer.autoCheckBox.setChecked(True)
@@ -2445,26 +2363,16 @@ class LchColorSelectorView(QFrame):
     +------------------------------------------+
     
     Attributes:
-        controller (LchColorSelectorController): Parent controller reference
-        imageHueController, imageSaturationController, imageLightnessController: Color bar displays
-        imageHueRangeController: Selected hue range visualization
-        sliderHueMin, sliderHueMax: Hue range selection sliders
-        sliderChromaMin, sliderChromaMax: Chroma range selection sliders
-        sliderLightMin, sliderLightMax: Lightness range selection sliders
-        sliderHueShift, sliderExposure, sliderContrast, sliderSaturation: Editing controls
-        valueHueShift, valueExposure, valueContrast, valueSaturation: Value displays
-        checkboxMask: Selection mask preview toggle
-        resetSelection, resetEdit: Reset buttons
-    
-    Methods:
-        sliderHueChange: Handle hue range selection changes
-        sliderChromaChange: Handle chroma range selection changes
-        sliderLightnessChange: Handle lightness range selection changes
-        sliderHueShiftChange: Handle hue shift editing changes
-        sliderExposureChange: Handle exposure editing changes
-        sliderSaturationChange: Handle saturation editing changes
-        sliderContrastChange: Handle contrast editing changes
-        checkboxMaskChange: Handle mask preview toggle
+        - controller (LchColorSelectorController): Parent controller reference
+        - imageHueController, imageSaturationController, imageLightnessController: Color bar displays
+        - imageHueRangeController: Selected hue range visualization
+        - sliderHueMin, sliderHueMax: Hue range selection sliders
+        - sliderChromaMin, sliderChromaMax: Chroma range selection sliders
+        - sliderLightMin, sliderLightMax: Lightness range selection sliders
+        - sliderHueShift, sliderExposure, sliderContrast, sliderSaturation: Editing controls
+        - valueHueShift, valueExposure, valueContrast, valueSaturation: Value displays
+        - checkboxMask: Selection mask preview toggle
+        - resetSelection, resetEdit: Reset buttons
     """
     def __init__(self, _controller, defaultValues=None):
         """
@@ -2737,15 +2645,11 @@ class GeometryView(QFrame):
     +------------------------------------------+
     
     Attributes:
-        controller (GeometryController): Parent controller reference
-        sliderCroppingVerticalAdjustement: Vertical cropping offset slider
-        valueCroppingVerticalAdjustement: Cropping adjustment value display
-        sliderRotation: Rotation angle slider
-        valueRotation: Rotation value display
-    
-    Methods:
-        sliderCroppingVerticalAdjustementChange: Handle cropping adjustment changes
-        sliderRotationChange: Handle rotation changes
+        - controller (GeometryController): Parent controller reference
+        - sliderCroppingVerticalAdjustement: Vertical cropping offset slider
+        - valueCroppingVerticalAdjustement: Cropping adjustment value display
+        - sliderRotation: Rotation angle slider
+        - valueRotation: Rotation value display
     """
     def __init__(self, _controller):
         """
@@ -2847,18 +2751,15 @@ class ImageAestheticsView(QSplitter):
     +------------------------------------------+
     
     Attributes:
-        controller (ImageAestheticsController): Parent controller reference
-        imageWidgetController (ImageWidgetController): Main image display
-        labelColorPalette: Color palette section label
-        labelNodeSelector: Process output selection label
-        nodeSelector (QComboBox): Process step selection dropdown
-        labelColorsNumber: Color count configuration label
-        nbColors (QSpinBox): Number of colors to extract (2-8)
-        paletteImageWidgetController (ImageWidgetController): Color palette display
-        scroll (QScrollArea): Scrollable container for controls
-    
-    Methods:
-        setProcessPipe: Update display with new ProcessPipe and color palette
+        - controller (ImageAestheticsController): Parent controller reference
+        - imageWidgetController (ImageWidgetController): Main image display
+        - labelColorPalette: Color palette section label
+        - labelNodeSelector: Process output selection label
+        - nodeSelector (QComboBox): Process step selection dropdown
+        - labelColorsNumber: Color count configuration label
+        - nbColors (QSpinBox): Number of colors to extract (2-8)
+        - paletteImageWidgetController (ImageWidgetController): Color palette display
+        - scroll (QScrollArea): Scrollable container for controls
     """
     def __init__(self, _controller, build=False):
         """
@@ -2954,10 +2855,7 @@ class ColorEditorsAutoView(QPushButton):
     editor configurations to the automatically generated settings.
     
     Attributes:
-        controller (ColorEditorsAutoController): Parent controller reference
-    
-    Methods:
-        Callback is automatically connected to controller.auto() method
+        - controller (ColorEditorsAutoController): Parent controller reference
     """
     def __init__(self,controller):
         """

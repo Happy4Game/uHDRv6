@@ -79,12 +79,8 @@ class ImageWidgetModel(object):
     either numpy arrays or hdrCore.image.Image objects.
     
     Attributes:
-        controller: Reference to the controlling ImageWidgetController
-        image: Image data (numpy.ndarray or hdrCore.image.Image)
-    
-    Methods:
-        setImage: Update the displayed image
-        getColorData: Get color data for rendering
+        - controller: Reference to the controlling ImageWidgetController
+        - image: Image data (numpy.ndarray or hdrCore.image.Image)
     """
 
     def __init__(self, controller):
@@ -129,21 +125,11 @@ class ImageGalleryModel:
     associated ProcessPipe for HDR editing operations.
     
     Attributes:
-        controller (ImageGalleryController): Parent controller reference
-        imageFilenames (list[str]): List of image file paths
-        processPipes (list[ProcessPipe]): HDR processing pipelines for each image
-        _selectedImage (int): Index of currently selected image (-1 if none)
-        aestheticsModels (list): Aesthetic analysis models for images
-    
-    Methods:
-        setSelectedImage: Set the currently selected image index
-        selectedImage: Get the currently selected image index
-        getSelectedProcessPipe: Get the ProcessPipe for selected image
-        setImages: Load a new set of images into the gallery
-        loadPage: Load and process images for a specific page
-        save: Save all ProcessPipe metadata to image files
-        getFilenamesOfCurrentPage: Get filenames for current page
-        getProcessPipeById: Get ProcessPipe by index
+        - controller (ImageGalleryController): Parent controller reference
+        - imageFilenames (list[str]): List of image file paths
+        - processPipes (list[ProcessPipe]): HDR processing pipelines for each image
+        - _selectedImage (int): Index of currently selected image (-1 if none)
+        - aestheticsModels (list): Aesthetic analysis models for images
     """
 
     def __init__(self, _controller):
@@ -288,14 +274,11 @@ class AppModel(object):
     image file lists, and HDR display configuration.
     
     Attributes:
-        controller: Reference to parent AppController
-        directory (str): Current working directory path
-        imageFilenames (list[str]): List of image files in directory
-        displayHDRProcess: HDR display process reference
-        displayModel (dict): HDR display configuration with scaling and shape
-    
-    Methods:
-        setDirectory: Change working directory and scan for images
+        - controller: Reference to parent AppController
+        - directory (str): Current working directory path
+        - imageFilenames (list[str]): List of image files in directory
+        - displayHDRProcess: HDR display process reference
+        - displayModel (dict): HDR display configuration with scaling and shape
     """
 
     def __init__(self, controller):
@@ -351,25 +334,10 @@ class EditImageModel(object):
     - Geometric transformations (rotation, cropping)
     
     Attributes:
-        controller: Reference to EditImageController
-        autoPreviewHDR (bool): Enable automatic HDR preview updates
-        processpipe (ProcessPipe): Current HDR processing pipeline
-        requestCompute (RequestCompute): Threading coordinator for real-time updates
-    
-    Methods:
-        getProcessPipe: Get current processing pipeline
-        setProcessPipe: Set new processing pipeline
-        buildProcessPipe: Create default processing pipeline [Static]
-        autoExposure: Automatically adjust exposure
-        changeExposure: Manual exposure adjustment
-        getEV: Get current exposure value
-        changeContrast: Adjust contrast parameters
-        changeToneCurve: Update tone curve control points
-        changeLightnessMask: Modify lightness masking
-        changeSaturation: Adjust global saturation
-        changeColorEditor: Update color editor parameters
-        changeGeometry: Modify geometric transformations
-        updateImage: Update view with processed image
+        - controller: Reference to EditImageController
+        - autoPreviewHDR (bool): Enable automatic HDR preview updates
+        - processpipe (ProcessPipe): Current HDR processing pipeline
+        - requestCompute (RequestCompute): Threading coordinator for real-time updates
     """
     def __init__(self,controller):
         """
@@ -654,12 +622,8 @@ class AdvanceSliderModel():
     auto adjustment and value persistence.
     
     Attributes:
-        controller: Reference to parent controller
-        value (float): Current slider value
-    
-    Methods:
-        setValue: Update slider value
-        toDict: Export state as dictionary
+        - controller: Reference to parent controller
+        - value (float): Current slider value
     """
     def __init__(self, controller, value):
         """
@@ -728,15 +692,10 @@ class ToneCurveModel():
   zeros ^ shadows  black   medium  white  highlights                          200
 
     Attributes:
-        control (dict): Current control point positions
-        default (dict): Default control point positions for reset
-        curve (BSpline.Curve): B-spline curve object
-        points (numpy.ndarray): Evaluated curve points
-    
-    Methods:
-        evaluate: Compute B-spline curve from control points
-        setValue: Update control point with constraints and auto-scaling
-        setValues: Set all control points from dictionary
+        - control (dict): Current control point positions
+        - default (dict): Default control point positions for reset
+        - curve (BSpline.Curve): B-spline curve object
+        - points (numpy.ndarray): Evaluated curve points
     """
     def __init__(self):
         """
@@ -860,12 +819,8 @@ class LightnessMaskModel():
     - highlights: Brightest areas
     
     Attributes:
-        controller: Reference to parent controller
-        masks (dict): Boolean mask state for each tone range
-    
-    Methods:
-        maskChange: Toggle mask for specific tone range
-        setValues: Set all mask values from dictionary
+        - controller: Reference to parent controller
+        - masks (dict): Boolean mask state for each tone range
     """
     def __init__(self, _controller):
         """
@@ -912,13 +867,8 @@ class ImageInfoModel(object):
     fields for workflow management.
     
     Attributes:
-        controller: Reference to parent controller
-        processPipe (ProcessPipe): Current image processing pipeline
-    
-    Methods:
-        getProcessPipe: Get current processing pipeline
-        setProcessPipe: Set new processing pipeline
-        changeMeta: Update metadata field value
+        - controller: Reference to parent controller
+        - processPipe (ProcessPipe): Current image processing pipeline
     """
 
     def __init__(self,controller):
@@ -1002,13 +952,9 @@ class HDRviewerModel(object):
     and current image reference for HDR preview.
     
     Attributes:
-        controller: Reference to parent HDRviewerController
-        currentIMG: Currently displayed HDR image
-        displayModel (dict): HDR display configuration with scaling and shape
-    
-    Methods:
-        scaling: Get current display scaling factor
-        shape: Get current display dimensions
+        - controller: Reference to parent HDRviewerController
+        - currentIMG: Currently displayed HDR image
+        - displayModel (dict): HDR display configuration with scaling and shape
     """
     def __init__(self,_controller):
         """
@@ -1062,28 +1008,16 @@ class LchColorSelectorModel(object):
     - Hue: 0-360 (color angle)
     
     Attributes:
-        controller: Reference to parent controller
-        lightnessSelection (tuple): (min, max) lightness range
-        chromaSelection (tuple): (min, max) chroma range
-        hueSelection (tuple): (min, max) hue range
-        exposure (float): Exposure adjustment for selected colors
-        hueShift (float): Hue shift for selected colors
-        contrast (float): Contrast adjustment for selected colors
-        saturation (float): Saturation adjustment for selected colors
-        mask (bool): Display selection mask
-        default (dict): Default values for reset
-    
-    Methods:
-        setHueSelection: Set hue range selection
-        setChromaSelection: Set chroma range selection  
-        setLightnessSelection: Set lightness range selection
-        setExposure: Set exposure adjustment
-        setHueShift: Set hue shift amount
-        setContrast: Set contrast adjustment
-        setSaturation: Set saturation adjustment
-        setMask: Toggle mask display
-        getValues: Get complete configuration
-        setValues: Set configuration from dictionary
+        - controller: Reference to parent controller
+        - lightnessSelection (tuple): (min, max) lightness range
+        - chromaSelection (tuple): (min, max) chroma range
+        - hueSelection (tuple): (min, max) hue range
+        - exposure (float): Exposure adjustment for selected colors
+        - hueShift (float): Hue shift for selected colors
+        - contrast (float): Contrast adjustment for selected colors
+        - saturation (float): Saturation adjustment for selected colors
+        - mask (bool): Display selection mask
+        - default (dict): Default values for reset
     """
     def __init__(self, _controller):
         """
@@ -1261,16 +1195,10 @@ class GeometryModel(object):
     including aspect ratio cropping and rotation adjustments.
     
     Attributes:
-        controller: Reference to parent controller
-        ratio (tuple): Aspect ratio for cropping (width, height)
-        up (float): Vertical cropping adjustment
-        rotation (float): Rotation angle in degrees
-    
-    Methods:
-        setCroppingVerticalAdjustement: Set vertical cropping offset
-        setRotation: Set rotation angle
-        getValues: Get complete geometry configuration
-        setValues: Set configuration from dictionary
+        - controller: Reference to parent controller
+        - ratio (tuple): Aspect ratio for cropping (width, height)
+        - up (float): Vertical cropping adjustment
+        - rotation (float): Rotation angle in degrees
     """
     def __init__(self, _controller):
         """
@@ -1342,16 +1270,10 @@ class ImageAestheticsModel:
     for dominant color extraction and provides visual representations.
     
     Attributes:
-        parent (ImageAestheticsController): Parent controller reference
-        requireUpdate (bool): Flag indicating analysis needs refresh
-        processPipe (ProcessPipe): Current image processing pipeline
-        colorPalette (Palette): Extracted color palette from image
-    
-    Methods:
-        getProcessPipe: Get current processing pipeline
-        setProcessPipe: Set new pipeline and trigger analysis
-        endComputing: Mark analysis as complete
-        getPaletteImage: Get visual representation of color palette
+        - parent (ImageAestheticsController): Parent controller reference
+        - requireUpdate (bool): Flag indicating analysis needs refresh
+        - processPipe (ProcessPipe): Current image processing pipeline
+        - colorPalette (Palette): Extracted color palette from image
     """
     def __init__(self, parent):
         """
@@ -1442,13 +1364,10 @@ class ColorEditorsAutoModel:
     color correction. Uses K-means clustering in Lab color space.
     
     Attributes:
-        controller: Reference to parent controller
-        processStepId (str): Name of processing step to analyze
-        nbColors (int): Number of dominant colors to extract
-        removeBlack (bool): Whether to exclude dark/black regions from analysis
-    
-    Methods:
-        compute: Perform K-means analysis and generate color editor configurations
+        - controller: Reference to parent controller
+        - processStepId (str): Name of processing step to analyze
+        - nbColors (int): Number of dominant colors to extract
+        - removeBlack (bool): Whether to exclude dark/black regions from analysis
     """
     def __init__(self,_controller, processStepName,nbColors, removeBlack= True):
         """

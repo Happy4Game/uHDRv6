@@ -247,19 +247,10 @@ class AppView(QMainWindow):
     system and docking functionality for use case selection interface.
     
     Attributes:
-        controller: Reference to AppViewController
-        screenSize: Display configuration from controller
-        imageGalleryController: Gallery controller for image management
-        dock: Multi-dock controller for use case interface
-    
-    Methods:
-        resizeEvent: Handle Qt resize events
-        setWindowGeometry: Configure window size and position
-        buildFileMenu: Create file menu with directory selection
-        buildInfoMenu: Create help/debug menu
-        buildDisplayHDR: Create HDR display menu
-        buildDockMenu: Create dock management menu
-        closeEvent: Handle application shutdown
+        - controller: Reference to AppViewController
+        - screenSize: Display configuration from controller
+        - imageGalleryController: Gallery controller for image management
+        - dock: Multi-dock controller for use case interface
     """
     def __init__(self, appViewController = None, shapeMode=None):
         """
@@ -400,13 +391,10 @@ class ImageInfoView(QSplitter):
     to help users make informed use case decisions.
     
     Attributes:
-        controller: Reference to ImageInfoController
-        imageWidgetController: Image display controller
-        layout (QFormLayout): Form layout for metadata fields
-        imageName, imagePath, imageSize, etc.: Metadata display widgets
-    
-    Methods:
-        setImage: Update display with new image and metadata
+        - controller: Reference to ImageInfoController
+        - imageWidgetController: Image display controller
+        - layout (QFormLayout): Form layout for metadata fields
+        - imageName, imagePath, imageSize, etc.: Metadata display widgets
     """
     def __init__(self, _controller):
         """
@@ -514,11 +502,8 @@ class AdvanceLineEdit(object):
     image metadata in the use case classification interface.
     
     Attributes:
-        label (QLabel): Display label for the field
-        lineEdit (QLineEdit): Text input widget
-    
-    Methods:
-        setText: Update the displayed text value
+        - label (QLabel): Display label for the field
+        - lineEdit (QLineEdit): Text input widget
     """
     def __init__(self, labelName, defaultText, layout, callBack=None):
         """
@@ -553,19 +538,11 @@ class EditImageView(QSplitter):
     quick image assessment during classification.
     
     Attributes:
-        controller: Reference to EditImageController
-        imageWidgetController: Image display controller
-        layout (QVBoxLayout): Vertical layout for controls
-        exposure: Exposure adjustment controller
-        contrast: Contrast adjustment controller
-    
-    Methods:
-        setImage: Update display with new image
-        autoExposure: Apply automatic exposure adjustment
-        changeExposure: Handle manual exposure changes
-        autoContrast: Apply automatic contrast adjustment  
-        changeContrast: Handle manual contrast changes
-        setProcessPipe: Initialize controls with ProcessPipe parameters
+        - controller: Reference to EditImageController
+        - imageWidgetController: Image display controller
+        - layout (QVBoxLayout): Vertical layout for controls
+        - exposure: Exposure adjustment controller
+        - contrast: Contrast adjustment controller
     """
     def __init__(self, _controller):
         """
@@ -694,14 +671,10 @@ class MultiDockView(QDockWidget):
     for image editing and information display during use case classification.
     
     Attributes:
-        controller: Reference to MultiDockController
-        childControllers (list): List of available child controllers
-        childController: Currently active child controller
-        active (int): Index of currently active controller
-    
-    Methods:
-        switch: Toggle between available child controllers
-        setProcessPipe: Update current controller with new ProcessPipe
+        - controller: Reference to MultiDockController
+        - childControllers (list): List of available child controllers
+        - childController: Currently active child controller
+        - active (int): Index of currently active controller
     """
     def __init__(self, _controller):
         """
@@ -760,18 +733,15 @@ class AdvanceSliderView(QFrame):
     parameter adjustment.
     
     Attributes:
-        controller: Reference to AdvanceSliderController
-        firstrow (QFrame): Top row container for controls
-        vbox (QVBoxLayout): Vertical layout container
-        hbox (QHBoxLayout): Horizontal layout for top row
-        label (QLabel): Parameter name label
-        auto (QPushButton): Automatic adjustment button
-        editValue (QLineEdit): Manual value entry field
-        reset (QPushButton): Reset to default button
-        slider (QSlider): Main slider control
-    
-    Methods:
-        Callback methods connected to Qt signals (handled by controller)
+        - controller: Reference to AdvanceSliderController
+        - firstrow (QFrame): Top row container for controls
+        - vbox (QVBoxLayout): Vertical layout container
+        - hbox (QHBoxLayout): Horizontal layout for top row
+        - label (QLabel): Parameter name label
+        - auto (QPushButton): Automatic adjustment button
+        - editValue (QLineEdit): Manual value entry field
+        - reset (QPushButton): Reset to default button
+        - slider (QSlider): Main slider control
     """
     def __init__(self, controller, name,defaultValue, range, step):
         """
@@ -836,14 +806,11 @@ class ImageUseCaseView(QSplitter):
     - Special (S): Special cases and technical challenges
     
     Attributes:
-        controller: Reference to ImageUseCaseController
-        imageWidgetController: Image display controller
-        layout (QFormLayout): Form layout for use case radio buttons
-        useCase01-18: Radio button controllers for each use case
-        scroll (QScrollArea): Scrollable container for use cases
-    
-    Methods:
-        setImage: Update display with new image for classification
+        - controller: Reference to ImageUseCaseController
+        - imageWidgetController: Image display controller
+        - layout (QFormLayout): Form layout for use case radio buttons
+        - useCase01-18: Radio button controllers for each use case
+        - scroll (QScrollArea): Scrollable container for use cases
     """
     def __init__(self, _controller):
         """
@@ -944,11 +911,8 @@ class AdvanceRadioButton(object):
     with optional callback functionality for selection handling.
     
     Attributes:
-        label (QLabel): Display label for the use case
-        radioButton (QRadioButton): Radio button control
-    
-    Methods:
-        setState: Set radio button checked state
+        - label (QLabel): Display label for the use case
+        - radioButton (QRadioButton): Radio button control
     """
     ### https://www.tutorialspoint.com/pyqt/pyqt_qradiobutton_widget.htm
     def __init__(self, labelName, defaultState, layout, callBack=None):

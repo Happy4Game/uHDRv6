@@ -76,17 +76,12 @@ class RequestCompute(object):
     - Parent callback for result delivery
     
     Attributes:
-        parent (EditImageModel): Parent model for result callbacks
-        requestDict (dict): Stores pending parameter updates {processNodeId: params}
-        pool (QThreadPool): Qt thread pool for worker management
-        processpipe (ProcessPipe): Active processing pipeline reference
-        readyToRun (bool): Processing availability flag
-        waitingUpdate (bool): Pending update flag during processing
-    
-    Methods:
-        setProcessPipe: Set active processing pipeline
-        requestCompute: Queue parameter update and trigger processing
-        endCompute: Handle processing completion and manage restart
+        - parent (EditImageModel): Parent model for result callbacks
+        - requestDict (dict): Stores pending parameter updates {processNodeId: params}
+        - pool (QThreadPool): Qt thread pool for worker management
+        - processpipe (ProcessPipe): Active processing pipeline reference
+        - readyToRun (bool): Processing availability flag
+        - waitingUpdate (bool): Pending update flag during processing
     """
 
     def __init__(self, parent):
@@ -161,10 +156,7 @@ class RunCompute(QRunnable):
     processing completion callbacks.
     
     Attributes:
-        parent (RequestCompute): Parent coordinator for completion callback
-    
-    Methods:
-        run: Main thread execution method with processing logic
+        - parent (RequestCompute): Parent coordinator for completion callback
     """
     def __init__(self,parent):
         """
@@ -211,13 +203,9 @@ class RequestLoadImage(object):
     callbacks and error recovery with automatic retry mechanisms.
     
     Attributes:
-        parent (ImageGalleryModel): Parent model for image registration
-        pool (QThreadPool): Qt thread pool for worker management
-        requestsDone (dict): Load completion tracking {imageIndex: completed}
-    
-    Methods:
-        requestLoad: Start loading for specific image
-        endLoadImage: Handle load completion or retry on failure
+        - parent (ImageGalleryModel): Parent model for image registration
+        - pool (QThreadPool): Qt thread pool for worker management
+        - requestsDone (dict): Load completion tracking {imageIndex: completed}
     """
 
     def __init__(self, parent):
@@ -276,13 +264,10 @@ class RunLoadImage(QRunnable):
     loading errors gracefully with error reporting.
     
     Attributes:
-        parent (RequestLoadImage): Parent coordinator for completion callback
-        minIdxInPage (int): First image index in current page
-        imgIdxInPage (int): Relative image index within page
-        filename (str): Image file path to load
-    
-    Methods:
-        run: Main thread execution with image loading and error handling
+        - parent (RequestLoadImage): Parent coordinator for completion callback
+        - minIdxInPage (int): First image index in current page
+        - imgIdxInPage (int): Relative image index within page
+        - filename (str): Image file path to load
     """
     def __init__(self,parent, minIdxInPage, imgIdxInPage, filename):
         """
@@ -337,15 +322,12 @@ class pCompute(object):
     6. Callback with final processed image
     
     Attributes:
-        callBack (function): Completion callback function
-        progress (function): Progress update callback function
-        nbSplits (int): Total number of image splits to process
-        nbDone (int): Number of completed split processing operations
-        geometryNode (ProcessNode): Geometry processing node for final step
-        meta (metadata): Image metadata for preservation
-    
-    Methods:
-        endCompute: Handle split completion and final merge
+        - callBack (function): Completion callback function
+        - progress (function): Progress update callback function
+        - nbSplits (int): Total number of image splits to process
+        - nbDone (int): Number of completed split processing operations
+        - geometryNode (ProcessNode): Geometry processing node for final step
+        - meta (metadata): Image metadata for preservation
     """
 
     def __init__(self, callBack, processpipe,nbWidth,nbHeight, toneMap=True, progress=None, meta=None):
@@ -427,13 +409,10 @@ class pRun(QRunnable):
     parent pCompute coordinator.
     
     Attributes:
-        parent (pCompute): Parent coordinator for completion callback
-        processpipe (ProcessPipe): Processing pipeline to apply to split
-        idx (tuple): (x, y) coordinates of split in grid
-        toneMap (bool): Apply tone mapping to result
-    
-    Methods:
-        run: Main thread execution for split processing
+        - parent (pCompute): Parent coordinator for completion callback
+        - processpipe (ProcessPipe): Processing pipeline to apply to split
+        - idx (tuple): (x, y) coordinates of split in grid
+        - toneMap (bool): Apply tone mapping to result
     """
     def __init__(self,parent,processpipe,toneMap, idxX,idxY):
         """
@@ -477,12 +456,9 @@ class cCompute(object):
     Uses single-threaded execution with optimized C++ implementation.
     
     Attributes:
-        callBack (function): Completion callback function
-        progress (function): Progress update callback function
-        pool (QThreadPool): Qt thread pool for worker management
-    
-    Methods:
-        endCompute: Handle processing completion
+        - callBack (function): Completion callback function
+        - progress (function): Progress update callback function
+        - pool (QThreadPool): Qt thread pool for worker management
     """
 
     def __init__(self, callBack, processpipe, toneMap=True, progress=None):
@@ -524,12 +500,9 @@ class cRun(QRunnable):
     delivery to parent coordinator.
     
     Attributes:
-        parent (cCompute): Parent coordinator for completion callback
-        processpipe (ProcessPipe): Processing pipeline to execute
-        toneMap (bool): Apply tone mapping to result
-    
-    Methods:
-        run: Main thread execution with C++ acceleration
+        - parent (cCompute): Parent coordinator for completion callback
+        - processpipe (ProcessPipe): Processing pipeline to execute
+        - toneMap (bool): Apply tone mapping to result
     """
     def __init__(self,parent,processpipe,toneMap):
         """
@@ -578,17 +551,12 @@ class RequestAestheticsCompute(object):
     that may have different performance characteristics and requirements.
     
     Attributes:
-        parent: Parent model for result callbacks  
-        requestDict (dict): Stores pending parameter updates
-        pool (QThreadPool): Qt thread pool for worker management
-        processpipe (ProcessPipe): Active processing pipeline reference
-        readyToRun (bool): Processing availability flag
-        waitingUpdate (bool): Pending update flag during processing
-    
-    Methods:
-        setProcessPipe: Set active processing pipeline
-        requestCompute: Queue parameter update and trigger processing  
-        endCompute: Handle processing completion and manage restart
+        - parent: Parent model for result callbacks  
+        - requestDict (dict): Stores pending parameter updates
+        - pool (QThreadPool): Qt thread pool for worker management
+        - processpipe (ProcessPipe): Active processing pipeline reference
+        - readyToRun (bool): Processing availability flag
+        - waitingUpdate (bool): Pending update flag during processing
     """
 
     def __init__(self, parent):
@@ -659,10 +627,7 @@ class RunAestheticsCompute(QRunnable):
     Uses Python-based processing for flexibility in analysis algorithms.
     
     Attributes:
-        parent (RequestAestheticsCompute): Parent coordinator for completion callback
-    
-    Methods:
-        run: Main thread execution for aesthetics processing
+        - parent (RequestAestheticsCompute): Parent coordinator for completion callback
     """
     def __init__(self,parent):
         """

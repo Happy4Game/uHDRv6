@@ -51,15 +51,15 @@ class quality(object):
     common HDR processing artifacts.
     
     Attributes:
-        _image (hdrCore.image.Image): Reference to the assessed image
-        imageNpath (dict): Image identification containing name and path
-        user (dict): User information for the assessment
-        score (dict): Quality scores across multiple dimensions:
+        - _image (hdrCore.image.Image): Reference to the assessed image
+        - imageNpath (dict): Image identification containing name and path
+        - user (dict): User information for the assessment
+        - score (dict): Quality scores across multiple dimensions:
             - quality: Overall quality score
             - aesthetics: Aesthetic appeal score  
             - comfort: Visual comfort score
             - naturalness: Naturalness/realism score
-        artifact (dict): Boolean flags for detected artifacts:
+        - artifact (dict): Boolean flags for detected artifacts:
             - ghost: Ghosting artifacts
             - noise: Noise artifacts
             - blur: Blur artifacts
