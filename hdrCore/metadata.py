@@ -94,15 +94,15 @@ class metadata:
     information. Metadata can be persisted to JSON files alongside images.
     
     Attributes:
-        metadata (dict): Complete metadata dictionary containing:
-            - filename: Image filename
-            - path: File path
-            - description: User description
-            - exif: EXIF data including camera settings and technical info
-            - processpipe: Processing pipeline information
-            - display: Display settings
-        image (hdrCore.image.Image): Reference to the associated image object
-        otherTags (tags): Tag management system instance
+        - metadata (dict): Complete metadata dictionary containing:
+            * filename: Image filename
+            * path: File path
+            * description: User description
+            * exif: EXIF data including camera settings and technical info
+            * processpipe: Processing pipeline information
+            * display: Display settings
+        - image (hdrCore.image.Image): Reference to the associated image object
+        - otherTags (tags): Tag management system instance
         
     Class Attributes:
         defaultColorSpaceName (str): Default color space name when undefined ('sRGB')

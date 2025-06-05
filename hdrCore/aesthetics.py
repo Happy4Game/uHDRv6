@@ -91,20 +91,12 @@ class Palette(ImageAestheticsModel):
     specified color space, providing a consistent ordering for analysis and display.
     
     Attributes:
-        name (str): Descriptive name for the palette
-        colorSpace (colour.models.RGB_COLOURSPACES): Color space of the palette
-        nbColors (int): Number of colors in the palette
-        colors (numpy.ndarray): Array of color values with shape (nbColors, 3),
+        - name (str): Descriptive name for the palette
+        - colorSpace (colour.models.RGB_COLOURSPACES): Color space of the palette
+        - nbColors (int): Number of colors in the palette
+        - colors (numpy.ndarray): Array of color values with shape (nbColors, 3),
                                sorted by distance from black
-        type (hdrCore.image.imageType): Type of the source image (SDR/HDR)
-        
-    Methods:
-        createImageOfPalette: Generate a visual representation of the palette
-        __repr__: String representation of the palette
-        __str__: Human-readable string representation
-        
-    Static Methods:
-        build: Extract color palette from a processing pipeline
+        - type (hdrCore.image.imageType): Type of the source image (SDR/HDR)
     """    
     
     # constructor
@@ -278,14 +270,9 @@ class MultidimensionalImageAestheticsModel():
     and tracking changes in the processing pipeline that might affect the analysis.
     
     Attributes:
-        processpipe (hdrCore.processing.ProcessPipe): Associated processing pipeline
-        processPipeChanged (bool): Flag indicating if pipeline has been modified
-        imageAestheticsModels (dict): Collection of aesthetic models indexed by key
-        
-    Methods:
-        add: Add a new aesthetic model to the collection
-        get: Retrieve a specific aesthetic model by key
-        build: Create and add a new model using a builder function
+        - processpipe (hdrCore.processing.ProcessPipe): Associated processing pipeline
+        - processPipeChanged (bool): Flag indicating if pipeline has been modified
+        - imageAestheticsModels (dict): Collection of aesthetic models indexed by key
     """
     
     def __init__(self, processpipe):

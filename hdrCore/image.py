@@ -29,11 +29,11 @@ conversion and channel management. It integrates with various image formats and 
 systems for complete HDR imaging workflows.
 
 Classes:
-    imageType: Enumeration for different image types (SDR, ARW, HDR)
-    channel: Channel identification and color space management
-    Image: Core image data structure with processing capabilities
-    ColorSpace: Color space definitions and transformations
-    Histogram: Image histogram computation and analysis
+    - imageType: Enumeration for different image types (SDR, ARW, HDR)
+    - channel: Channel identification and color space management
+    - Image: Core image data structure with processing capabilities
+    - ColorSpace: Color space definitions and transformations
+    - Histogram: Image histogram computation and analysis
 
 Key Features:
     - Multi-format image loading (HDR, RAW, JPEG)
@@ -65,9 +65,9 @@ class imageType(enum.Enum):
     within the HDR imaging pipeline, each with specific handling requirements.
     
     Attributes:
-        SDR (int): Standard Dynamic Range images (.jpg, .png)
-        ARW (int): Sony RAW image files (.arw)
-        HDR (int): High Dynamic Range images (.hdr, .exr)
+        - SDR (int): Standard Dynamic Range images (.jpg, .png)
+        - ARW (int): Sony RAW image files (.arw)
+        - HDR (int): High Dynamic Range images (.hdr, .exr)
     """
 
     SDR = 0 # SDR image:                (.jpg)
@@ -86,12 +86,12 @@ class channel(enum.Enum):
     access and full color space operations.
     
     Attributes:
-        sR, sG, sB (int): Individual sRGB color channels (0, 1, 2)
-        sRGB (int): Full sRGB color space identifier (3)
-        X, Y, Z (int): Individual XYZ color channels (4, 5, 6)
-        XYZ (int): Full XYZ color space identifier (7)
-        L, a, b (int): Individual Lab color channels (8, 9, 10)
-        Lab (int): Full Lab color space identifier (11)
+        - sR, sG, sB (int): Individual sRGB color channels (0, 1, 2)
+        - sRGB (int): Full sRGB color space identifier (3)
+        - X, Y, Z (int): Individual XYZ color channels (4, 5, 6)
+        - XYZ (int): Full XYZ color space identifier (7)
+        - L, a, b (int): Individual Lab color channels (8, 9, 10)
+        - Lab (int): Full Lab color space identifier (11)
     """
     
     sR      = 0
@@ -173,31 +173,16 @@ class Image(object):
     image manipulation, analysis, and processing pipeline integration.
     
     Attributes:
-        path (str): Directory path to the image file
-        name (str): Image filename with extension
-        colorData (numpy.ndarray): Image pixel data as 3D array (height, width, channels)
-        shape (tuple): Image dimensions (height, width, channels)
-        type (imageType): Image type classification (SDR, ARW, HDR)
-        linear (bool): Whether image data is in linear color space
-        colorSpace (colour.models.RGB_COLOURSPACES): Current color space definition
-        scalingFactor (float): Scaling factor for normalizing to [0,1] range
-        metadata (hdrCore.metadata.metadata): Associated metadata object
-        histogram (Histogram): Image histogram data
-    
-    Methods:
-        isHDR: Check if image is HDR type
-        process: Apply processing operations
-        write: Save image and metadata to disk
-        getChannel: Extract specific color channel
-        getDynamicRange: Calculate image dynamic range
-        buildHistogram: Generate image histogram
-        plot: Display image with optional tone mapping
-        split: Divide image into sub-images
-        
-    Static Methods:
-        read: Load image from file with format detection
-        merge: Combine sub-images into single image
-        buildLchColorData: Generate synthetic LCH color data
+        - path (str): Directory path to the image file
+        - name (str): Image filename with extension
+        - colorData (numpy.ndarray): Image pixel data as 3D array (height, width, channels)
+        - shape (tuple): Image dimensions (height, width, channels)
+        - type (imageType): Image type classification (SDR, ARW, HDR)
+        - linear (bool): Whether image data is in linear color space
+        - colorSpace (colour.models.RGB_COLOURSPACES): Current color space definition
+        - scalingFactor (float): Scaling factor for normalizing to [0,1] range
+        - metadata (hdrCore.metadata.metadata): Associated metadata object
+        - histogram (Histogram): Image histogram data
     """
 
     def __init__(self, path, name, colorData, type, linear, colorspace, scalingFactor=1.0):
@@ -721,14 +706,6 @@ class ColorSpace(object):
     This class provides static methods for creating and managing various color
     spaces used in HDR image processing. It serves as a centralized interface
     for color space creation and configuration.
-    
-    Static Methods:
-        Lab: Create Lab color space definition
-        Lch: Create LCH color space definition  
-        sRGB: Create standard sRGB color space
-        scRGB: Create extended sRGB color space for HDR
-        XYZ: Create XYZ color space definition
-        build: Factory method for creating color spaces by name
     """
 
     @staticmethod

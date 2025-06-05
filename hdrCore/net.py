@@ -47,12 +47,12 @@ class Net(nn.Module):
     for stable training.
     
     Attributes:
-        layer (nn.Sequential): Sequential layer containing linear transformation,
+        - layer (nn.Sequential): Sequential layer containing linear transformation,
                               batch normalization, and sigmoid activation
     
     Args:
-        n_feature (int): Number of input features
-        n_output (int): Number of output neurons (currently not used in implementation)
+        - n_feature (int): Number of input features
+        - n_output (int): Number of output neurons (currently not used in implementation)
         
     Note:
         The current implementation uses a fixed architecture with 5 hidden units

@@ -55,16 +55,16 @@ class quality(object):
         - imageNpath (dict): Image identification containing name and path
         - user (dict): User information for the assessment
         - score (dict): Quality scores across multiple dimensions:
-            - quality: Overall quality score
-            - aesthetics: Aesthetic appeal score  
-            - comfort: Visual comfort score
-            - naturalness: Naturalness/realism score
+            * quality: Overall quality score
+            * aesthetics: Aesthetic appeal score  
+            * comfort: Visual comfort score
+            * naturalness: Naturalness/realism score
         - artifact (dict): Boolean flags for detected artifacts:
-            - ghost: Ghosting artifacts
-            - noise: Noise artifacts
-            - blur: Blur artifacts
-            - halo: Halo artifacts
-            - other: Other unspecified artifacts
+            * ghost: Ghosting artifacts
+            * noise: Noise artifacts
+            * blur: Blur artifacts
+            * halo: Halo artifacts
+            * other: Other unspecified artifacts
     """
     
     def __init__(self):
