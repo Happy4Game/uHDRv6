@@ -124,12 +124,12 @@ implementations optimized for HDR imaging applications.</p>
 </span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="sd">    for stable training.</span>
 </span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="sd">    </span>
 </span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="sd">    Attributes:</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="sd">        layer (nn.Sequential): Sequential layer containing linear transformation,</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="sd">        - layer (nn.Sequential): Sequential layer containing linear transformation,</span>
 </span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="sd">                              batch normalization, and sigmoid activation</span>
 </span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="sd">    </span>
 </span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="sd">    Args:</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="sd">        n_feature (int): Number of input features</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="sd">        n_output (int): Number of output neurons (currently not used in implementation)</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="sd">        - n_feature (int): Number of input features</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="sd">        - n_output (int): Number of output neurons (currently not used in implementation)</span>
 </span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="sd">        </span>
 </span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a><span class="sd">    Note:</span>
 </span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="sd">        The current implementation uses a fixed architecture with 5 hidden units</span>
@@ -194,12 +194,12 @@ implementations optimized for HDR imaging applications.</p>
 </span><span id="Net-48"><a href="#Net-48"><span class="linenos">48</span></a><span class="sd">    for stable training.</span>
 </span><span id="Net-49"><a href="#Net-49"><span class="linenos">49</span></a><span class="sd">    </span>
 </span><span id="Net-50"><a href="#Net-50"><span class="linenos">50</span></a><span class="sd">    Attributes:</span>
-</span><span id="Net-51"><a href="#Net-51"><span class="linenos">51</span></a><span class="sd">        layer (nn.Sequential): Sequential layer containing linear transformation,</span>
+</span><span id="Net-51"><a href="#Net-51"><span class="linenos">51</span></a><span class="sd">        - layer (nn.Sequential): Sequential layer containing linear transformation,</span>
 </span><span id="Net-52"><a href="#Net-52"><span class="linenos">52</span></a><span class="sd">                              batch normalization, and sigmoid activation</span>
 </span><span id="Net-53"><a href="#Net-53"><span class="linenos">53</span></a><span class="sd">    </span>
 </span><span id="Net-54"><a href="#Net-54"><span class="linenos">54</span></a><span class="sd">    Args:</span>
-</span><span id="Net-55"><a href="#Net-55"><span class="linenos">55</span></a><span class="sd">        n_feature (int): Number of input features</span>
-</span><span id="Net-56"><a href="#Net-56"><span class="linenos">56</span></a><span class="sd">        n_output (int): Number of output neurons (currently not used in implementation)</span>
+</span><span id="Net-55"><a href="#Net-55"><span class="linenos">55</span></a><span class="sd">        - n_feature (int): Number of input features</span>
+</span><span id="Net-56"><a href="#Net-56"><span class="linenos">56</span></a><span class="sd">        - n_output (int): Number of output neurons (currently not used in implementation)</span>
 </span><span id="Net-57"><a href="#Net-57"><span class="linenos">57</span></a><span class="sd">        </span>
 </span><span id="Net-58"><a href="#Net-58"><span class="linenos">58</span></a><span class="sd">    Note:</span>
 </span><span id="Net-59"><a href="#Net-59"><span class="linenos">59</span></a><span class="sd">        The current implementation uses a fixed architecture with 5 hidden units</span>
@@ -249,12 +249,12 @@ workflows. The network includes a single hidden layer with batch normalization
 for stable training.</p>
 
 <p>Attributes:
-    layer (nn.Sequential): Sequential layer containing linear transformation,
+    - layer (nn.Sequential): Sequential layer containing linear transformation,
                           batch normalization, and sigmoid activation</p>
 
 <p>Args:
-    n_feature (int): Number of input features
-    n_output (int): Number of output neurons (currently not used in implementation)</p>
+    - n_feature (int): Number of input features
+    - n_output (int): Number of output neurons (currently not used in implementation)</p>
 
 <p>Note:
     The current implementation uses a fixed architecture with 5 hidden units
