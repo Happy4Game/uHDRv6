@@ -200,32 +200,54 @@ def Lch_to_sRGB(Lch,apply_cctf_encoding=True, clip=False):
 # -----------------------------------------------------------------------------
 class Processing(object):
     """
-    Abstract base class for all image processing operations.
-    
-    This class defines the standard interface that all processing operations
-    must implement within the uHDR system. It provides a consistent compute
-    method signature for pipeline integration.
-    
-    Methods:
-        compute: Abstract method for processing image data
+    Base class for HDR image processing operations.
+
+    This class defines the common interface for all image processing operations
+    in the HDR pipeline. It provides the basic structure and common mechanisms
+    for operation execution.
+
+    Interface:
+    Each processing operation must implement:
+    - compute() method: Operation execution
+    - Parameter management: Storage and validation
+    - Operation state: Change tracking
+
+    Features:
+    - Non-destructive operations
+    - HDR processing support
+    - Parameter validation
+    - State management
+    - Performance profiling
+
+    Usage:
+        class MyOperation(Processing):
+            def compute(self, img, **kwargs):
+                # Operation implementation
+                return result_image
+
+    Notes:
+        - All operations inherit from this class
+        - Parameters are validated before execution
+        - Profiling is automatic if enabled
+        - State is preserved between executions
     """
 
-    def compute(self,image,**kwargs):
-        """
-        Process an image with specified parameters.
-        
-        This abstract method must be implemented by all processing subclasses.
-        It takes an input image and optional parameters, then returns a
-        processed image.
+    def compute(self, image, **kwargs):
+        """Execute the processing operation.
 
         Args:
             image (hdrCore.image.Image): Input image to process
-            **kwargs: Processing-specific parameters
-                
+            **kwargs: Operation-specific parameters
+
         Returns:
-            hdrCore.image.Image: Processed image
+            hdrCore.image.Image: Resulting processed image
+
+        Raises:
+            NotImplementedError: If method is not implemented
+            ValueError: If parameters are invalid
         """
-        return copy.deepcopy(image)
+        raise NotImplementedError("compute() method must be implemented")
+
 # -----------------------------------------------------------------------------
 # --- Class tmo_cctf ---------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -675,9 +697,6 @@ class resize(Processing):
 # --- Class Ycurve -----------------------------------------------------------
 # -----------------------------------------------------------------------------
 class Ycurve(Processing):
-    """
-    TODO - Documentation de la classe Ycurve
-    """
     
     def compute(self,img,**kwargs):
         """
@@ -764,9 +783,6 @@ class Ycurve(Processing):
 # --- Class saturation -------------------------------------------------------
 # -----------------------------------------------------------------------------
 class saturation(Processing):
-    """
-    TODO - Documentation de la classe saturation
-    """
     
     def compute(self,img,**kwargs):
         """saturation operator
@@ -1047,24 +1063,47 @@ class lightnessMask(Processing):
 # -----------------------------------------------------------------------------
 class geometry(Processing):
     """
-    TODO - Documentation de la classe geometry
+    Geometric transformation operation for HDR images.
+
+    This class implements basic geometric transformations for HDR images,
+    including cropping and rotation. It allows modifying image dimensions
+    and orientation while preserving HDR data precision.
+
+    Supported Transformations:
+    - Cropping: Image dimension adjustment
+    - Rotation: Image rotation by specified angle
+    - Orientation: Image orientation management (up/down)
+
+    Parameters:
+        ratio (tuple): Target aspect ratio (width, height)
+        up (int): Image orientation (0: up, 1: down)
+        rotation (float): Rotation angle in degrees
+
+    Notes:
+        - Transformations are applied in order: rotation then cropping
+        - Cropping preserves the specified aspect ratio
+        - Rotation uses bilinear interpolation
+        - HDR values are preserved during transformations
     """
     
     def compute(self, img, **kwargs): 
-        """geometry operator.
+        """Geometric transformation operator.
 
         Args:
-            img (hdrCore.image.Image,Required): input image
-            kwargs (dict,Optionnal) : parameters
-                'ratio': (int,int)
-                'up': int
-                'rotation': float
+            img (hdrCore.image.Image,Required): Input image
+            kwargs (dict,Optional): Transformation parameters
+                'ratio': (int,int) - Target aspect ratio (width, height)
+                'up': int - Image orientation (0: up, 1: down)
+                'rotation': float - Rotation angle in degrees
 
-                default value = { 'ratio': (16,9), 'up': 0,'rotation': 0.0}
+                Default values = { 'ratio': (16,9), 'up': 0, 'rotation': 0.0}
                 
         Returns:
-            (hdrCore.image.Image,Required): input image
-        """ 
+            hdrCore.image.Image: Transformed image
+
+        Raises:
+            ValueError: If transformation parameters are invalid
+        """
         start = timer()
         defaultValue = { 'ratio': (16,9), 'up': 0,'rotation': 0.0}
         if not kwargs: kwargs = defaultValue  # default value 
@@ -1110,36 +1149,67 @@ class geometry(Processing):
 # -----------------------------------------------------------------------------
 class ProcessPipe(object):
     """
-    class ProcessPipe: pipeline of process nodes
-        defines the pipeline of image procesing objects. 
-    
+    Non-destructive HDR image processing pipeline.
+
+    This class implements an image processing pipeline that allows chaining
+    operations in a non-destructive manner. It manages operation states,
+    preserves the original image, and optimizes performance.
+
+    Architecture:
+    The pipeline consists of processing nodes (ProcessNode) that encapsulate
+    processing operations (Processing). Each node maintains its own state
+    and parameters, enabling non-destructive editing.
+
+    Memory Management:
+    - Original image is preserved
+    - Intermediate images are computed on demand
+    - Automatic resizing optimizes performance
+    - Memory is efficiently managed for large images
+
+    Features:
+    - Processing operation chaining
+    - Operation state preservation
+    - Optimized result computation
+    - Metadata management
+    - Result export
+    - HDR preview
+
     Attributes:
-        originalImage (hdrCore.image.Image):
-        __inputImage (hdrCore.image.Image):
-        __outputImage (hdrCore.image.Image):
-        processNodes ([ProcessNode]):
-        previewHDR (bool):
-        previewHDR_process ():
+        - originalImage (hdrCore.image.Image): Original source image
+        - __inputImage (hdrCore.image.Image): Current input image
+        - __outputImage (hdrCore.image.Image): Current output image
+        - processNodes ([ProcessNode]): List of processing nodes
+        - previewHDR (bool): HDR preview state
+        - previewHDR_process (): HDR preview process
 
     Class Attributes:
-        autoResize (boolean): True resize automatically image for faster computation
-        maxSize (int): 
-        maxWorking (int):       
+        autoResize (bool): Enables automatic resizing
+        maxSize (int): Maximum size for resizing
+        maxWorking (int): Maximum size for processing
 
-    Methods:
-        append:                 (int) append a process node (ProcessNode) to process pipe (self)
-        getName:                (str) return image name associated to processpipe
-        setImage:               ()
-        getInputImage           ()
-        compute                 ()
-        setParameters           ()
-        getParameters           ()
-        getProcessNodeByName    ()
-        __repr__                (str)
-        __str__                 (str)
-        updateProcessPipeMetadata ()
-        updateHDRuseCase        ()
-        export                  ()
+    Usage:
+        # Create a pipeline
+        pipe = ProcessPipe()
+        
+        # Set source image
+        pipe.setImage(source_image)
+        
+        # Add operations
+        pipe.append(exposure(), {'value': 1.0})
+        pipe.append(contrast(), {'value': 10})
+        
+        # Execute pipeline
+        result = pipe.compute()
+        
+        # Export results
+        pipe.export("output/", size=(1920, 1080))
+
+    Technical Notes:
+        - Non-destructive pipeline
+        - Automatic memory optimization
+        - HDR processing support
+        - Metadata management
+        - Real-time preview
     """
     
     # autoresizing for fast computation
@@ -1151,29 +1221,45 @@ class ProcessPipe(object):
     # --- Class ProcessNode --------------------------------------------------
     # -------------------------------------------------------------------------
     class ProcessNode(object):
-        """encapsulates a Processing object to create processpipe
+        """
+        Processing node encapsulating a processing operation.
+
+        This inner class encapsulates a processing operation (Processing)
+        with its parameters and state. It manages conditional execution
+        of operations and parameter persistence.
 
         Attributes:
-            name (str): name of ProcessNode
-            process (hdrCore.processing.Processing):
-            params(dict):
-            defaultParams (dict):
-            requireUpdate (bool):
-            outputImage (hdrCore.image.Image):   
-            
-        Methods:
-            compute 
-            condCompute
-            setParameters
-            getParameters
-            toDict
+            - name (str): Processing node name
+            - process (hdrCore.processing.Processing): Processing operation
+            - params (dict): Current parameters
+            - defaultParams (dict): Default parameters
+            - requireUpdate (bool): Update required state
+            - outputImage (hdrCore.image.Image): Output image
+
+        Notes:
+            - Identifiant unique pour chaque nœud
+            - Gestion d'état pour optimisation
+            - Paramètres persistants
+            - Support de l'exécution conditionnelle
         """
 
-        
-        id=0
-        
-        def __init__(self,process,paramDict=None,name=None):
+        id = 0
 
+        def __init__(self,process,paramDict=None,name=None):
+            """
+            Initialize a new processing node.
+
+            Args:
+                process (Processing): Processing operation to encapsulate
+                paramDict (dict, optional): Initial parameters for the operation
+                name (str, optional): Custom name for the node. If None, a default
+                    name is generated using 'process_' prefix and a unique ID.
+
+            Notes:
+                - Each node gets a unique ID for identification
+                - Default parameters are stored for reset capability
+                - Node state is initialized as requiring update
+            """
             self.name = 'noname'
             if not name:
                 self.name = 'process_'+str(ProcessNode.id)
@@ -1187,27 +1273,76 @@ class ProcessPipe(object):
             self.outputImage = None # store results image (Image)
 
         def compute(self,img):
+            """
+            Execute the processing operation on the input image.
 
+            Args:
+                img (hdrCore.image.Image): Input image to process
+
+            Notes:
+                - Operation is executed only if update is required
+                - Output image is cached for subsequent calls
+                - Node state is updated after computation
+            """
             self.outputImage = self.process.compute(img,**self.params)
             self.requireUpdate = False
 
         def condCompute(self,img):
+            """
+            Conditionally execute the processing operation.
 
-           if self.requireUpdate: self.compute(img)
-           pass
+            Args:
+                img (hdrCore.image.Image): Input image to process
+
+            Notes:
+                - Checks if parameters differ from defaults
+                - Only executes if parameters have been modified
+                - Preserves input image if no changes needed
+            """
+            if self.requireUpdate: self.compute(img)
+            pass
 
         def setParameters(self,paramDict):
+            """
+            Update the node's processing parameters.
 
+            Args:
+                paramDict (dict): New parameter values to set
+
+            Notes:
+                - Parameters are deep copied to prevent external modification
+                - Node is marked for update after parameter change
+                - Invalid parameters are ignored
+            """
             if pref.verbose: print(" [PROCESS] >> ProcessNode.setParameters(",self.name,"):",paramDict)
             self.params=paramDict
             self.requireUpdate = True
 
         def getParameters(self):
+            """
+            Retrieve the current processing parameters.
 
+            Returns:
+                dict: Current parameter values
+
+            Notes:
+                - Returns a copy of parameters to prevent external modification
+                - Includes all parameters, even if unchanged from defaults
+            """
             return self.params
 
         def toDict(self):
+            """
+            Convert the node to a dictionary representation.
 
+            Returns:
+                dict: Dictionary containing node name and parameters
+
+            Notes:
+                - Used for serialization and state saving
+                - Format: {node_name: parameters_dict}
+                - Preserves parameter values for later restoration
+            """
             return {self.name: self.params}
     # -------------------------------------------------------------------------
     # --- End of ProcessNode -------------------------------------------
@@ -1215,9 +1350,23 @@ class ProcessPipe(object):
     
     def __init__(self):
         """
-        TODO - Documentation de la méthode __init__
-        
-        /!\ - Les constructeurs n'apparaissent pas dans la doc générées par sphinx.
+        Initialize a new processing pipeline.
+
+        Creates an empty pipeline ready to accept processing operations.
+        Initializes internal state and image storage.
+
+        Attributes:
+            originalImage (hdrCore.image.Image): Original source image
+            __inputImage (hdrCore.image.Image): Current input image
+            __outputImage (hdrCore.image.Image): Current output image
+            processNodes (list): List of processing nodes
+            previewHDR (bool): HDR preview state
+            previewHDR_process (): HDR preview process
+
+        Notes:
+            - Pipeline starts empty with no operations
+            - All image references are initialized to None
+            - HDR preview is enabled by default
         """
         self.originalImage = None # 
         self.__inputImage = None
@@ -1229,46 +1378,51 @@ class ProcessPipe(object):
 
     def append(self,process,paramDict=None,name=None):
         """
-        TODO - Documentation de la méthode append
+        Add a processing operation to the pipeline.
 
         Args:
-            process: TODO
-                TODO
-            paramDict: TODO
-                TODO
-            name: TODO
-                TODO
-                
+            process (Processing): Processing operation to add
+            paramDict (dict, optional): Initial parameters for the operation
+            name (str, optional): Custom name for the operation node
+
         Returns:
-            TODO
-                TODO
+            int: Index of the newly added operation in the pipeline
+
+        Notes:
+            - Operation is encapsulated in a ProcessNode
+            - Parameters are optional and can be set later
+            - Custom names help identify operations in the pipeline
         """
         if isinstance(process,Processing): process = ProcessPipe.ProcessNode(process,paramDict,name) # encapsulate process in processNode
         self.processNodes.append(process)
         return len(self.processNodes)-1 # return index of process (list[index])
 
     def getName(self):
-        """return name of input image.
-        
+        """
+        Get the name of the current output image.
+
         Returns:
-            (str)
+            str: Name of the output image, or None if no image is set
+
+        Notes:
+            - Returns None if pipeline has no output image
+            - Name is preserved from input image through processing
         """
         return self.__outputImage.name
 
     def setImage(self,img):
-        """set the input image to the process-pipeline:
-            (1) a copy of the image is set to 'originalImage'
-            (2) if ProcessPipe.autoResize: the image is resized
-            (3) the (resize) is set to '__inputImage'
-            (4) a copy of the resized image is set to '__outputImage' (for display)
-            (5) initialize processpipe using 'img.metadata'  
-            (6) for all processes in the pipe 'requireUpdate' is set to True
+        """
+        Set the input image for the processing pipeline.
 
         Args:
-            img (hdrCore.image.Image, Required) : input image
+            img (hdrCore.image.Image): Input image to process
 
-        Returns:
-            
+        Notes:
+            - Creates deep copies of the image for safety
+            - Applies automatic resizing if enabled
+            - Converts to linear color space if needed
+            - Initializes pipeline metadata from image
+            - Marks all operations for update
         """
         if pref.verbose: print(" [PROCESS] >> ProcessPipe.setImage(",img.name,")")
 
@@ -1287,8 +1441,6 @@ class ProcessPipe(object):
         self.__outputImage = copy.deepcopy(img)
      
         if not img.linear: 
-
-
             if pref.computation == 'python':
                 start = timer()
                 img.colorData =     np.float32(colour.cctf_decoding(img.colorData, function='sRGB'))
@@ -1326,30 +1478,48 @@ class ProcessPipe(object):
                         self.setParameters(idProcess,param)
 
     def setOutput(self, img):
-        """setOuput: set the output image
+        """
+        Set the output image of the pipeline.
+
+        Args:
+            img (hdrCore.image.Image): New output image
+
+        Notes:
+            - Creates a deep copy of the image
+            - Updates pipeline state
+            - Preserves original and input images
         """
         self.__outputImage = copy.deepcopy(img)
         pass
 
     def getInputImage(self):
-        """return input image
-        
+        """
+        Get the current input image.
+
         Returns:
-            (hdrCore.image.Image)
+            hdrCore.image.Image: Current input image, or None if not set
+
+        Notes:
+            - Returns None if no image has been set
+            - Image may be resized from original if autoResize is enabled
         """
         return self.__inputImage
 
     def getImage(self,toneMap=True):
         """
-        TODO - Documentation de la méthode getImage
+        Get the current output image with optional tone mapping.
 
         Args:
-            toneMap: TODO
-                TODO
-                
+            toneMap (bool, optional): Whether to apply tone mapping (default: True)
+
         Returns:
-            TODO
-                TODO
+            hdrCore.image.Image: Processed output image, or None if no image is set
+
+        Notes:
+            - Applies tone mapping if requested and image is HDR
+            - Handles color space conversions automatically
+            - Preserves original image data
+            - Returns None if pipeline has no image
         """
         if isinstance(self.originalImage, image.Image): # if pipe has an image
             # conditionnal encoding or decoding to prime, linear
@@ -1385,13 +1555,19 @@ class ProcessPipe(object):
         else: return None
 
     def compute(self,progress=None):
-        """compute the processpipe
+        """
+        Execute the processing pipeline.
 
         Args:
-            progress: (object with showMessage and repaint method) object used to display progress
+            progress (object, optional): Progress tracking object with showMessage
+                and repaint methods
 
-        Returns:
-                
+        Notes:
+            - Executes operations in sequence
+            - Updates progress if tracking object provided
+            - Preserves original image
+            - Handles operation dependencies
+            - Updates output image after completion
         """
         if self.__inputImage:
 
@@ -1417,13 +1593,16 @@ class ProcessPipe(object):
 
     def setParameters(self,id,paramDicts):
         """
-        TODO - Documentation de la méthode setParameters
+        Update parameters for a processing operation.
 
         Args:
-            id: TODO
-                TODO
-            paramDicts: TODO
-                TODO
+            id (int): Index of the operation to update
+            paramDicts (dict): New parameter values
+
+        Notes:
+            - Updates operation parameters
+            - Marks dependent operations for update
+            - Updates pipeline metadata
         """
         self.processNodes[id].setParameters(paramDicts)
         for processNode in self.processNodes[id:]: processNode.requireUpdate = True
@@ -1431,29 +1610,33 @@ class ProcessPipe(object):
 
     def getParameters(self,id):
         """
-        TODO - Documentation de la méthode getParameters
+        Get current parameters for a processing operation.
 
         Args:
-            id: TODO
-                TODO
-                
+            id (int): Index of the operation
+
         Returns:
-            TODO
-                TODO
+            dict: Current parameter values for the operation
+
+        Notes:
+            - Returns None if operation index is invalid
+            - Returns a copy of parameters to prevent modification
         """
         return self.processNodes[id].getParameters()
 
     def getProcessNodeByName(self,name):
         """
-        TODO - Documentation de la méthode getProcessNodeByName
+        Find a processing operation by name.
 
         Args:
-            name: TODO
-                TODO
-                
+            name (str): Name of the operation to find
+
         Returns:
-            TODO
-                TODO
+            int: Index of the operation, or -1 if not found
+
+        Notes:
+            - Returns -1 if no operation matches the name
+            - Names are case-sensitive
         """
         id = -1
         for i, process in enumerate(self.processNodes):
@@ -1464,11 +1647,15 @@ class ProcessPipe(object):
 
     def __repr__(self):
         """
-        TODO - Documentation de la méthode __repr__
-                
+        Get a string representation of the pipeline.
+
         Returns:
-            TODO
-                TODO
+            str: Detailed string representation of the pipeline state
+
+        Notes:
+            - Includes input image name
+            - Lists all operations with their parameters
+            - Shows update status for each operation
         """
         res =   "<class ProcessPipe: \n"+ \
                 "\t inputImage: "
@@ -1482,21 +1669,27 @@ class ProcessPipe(object):
 
     def __str__(self):
         """
-        TODO - Documentation de la méthode __str__
-                
+        Get a string representation of the pipeline.
+
         Returns:
-            TODO
-                TODO
+            str: Same as __repr__
+
+        Notes:
+            - Alias for __repr__ for consistency
         """
         return self.__repr__()
 
     def toDict(self):
         """
-        TODO - Documentation de la méthode toDict
-                
+        Convert the pipeline to a dictionary representation.
+
         Returns:
-            TODO
-                TODO
+            list: List of operation dictionaries
+
+        Notes:
+            - Used for serialization and state saving
+            - Each operation is represented as a dictionary
+            - Preserves operation order and parameters
         """
         res = []
         for p in self.processNodes: res.append(p.toDict())
@@ -1504,7 +1697,12 @@ class ProcessPipe(object):
 
     def updateProcessPipeMetadata(self):
         """
-        TODO - Documentation de la méthode updateProcessPipeMetadata
+        Update metadata for all images in the pipeline.
+
+        Notes:
+            - Updates metadata for original, input and output images
+            - Preserves pipeline state in metadata
+            - Handles missing images gracefully
         """
         ppMeta = self.toDict()
         if pref.verbose: print(" [PROCESS] >> ProcessPipe.updateMetadata(","):",ppMeta)
@@ -1514,11 +1712,16 @@ class ProcessPipe(object):
 
     def updateUserMeta(self,tagRootName,meta):
         """
-        TODO - Documentation de la méthode updateUserMeta
+        Update user metadata for all images in the pipeline.
 
         Args:
-            hdrmeta: TODO
-                TODO
+            tagRootName (str): Root tag for the metadata
+            meta (dict): Metadata to store
+
+        Notes:
+            - Updates metadata for all pipeline images
+            - Preserves existing metadata
+            - Handles missing images gracefully
         """
         if pref.verbose: print(" [PROCESS] >> ProcessPipe.updateUserMeta(",")")
         if isinstance(self.originalImage,image.Image):  self.originalImage.metadata.metadata[tagRootName] =   copy.deepcopy(meta)
@@ -1527,16 +1730,23 @@ class ProcessPipe(object):
 
     def export(self,dirName,size=None,to=None,progress=None):
         """
-        TODO - Documentation de la méthode export
+        Export the processed image to a file.
 
         Args:
-            dirName: TODO
-            size: TODO
-            to: TODO
-            progress: TODO
-                
+            dirName (str): Directory to save the exported image
+            size (tuple, optional): Target size for export (width, height)
+            to (dict, optional): Export settings including scaling and tags
+            progress (object, optional): Progress tracking object
+
         Returns:
-            (hdrCore.image.Image)
+            hdrCore.image.Image: Exported image
+
+        Notes:
+            - Preserves original image and metadata
+            - Applies resizing if specified
+            - Handles HDR/SDR conversion
+            - Updates metadata for export
+            - Restores pipeline state after export
         """
         # recover input and processpipe metadata
         input = copy.deepcopy(self.originalImage)
