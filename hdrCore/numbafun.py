@@ -18,7 +18,21 @@
 # --- Package hdrCore ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrCore consists of the core classes for HDR imaging.
+HDR Core Numba Accelerated Functions Module
+
+This module provides high-performance implementations of color space conversion
+and gamma correction functions using Numba JIT compilation for CPU acceleration
+and CUDA for GPU acceleration.
+
+The functions implement sRGB color correction transfer functions (CCTF) for
+encoding and decoding, which are essential for proper HDR image display and
+color space transformations.
+
+Functions:
+    - numba_cctf_sRGB_encoding: CPU-accelerated sRGB gamma encoding
+    - numba_cctf_sRGB_decoding: CPU-accelerated sRGB gamma decoding  
+    - cuda_cctf_sRGB_encoding: GPU-accelerated sRGB gamma encoding
+    - cuda_cctf_sRGB_decoding: GPU-accelerated sRGB gamma decoding
 """
 
 # -----------------------------------------------------------------------------
@@ -31,26 +45,46 @@ import numpy as np
 # -----------------------------------------------------------------------------
 @numba.jit(cache=True, parallel=True)
 def numba_cctf_sRGB_encoding(L):
-    """cctf SRGB encoding (numba acceleration)
+    """
+    Apply sRGB color correction transfer function encoding with Numba acceleration.
+    
+    Converts linear RGB values to gamma-corrected sRGB values using the standard
+    sRGB transfer function. This function is optimized with Numba JIT compilation
+    for fast CPU processing with parallel execution support.
 
-        Args:
-            L (float or numpy.ndarray, Required)
+    Args:
+        L (float or numpy.ndarray): Linear RGB values to encode, typically in [0,1] range
 
-        Returns:
-            (float)
+    Returns:
+        numpy.ndarray or float: Gamma-corrected sRGB values
+        
+    Note:
+        Uses the standard sRGB encoding formula:
+        - For L ≤ 0.0031308: V = L × 12.92
+        - For L > 0.0031308: V = 1.055 × L^(1/2.4) - 0.055
     """
     v = np.where(L <= 0.0031308, L * 12.92, 1.055 * np.power(L, 1 / 2.4) - 0.055)
     return v
 # -----------------------------------------------------------------------------
 @numba.jit(cache=True, parallel=True)
 def numba_cctf_sRGB_decoding(V):
-    """cctf SRGB decoding (numba acceleration)
+    """
+    Apply sRGB color correction transfer function decoding with Numba acceleration.
+    
+    Converts gamma-corrected sRGB values to linear RGB values using the inverse
+    sRGB transfer function. This function is optimized with Numba JIT compilation
+    for fast CPU processing with parallel execution support.
 
-        Args:
-            V (float or numpy.ndarray, Required)
+    Args:
+        V (float or numpy.ndarray): Gamma-corrected sRGB values to decode, typically in [0,1] range
 
-        Returns:
-            (float)
+    Returns:
+        numpy.ndarray or float: Linear RGB values
+        
+    Note:
+        Uses the standard sRGB decoding formula:
+        - For V ≤ 0.04045: L = V / 12.92
+        - For V > 0.04045: L = ((V + 0.055) / 1.055)^2.4
     """
     L = np.where(V <= numba_cctf_sRGB_encoding(0.0031308), V / 12.92, np.power((V + 0.055) / 1.055, 2.4))
     return L
@@ -60,13 +94,22 @@ def numba_cctf_sRGB_decoding(V):
 # -----------------------------------------------------------------------------
 @numba.vectorize('float32(float32)', target='cuda' )
 def cuda_cctf_sRGB_decoding(V):
-    """cctf sRGB decoding (cuda acceleration)
+    """
+    Apply sRGB color correction transfer function decoding with CUDA acceleration.
+    
+    GPU-accelerated version of sRGB gamma decoding that converts gamma-corrected
+    sRGB values to linear RGB values. Uses CUDA vectorization for high-performance
+    parallel processing on compatible GPUs.
 
-        Args:
-            V (float or numpy.ndarray, Required)
+    Args:
+        V (float32 or numpy.ndarray): Gamma-corrected sRGB values to decode
 
-        Returns:
-            (float)
+    Returns:
+        float32 or numpy.ndarray: Linear RGB values
+        
+    Note:
+        Optimized for GPU execution with single-precision floating point arithmetic.
+        Uses conditional branching suitable for CUDA execution model.
     """
 
     if V <= 0.040449935999999999:
@@ -77,13 +120,22 @@ def cuda_cctf_sRGB_decoding(V):
 # -----------------------------------------------------------------------------
 @numba.vectorize('float32(float32)', target='cuda' )
 def cuda_cctf_sRGB_encoding(L):
-    """cctf SRGB encoding (cuda acceleration)
+    """
+    Apply sRGB color correction transfer function encoding with CUDA acceleration.
+    
+    GPU-accelerated version of sRGB gamma encoding that converts linear RGB values
+    to gamma-corrected sRGB values. Uses CUDA vectorization for high-performance
+    parallel processing on compatible GPUs.
 
-        Args:
-            L (float or numpy.ndarray, Required)
+    Args:
+        L (float32 or numpy.ndarray): Linear RGB values to encode
 
-        Returns:
-            (float)
+    Returns:
+        float32 or numpy.ndarray: Gamma-corrected sRGB values
+        
+    Note:
+        Optimized for GPU execution with single-precision floating point arithmetic.
+        Uses conditional branching suitable for CUDA execution model.
     """
 
     if L <= 0.0031308:
@@ -94,6 +146,19 @@ def cuda_cctf_sRGB_encoding(L):
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 def numba_sRGB_to_XYZ(sRGB, cctf_decoding=None):
+    """
+    Convert sRGB color values to XYZ color space (placeholder function).
+    
+    This function is currently not implemented and serves as a placeholder
+    for future sRGB to XYZ color space conversion with Numba acceleration.
+    
+    Args:
+        sRGB (numpy.ndarray): sRGB color values
+        cctf_decoding (callable, optional): Color correction transfer function for decoding
+        
+    Returns:
+        None: Function not implemented
+    """
     pass
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------

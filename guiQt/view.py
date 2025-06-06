@@ -20,7 +20,44 @@
 # --- Package hdrGUI ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrGUI consists of the classes for GUI.
+guiQt.view module: PyQt5 view components for uHDR GUI application.
+
+This module implements the View component of the Model-View-Controller (MVC)
+architecture pattern used in uHDR. It contains PyQt5 widgets and interfaces
+that handle user interaction and visual presentation of HDR image editing tools.
+
+The module provides:
+- Main application window with menu system and docking
+- Image gallery with grid layout and pagination  
+- HDR image editing controls and parameter adjustment
+- Tone curve editing with B-spline visualization
+- Color space editing in LCH coordinates
+- Lightness masking for selective adjustments
+- Geometry transformation controls
+- Image information and metadata display
+- Aesthetics analysis visualization
+- HDR display and external monitor support
+
+Key View Classes:
+    - AppView: Main application window with menus and docking
+    - ImageGalleryView: Grid-based image gallery with pagination
+    - EditImageView: Complete HDR editing interface
+    - ImageInfoView: Image metadata and information display
+    - ToneCurveView: B-spline tone curve editing with matplotlib
+    - LchColorSelectorView: LCH color space selection interface
+    - HDRviewerView: HDR display controls and preview
+    - ImageAestheticsView: Color palette and aesthetics visualization
+
+Widget Utilities:
+    - ImageWidgetView: Basic image display widget
+    - FigureWidget: Matplotlib integration for curve editing
+    - AdvanceSliderView: Enhanced slider with auto/reset functionality
+    - AdvanceLineEdit: Labeled line edit widget
+    - AdvanceCheckBox: Labeled checkbox widget
+
+The views handle user interaction events and delegate business logic
+to their associated controllers while providing visual feedback and
+real-time parameter adjustment capabilities.
 """
 
 # -----------------------------------------------------------------------------
@@ -54,9 +91,28 @@ import preferences.preferences as pref
 # --- class ImageWidgetView(QWidget) -------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageWidgetView(QWidget):
-    """description of class"""
+    """
+    Basic image display widget for showing numpy arrays or HDR images.
+    
+    Provides a simple image viewer widget that can display color data
+    as QPixmap with automatic scaling and aspect ratio preservation.
+    Handles clipping and conversion from floating-point HDR data to
+    8-bit RGB for Qt display.
+    
+    Attributes:
+        - controller: Reference to controlling ImageWidgetController
+        - label (QLabel): Qt label widget for pixmap display
+        - imagePixmap (QPixmap): Current pixmap for display
+    """
 
     def __init__(self,controller,colorData = None):
+        """
+        Initialize image widget view.
+        
+        Args:
+            controller: Parent ImageWidgetController instance
+            colorData (numpy.ndarray, optional): Initial image data to display
+        """
         super().__init__()
         self.controller = controller
         self.label = QLabel(self)   # create a QtLabel for pixmap
@@ -65,14 +121,38 @@ class ImageWidgetView(QWidget):
         self.setPixmap(colorData)  
 
     def resize(self):
+        """
+        Update widget and pixmap scaling to current size.
+        
+        Resizes the internal label and scales the pixmap to fit the widget
+        while preserving aspect ratio.
+        """
         self.label.resize(self.size())
         self.label.setPixmap(self.imagePixmap.scaled(self.size(),Qt.KeepAspectRatio))
 
     def resizeEvent(self,event):
+        """
+        Handle Qt resize events.
+        
+        Args:
+            event: Qt resize event object
+        """
         self.resize()
         super().resizeEvent(event)
 
     def setPixmap(self,colorData):
+        """
+        Set image from numpy array with HDR to sRGB conversion.
+        
+        Converts floating-point HDR image data to 8-bit RGB for Qt display.
+        Applies clipping to [0,1] range and handles format conversion.
+        
+        Args:
+            colorData (numpy.ndarray): RGB image data (height, width, 3)
+            
+        Returns:
+            QPixmap: Generated pixmap for display
+        """
         if not isinstance(colorData, np.ndarray): 
             colorData = ImageWidgetView.emptyImageColorData()
         # self.colorData = colorData
@@ -89,17 +169,49 @@ class ImageWidgetView(QWidget):
         return self.imagePixmap
 
     def setQPixmap(self, qPixmap):
+        """
+        Set pre-processed QPixmap directly.
+        
+        Args:
+            qPixmap (QPixmap): Pre-processed pixmap for display
+        """
         self.imagePixmap = qPixmap
         self.resize()
 
-    def emptyImageColorData(): return np.ones((90,160,3))*(220/255) 
+    def emptyImageColorData(): 
+        """
+        Generate default placeholder image for empty display.
+        
+        Returns:
+            numpy.ndarray: Gray placeholder image (90x160x3) 
+        """
+        return np.ones((90,160,3))*(220/255) 
 # ------------------------------------------------------------------------------------------
 # --- class FigureWidget(FigureCanvas ------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class FigureWidget(FigureCanvas):
-    """ Matplotlib Figure Widget  """
+    """
+    Matplotlib figure widget for embedding plots in Qt interface.
+    
+    Provides matplotlib integration for displaying curves, histograms,
+    and other plots within the Qt GUI. Used primarily for tone curve
+    visualization and editing.
+    
+    Attributes:
+        - fig (Figure): Matplotlib figure object
+        - axes: Matplotlib axes for plotting
+    """
 
     def __init__(self, parent=None, width=5, height=5, dpi=100):
+        """
+        Initialize matplotlib figure widget.
+        
+        Args:
+            parent: Parent Qt widget
+            width (int): Figure width in inches
+            height (int): Figure height in inches
+            dpi (int): Figure resolution in dots per inch
+        """
         # create Figure
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111)
@@ -109,6 +221,15 @@ class FigureWidget(FigureCanvas):
         self.setMinimumSize(200, 200)
 
     def plot(self,X,Y,mode, clear=False):
+        """
+        Draw line plot with specified data and style.
+        
+        Args:
+            X (array-like): X-coordinate data points
+            Y (array-like): Y-coordinate data points
+            mode (str): Matplotlib line style (e.g., 'r--', 'b-')
+            clear (bool): Clear previous plots before drawing
+        """
         if clear: self.axes.clear()
         self.axes.plot(X,Y,mode)
         try:
@@ -121,9 +242,14 @@ class FigureWidget(FigureCanvas):
 # --- class ImageGalleryView(QSplitter) ----------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageGalleryView(QSplitter):
-    """ 
-        ImageGallery(QSplitter)
-
+    """
+    Grid-based image gallery with pagination and navigation controls.
+    
+    Displays multiple images in a configurable grid layout with pagination
+    support for large image collections. Provides interactive navigation
+    buttons and supports different grid configurations (1x1, 3x2, 6x4, 9x6).
+    
+    Layout Structure:
         +-------------------------------------------+
         | +----+ +----+ +----+ +----+ +----+ +----+ | \
         | |ImgW| |ImgW| |ImgW| |ImgW| |ImgW| |ImgW| |  |
@@ -140,9 +266,25 @@ class ImageGalleryView(QSplitter):
         +-------------------------------------------+  <    splitter
         | [<] [1x1][3x2][6x4][9x6][page number] [>] |       [pushButton] HorizontalLayout
         +-------------------------------------------+
-
+    
+    Attributes:
+        - controller: Reference to ImageGalleryController
+        - shapeMode: Current grid layout mode (GalleryMode enum)
+        - pageNumber (int): Current page index (0-based)
+        - imagesControllers (list): List of ImageWidgetController instances
+        - images (QFrame): Frame containing image grid
+        - imagesLayout (QGridLayout): Grid layout for images
+        - buttons (QWidget): Navigation button container
+        - pageNumberLabel (QLabel): Current page display
     """
     def __init__(self,controller_=None,shapeMode=None):
+        """
+        Initialize image gallery view.
+        
+        Args:
+            controller_: Parent ImageGalleryController instance
+            shapeMode: Initial grid layout mode (defaults to 3x2)
+        """
         if pref.verbose: print(" [VIEW] >> ImageGalleryView.__init__(",")")
 
         super().__init__(Qt.Vertical)
@@ -194,9 +336,25 @@ class ImageGalleryView(QSplitter):
         self.addWidget(self.buttons)
         self.setSizes([1525,82])
 
-    def currentPage(self): return self.pageNumber
+    def currentPage(self): 
+        """
+        Get current page number.
+        
+        Returns:
+            int: Current page index (0-based)
+        """
+        return self.pageNumber
 
     def changePageNumber(self,step):
+        """
+        Navigate to different page with wraparound.
+        
+        Changes the current page by the specified step, with automatic
+        wraparound at the beginning and end of the page range.
+        
+        Args:
+            step (int): Page increment/decrement (+1 for next, -1 for previous)
+        """
         if pref.verbose: print(" [VIEW] >> ImageGalleryView.changePageNumber(",step,")")
 
         nbImagePerPage = controller.GalleryMode.nbRow(self.shapeMode)*controller.GalleryMode.nbCol(self.shapeMode)
@@ -216,6 +374,13 @@ class ImageGalleryView(QSplitter):
             if pref.verbose: print(" [VIEW] >> ImageGalleryView.changePageNumber(currentPage:",self.pageNumber," | max page:",maxPage,")")
 
     def updateImages(self):
+        """
+        Refresh image display for current page.
+        
+        Updates all image widgets in the grid with placeholder content
+        and refreshes the page number display. Actual images are loaded
+        asynchronously by the model.
+        """
         if pref.verbose: print(" [VIEW] >> ImageGalleryView.updateImages(",")")
 
         """ update images content """
@@ -232,12 +397,26 @@ class ImageGalleryView(QSplitter):
         self.pageNumberLabel.setText(str(self.pageNumber)+"/"+str(maxPage-1))
 
     def updateImage(self, idx, processPipe, filename):
+        """
+        Update specific image in grid with loaded content.
+        
+        Args:
+            idx (int): Index of image within current page
+            processPipe (ProcessPipe): Loaded image processing pipeline
+            filename (str): Image filename for status display
+        """
         if pref.verbose: print(" [VIEW] >> ImageGalleryView.updateImage(",")")
         imageWidgetController = self.imagesControllers[idx]                                 
         imageWidgetController.setImage(processPipe.getImage())
         self.controller.parent.statusBar().showMessage("loading of image "+filename+" done!")
 
     def resetGridLayoutWidgets(self):
+        """
+        Clear current grid layout widgets.
+        
+        Removes all image widgets from the grid layout and cleans up
+        memory by deleting widget references.
+        """
         if pref.verbose: print(" [VIEW] >> ImageGalleryView.resetGridLayoutWidgets(",")")
 
         for w in self.imagesControllers:
@@ -246,6 +425,12 @@ class ImageGalleryView(QSplitter):
         self.imagesControllers = []
 
     def buildGridLayoutWidgets(self):
+        """
+        Create new grid layout widgets based on current shape mode.
+        
+        Generates ImageWidgetController instances for each position in
+        the grid and adds them to the layout with proper positioning.
+        """
         if pref.verbose: print(" [VIEW] >> ImageGalleryView.buildGridLayoutWidgets(",")")
 
         imageIndex = 0
@@ -257,6 +442,12 @@ class ImageGalleryView(QSplitter):
                 imageIndex +=1
 
     def wheelEvent(self, event):
+        """
+        Handle mouse wheel navigation between pages.
+        
+        Args:
+            event: Qt wheel event with scroll direction
+        """
         if pref.verbose: print(" [EVENT] >> ImageGalleryView.wheelEvent(",")")
 
         if event.angleDelta().y() < 0 :     
@@ -271,6 +462,15 @@ class ImageGalleryView(QSplitter):
         event.accept()
 
     def mousePressEvent(self,event):
+        """
+        Handle image selection clicks.
+        
+        Determines which image was clicked based on mouse position
+        and notifies the controller for selection handling.
+        
+        Args:
+            event: Qt mouse press event with position
+        """
         if pref.verbose: print(" [EVENT] >> ImageGalleryView.mousePressEvent(",")")
 
         # self.childAt(event.pos()) return QLabel .parent() should be ImageWidget object
@@ -286,10 +486,37 @@ class ImageGalleryView(QSplitter):
 # --- class AppView(QMainWindow) -----------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class AppView(QMainWindow):
-    """ 
-        MainWindow(Vue)
+    """
+    Main application window for uHDR HDR image editing software.
+    
+    Provides the primary user interface for uHDR with comprehensive menu system,
+    dockable panels, and central image gallery. Manages window geometry, screen
+    configuration, and application-wide functionality including file operations,
+    HDR display management, and export capabilities.
+    
+    Window Structure:
+    - Central Widget: Image gallery with pagination
+    - Right Dock: Multi-panel interface (Edit/Info/Aesthetics)
+    - Menu Bar: File, Display HDR, Export, Dock, Preferences
+    - Status Bar: Real-time operation feedback
+    
+    Attributes:
+        - controller (AppController): Parent application controller
+        - imageGalleryController (ImageGalleryController): Central gallery management
+        - dock (MultiDockController): Right panel controller
+        - topContainer (QWidget): Central widget container
+        - menuExport (QAction): Export menu action reference
+        - menuExportAll (QAction): Export all menu action reference
     """
     def __init__(self, _controller = None, shapeMode=None, HDRcontroller=None):
+        """
+        Initialize main application window.
+        
+        Args:
+            _controller (AppController): Parent application controller
+            shapeMode: Initial gallery layout mode
+            HDRcontroller: HDR display controller reference
+        """
         super().__init__()
         # --------------------
         scale = 0.8
@@ -322,11 +549,34 @@ class AppView(QMainWindow):
         self.buildExport()
         self.buildPreferences()
     # ------------------------------------------------------------------------------------------
-    def getImageGalleryController(self): return self.imageGalleryController
+    def getImageGalleryController(self): 
+        """
+        Get reference to the central image gallery controller.
+        
+        Returns:
+            ImageGalleryController: Central gallery management controller
+        """
+        return self.imageGalleryController
     # ------------------------------------------------------------------------------------------
-    def resizeEvent(self, event): super().resizeEvent(event)
+    def resizeEvent(self, event): 
+        """
+        Handle Qt window resize events.
+        
+        Args:
+            event: Qt resize event object
+        """
+        super().resizeEvent(event)
     # ------------------------------------------------------------------------------------------
     def setWindowGeometry(self, scale=0.8):
+        """
+        Configure window size and position based on available displays.
+        
+        Automatically detects multiple displays and positions window on
+        secondary display if available, otherwise uses primary display.
+        
+        Args:
+            scale (float): Window scaling factor (default 0.8)
+        """
         displayCoord = QDesktopWidget().screenGeometry(1)
         if len(self.controller.screenSize) > 1:
             width, height = self.controller.screenSize[1].width(), self.controller.screenSize[1].height()
@@ -337,6 +587,14 @@ class AppView(QMainWindow):
         self.showMaximized()
     # ------------------------------------------------------------------------------------------
     def buildFileMenu(self):
+        """
+        Create file operations menu with directory selection, save, and quit.
+        
+        Menu Items:
+        - Select directory (Ctrl+O): Choose working directory
+        - Save (Ctrl+S): Save ProcessPipe metadata 
+        - Quit (Ctrl+Q): Exit application with cleanup
+        """
         menubar = self.menuBar()# get menubar
         fileMenu = menubar.addMenu('&File')# file menu
 
@@ -359,12 +617,12 @@ class AppView(QMainWindow):
         fileMenu.addAction(quit)
     # ------------------------------------------------------------------------------------------    
     def buildPreferences(self):
-        """build preferences menu
-
-            Args:
-
-            Returns:
-
+        """
+        Create HDR display preferences menu with dynamic display selection.
+        
+        Automatically generates menu items for each configured HDR display
+        from preferences, allowing runtime switching between different HDR
+        monitor configurations.
         """
 
         menubar = self.menuBar()# get menubar
@@ -389,6 +647,14 @@ class AppView(QMainWindow):
 
     # ------------------------------------------------------------------------------------------
     def buildDisplayHDR(self):
+        """
+        Create HDR display menu for real-time preview and comparison.
+        
+        Menu Items:
+        - Display HDR image (Ctrl+H): Show on HDR monitor
+        - Compare raw and edited (Ctrl+C): Side-by-side comparison
+        - Reset HDR display (Ctrl+K): Clear HDR preview
+        """
         menubar = self.menuBar()# get menubar
         displayHDRmenu = menubar.addMenu('&Display HDR')# file menu
 
@@ -411,6 +677,15 @@ class AppView(QMainWindow):
         displayHDRmenu.addAction(closeHDR)
     # ------------------------------------------------------------------------------------------  
     def buildExport(self):
+        """
+        Create export menu for saving processed HDR images.
+        
+        Menu Items:
+        - Export to [display] (Ctrl+X): Export current image for HDR display
+        - Export All to [display] (Ctrl+Y): Batch export all images
+        
+        Display target automatically updates based on preferences selection.
+        """
         menubar = self.menuBar()# get menubar
         exportHDR = menubar.addMenu('&Export HDR image')# file menu
 
@@ -427,6 +702,14 @@ class AppView(QMainWindow):
         exportHDR.addAction(self.menuExportAll)
     # ------------------------------------------------------------------------------------------        
     def buildDockMenu(self):
+        """
+        Create dock panel switching menu for right-side interface.
+        
+        Menu Items:
+        - Info and Metadata (Ctrl+I): Image information panel
+        - Edit (Ctrl+E): HDR editing controls panel  
+        - Image Aesthetics (Ctrl+A): Aesthetics analysis panel
+        """
         menubar = self.menuBar()# get menubar
         dockMenu = menubar.addMenu('&Dock')# file menu
 
@@ -449,6 +732,14 @@ class AppView(QMainWindow):
         dockMenu.addAction(iqa)
     # ------------------------------------------------------------------------------------------
     def closeEvent(self, event):
+        """
+        Handle application shutdown with proper cleanup.
+        
+        Saves all ProcessPipe metadata and closes HDR display before exit.
+        
+        Args:
+            event: Qt close event
+        """
         if pref.verbose: print(" [CB] >> AppView.closeEvent()>> ... closing")
         self.imageGalleryController.save()
         self.controller.hdrDisplay.close()
@@ -456,7 +747,35 @@ class AppView(QMainWindow):
 # --- class ImageInfoView(QSplitter) -------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageInfoView(QSplitter):
+    """
+    Image information and metadata display panel.
+    
+    Provides comprehensive display of image metadata including EXIF data,
+    technical parameters, and user-defined tags. Supports interactive editing
+    of custom metadata fields for workflow management and image classification.
+    
+    Layout Structure:
+    - Top: Image preview widget
+    - Bottom: Scrollable metadata form with:
+      * Technical metadata (name, path, size, dynamic range, etc.)
+      * EXIF data (exposure, ISO, camera, lens, etc.)
+      * User-defined workflow tags (organized by groups)
+    
+    Attributes:
+        - controller (ImageInfoController): Parent controller reference
+        - imageWidgetController (ImageWidgetController): Image preview controller
+        - layout (QFormLayout): Metadata fields layout
+        - imageName, imagePath, imageSize, etc.: Technical metadata widgets
+        - userDefinedTags (list[AdvanceCheckBox]): Custom metadata checkboxes
+        - scroll (QScrollArea): Scrollable container for metadata fields
+    """
     def __init__(self, _controller):
+        """
+        Initialize image info view with metadata form.
+        
+        Args:
+            _controller (ImageInfoController): Parent controller instance
+        """
         if pref.verbose: print(" [VIEW] >> ImageInfoView.__init__(",")")
 
         super().__init__(Qt.Vertical)
@@ -519,6 +838,19 @@ class ImageInfoView(QSplitter):
         self.setSizes([60,40])
 
     def setProcessPipe(self,processPipe): 
+        """
+        Update display with new image and populate all metadata fields.
+        
+        Extracts comprehensive metadata from the ProcessPipe's image including
+        EXIF data, technical parameters, and user-defined tags. Updates all
+        form fields and checkboxes to reflect current image state.
+        
+        Args:
+            processPipe (ProcessPipe): Processing pipeline containing image with metadata
+            
+        Returns:
+            Result of imageWidgetController.setImage() operation
+        """
         image_ = processPipe.getImage()
         # ---------------------------------------------------
         if pref.verbose: print(" [VIEW] >> ImageInfoView.setImage(",image_.name,")")
@@ -573,23 +905,82 @@ class ImageInfoView(QSplitter):
         return self.imageWidgetController.setImage(image_)
 
     def metadataChange(self,metaGroup,metaTag, on_off): 
+        """
+        Handle user changes to custom metadata tags.
+        
+        Args:
+            metaGroup (str): Metadata group name
+            metaTag (str): Specific tag name
+            on_off (bool): New tag state
+        """
         if self.controller.callBackActive: self.controller.metadataChange(metaGroup,metaTag, on_off)
 # ------------------------------------------------------------------------------------------
 # --- class AdvanceLineEdit(object) --------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class AdvanceLineEdit(object):
+    """
+    Enhanced line edit widget with label for metadata display.
+    
+    Provides a labeled text input widget optimized for displaying and
+    potentially editing metadata values in forms. Includes automatic
+    layout management and optional change callbacks.
+    
+    Attributes:
+        - label (QLabel): Display label for the field
+        - lineEdit (QLineEdit): Text input widget
+    """
     def __init__(self, labelName, defaultText, layout, callBack=None):
+        """
+        Initialize labeled line edit widget.
+        
+        Args:
+            labelName (str): Display label text
+            defaultText (str): Initial/default text value
+            layout (QFormLayout): Parent layout to add widget to
+            callBack (function, optional): Text change callback function
+        """
         self.label = QLabel(labelName)
         self.lineEdit =QLineEdit(defaultText)
         if callBack: self.lineEdit.textChanged.connect(callBack)
         layout.addRow(self.label,self.lineEdit)
 
-    def setText(self, txt): self.lineEdit.setText(txt)
+    def setText(self, txt): 
+        """
+        Update the displayed text value.
+        
+        Args:
+            txt (str): New text to display
+        """
+        self.lineEdit.setText(txt)
 # ------------------------------------------------------------------------------------------
 # --- class AdvanceCheckBox(object) --------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class AdvanceCheckBox(object):
+    """
+    Enhanced checkbox widget with label for metadata editing.
+    
+    Provides a labeled checkbox widget optimized for editing user-defined
+    metadata tags. Supports callback functionality for metadata updates
+    and automatic layout management.
+    
+    Attributes:
+        - parent (ImageInfoView): Parent view for callback delegation
+        - leftText (str): Left label text (group name)
+        - rightText (str): Right label text (tag name)
+        - label (QLabel): Display label widget
+        - checkbox (QCheckBox): Checkbox control
+    """
     def __init__(self, parent, leftText, rightText, defaultValue, layout):
+        """
+        Initialize labeled checkbox widget.
+        
+        Args:
+            parent (ImageInfoView): Parent view for callbacks
+            leftText (str): Left label text (metadata group)
+            rightText (str): Right label text (metadata tag)
+            defaultValue (bool): Initial checkbox state
+            layout (QFormLayout): Parent layout to add widget to
+        """
         self.parent = parent
 
         self.leftText = leftText
@@ -600,15 +991,66 @@ class AdvanceCheckBox(object):
         self.checkbox.toggled.connect(self.toggled)
         layout.addRow(self.label,self.checkbox)
 
-    def setState(self, on_off): self.checkbox.setChecked(on_off)
+    def setState(self, on_off): 
+        """
+        Set checkbox checked state.
+        
+        Args:
+            on_off (bool): New checked state
+        """
+        self.checkbox.setChecked(on_off)
 
-    def toggled(self): self.parent.metadataChange(self.leftText, self.rightText, self.checkbox.isChecked())
+    def toggled(self): 
+        """
+        Handle checkbox state changes and notify parent.
+        """
+        self.parent.metadataChange(self.leftText, self.rightText, self.checkbox.isChecked())
 # ------------------------------------------------------------------------------------------
 # --- class EditImageView(QSplitter) -------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class EditImageView(QSplitter):
+    """
+    Comprehensive HDR image editing interface with all editing controls.
+    
+    Provides the complete HDR editing interface with real-time preview and
+    extensive parameter controls. Includes exposure, contrast, tone curves,
+    color editing, geometry transformations, and HDR preview capabilities.
+    
+    Layout Structure:
+    - Top: Image preview showing real-time edits
+    - Bottom: Scrollable controls panel with:
+      * Basic adjustments (exposure, contrast, saturation)
+      * Advanced tone curve with B-spline control points
+      * Lightness masking for selective editing
+      * Five independent color editors in LCH space
+      * Automatic color selection tools
+      * Geometry transformations (rotation, cropping)
+      * HDR preview controls
+    
+    Attributes:
+        - controller (EditImageController): Parent controller reference
+        - imageWidgetController (ImageWidgetController): Image preview controller
+        - exposure, contrast, saturation (AdvanceSliderController): Basic adjustment controls
+        - tonecurve (ToneCurveController): B-spline tone curve editor
+        - lightnessmask (LightnessMaskController): Tone range masking
+        - colorEditor0-4 (LchColorSelectorController): Independent color editors
+        - colorEditorsAuto (ColorEditorsAutoController): Automatic color selection
+        - geometry (GeometryController): Rotation and cropping controls
+        - hdrPreview (HDRviewerView): HDR display preview interface
+        - scroll (QScrollArea): Scrollable container for all controls
+    """
 
     def __init__(self, _controller, build=False):
+        """
+        Initialize comprehensive HDR editing interface.
+        
+        Creates all editing controls and sets up the scrollable interface
+        with proper callback connections for real-time parameter updates.
+        
+        Args:
+            _controller (EditImageController): Parent controller instance
+            build (bool): Whether to restore previous state during construction
+        """
         if pref.verbose: print(" [VIEW] >> EditImageView.__init__(",")")
         super().__init__(Qt.Vertical)
 
@@ -704,46 +1146,99 @@ class EditImageView(QSplitter):
         self.setSizes([60,40])
 
     def setImage(self,image):
+        """
+        Update the image preview display.
+        
+        Args:
+            image (hdrCore.image.Image): Image to display in preview
+            
+        Returns:
+            Result of imageWidgetController.setImage() operation
+        """
         if pref.verbose: print(" [VIEW] >> EditImageView.setImage(",image.name,")")
         return self.imageWidgetController.setImage(image)
 
     def autoExposure(self):
+        """
+        Trigger automatic exposure calculation.
+        
+        Delegates to controller for automatic exposure value computation
+        based on image histogram analysis.
+        """
         if pref.verbose: print(" [CB] >> EditImageView.autoExposure(",")")
 
         self.controller.autoExposure()
         pass
 
     def changeExposure(self, value):
+        """
+        Handle manual exposure adjustment changes.
+        
+        Args:
+            value (float): New exposure value in EV stops
+        """
         if pref.verbose: print(" [CB] >> EditImageView.changeExposure(",")")
 
         self.controller.changeExposure(value)
         pass
 
     def autoContrast(self):
+        """
+        Trigger automatic contrast calculation.
+        
+        Placeholder for automatic contrast adjustment functionality.
+        """
         if pref.verbose: print(" [CB] >> EditImageView.autoContrast(",")")
         pass
 
     def changeContrast(self, value):
+        """
+        Handle manual contrast adjustment changes.
+        
+        Args:
+            value (float): New contrast value
+        """
         if pref.verbose: print(" [CB] >> EditImageView.changeContrast(",")")
 
         self.controller.changeContrast(value)
         pass
 
     def autoSaturation(self):
+        """
+        Trigger automatic saturation calculation.
+        
+        Placeholder for automatic saturation adjustment functionality.
+        """
         print(" [CB] >> EditImageView.autoSaturation(",")")
         pass
 
     def changeSaturation(self,value):   ### TO DO
+        """
+        Handle manual saturation adjustment changes.
+        
+        Args:
+            value (float): New saturation value
+        """
         if pref.verbose:  print(" [CB] >> EditImageView.changeSaturation(",")")
         self.controller.changeSaturation(value)
 
-    def plotToneCurve(self): self.tonecurve.plotCurve()
+    def plotToneCurve(self): 
+        """
+        Update tone curve visualization in the curve editor.
+        """
+        self.tonecurve.plotCurve()
  
     def setProcessPipe(self, processPipe):
-        """ 
-            called to initialize EditImageView on image change
-            recover parameters of processPipe
-            and initialize view components
+        """
+        Initialize interface with ProcessPipe parameters.
+        
+        Recovers all editing parameters from the ProcessPipe and restores
+        the interface state to match the current image's editing configuration.
+        This method is called when switching between images to maintain
+        consistent editing state.
+        
+        Args:
+            processPipe (ProcessPipe): Processing pipeline with current parameters
         """
         if pref.verbose:  print(" [VIEW] >> EditImageView.setProcessPipe(",")")
 
@@ -816,7 +1311,97 @@ class EditImageView(QSplitter):
 # --- class MultiDockView(QDockWidget) -----------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class MultiDockView(QDockWidget):
+    """
+    Multi-panel dockable widget for uHDR right-side interface.
+    
+    Provides a switchable dock widget that can display different interface panels
+    for HDR image editing workflow. Manages three distinct child controllers
+    that handle different aspects of image processing: editing controls, metadata
+    information, and aesthetics analysis.
+    
+    Panel Types:
+    - Panel 0: Edit Image Controls (EditImageController)
+      * HDR parameter adjustments (exposure, contrast, saturation)
+      * Tone curve editing with B-spline controls
+      * Color space editing in LCH coordinates
+      * Geometry transformations and HDR preview
+      
+    - Panel 1: Image Information & Metadata (ImageInfoController)
+      * EXIF data display and technical parameters
+      * User-defined workflow tags and classification
+      * File information and processing metadata
+      
+    - Panel 2: Image Aesthetics Analysis (ImageAestheticsController)
+      * Color palette extraction using K-means clustering
+      * Dominant color visualization and analysis
+      * Aesthetic composition metrics
+    
+    Architecture:
+    The MultiDockView implements a container pattern where child controllers
+    manage their own views and business logic. The dock handles view switching,
+    memory management, and state synchronization between panels.
+    
+    Docking Behavior:
+    - Allowed areas: Left or Right dock areas only
+    - Default position: Right side of main window
+    - Resizable and detachable following Qt dock widget standards
+    - Panel switching preserves current ProcessPipe state
+    
+    State Management:
+    When switching panels, the dock:
+    1. Destroys the current view to free memory
+    2. Rebuilds the target view with current ProcessPipe
+    3. Updates the dock widget content
+    4. Maintains consistent state across panels
+    
+    Memory Optimization:
+    Views are dynamically created/destroyed during switching to minimize
+    memory usage, especially important for the complex editing interface
+    with matplotlib components and HDR preview capabilities.
+    
+    Attributes:
+        - controller (MultiDockController): Parent controller for dock management
+        - childControllers (list): List of three child controllers:
+            [0] EditImageController - editing interface
+            [1] ImageInfoController - metadata interface  
+            [2] ImageAestheticsController - aesthetics interface
+        - childController: Currently active child controller
+        - active (int): Index of currently displayed panel (0, 1, or 2)
+    
+    Usage Example:
+        # Create multi-dock with HDR support
+        dock = MultiDockView(controller, HDRcontroller)
+        
+        # Switch to metadata panel
+        dock.switch(1)
+        
+        # Update with new image
+        dock.setProcessPipe(processPipe)
+    
+    Integration:
+    The MultiDockView integrates with the main AppView through menu
+    shortcuts (Ctrl+E, Ctrl+I, Ctrl+A) that trigger panel switching
+    for efficient workflow navigation.
+    """
     def __init__(self, _controller, HDRcontroller=None):
+        """
+        Initialize multi-panel dock widget with child controllers.
+        
+        Creates the dock widget with three child controllers for different
+        interface panels. Sets up docking constraints, initializes the
+        editing panel as default, and establishes parent-child relationships.
+        
+        Args:
+            _controller (MultiDockController): Parent controller managing dock behavior
+            HDRcontroller (HDRController, optional): HDR display controller for
+                real-time HDR preview functionality in editing panel
+                
+        Child Controllers Created:
+            - EditImageController: Complete HDR editing interface with tone curves,
+              color editors, geometry controls, and HDR preview
+            - ImageInfoController: Metadata display and user tag management
+            - ImageAestheticsController: Color palette and aesthetic analysis
+        """
         if pref.verbose:  print(" [VIEW] >> MultiDockView.__init__(",")")
 
         super().__init__("Image Edit/Info")
@@ -836,10 +1421,41 @@ class MultiDockView(QDockWidget):
     # ------------------------------------------------------------------------------------------
     def switch(self,nb):
         """
-            change active dock
-            nb = 0 > editing imag dock
-            nb = 1 > image info and metadata dock
-            nb = 2 > image aesthetics model 
+        Switch to different dock panel and rebuild interface.
+        
+        Changes the active dock panel by destroying the current view,
+        selecting the target child controller, rebuilding the view with
+        current ProcessPipe state, and updating the dock widget content.
+        
+        Panel Selection:
+        - nb = 0: Edit Image Controls
+          * HDR parameter adjustments (exposure, contrast, saturation)
+          * Tone curve editing and lightness masking
+          * Color space editing in LCH coordinates
+          * Geometry transformations and HDR preview
+          
+        - nb = 1: Image Information & Metadata  
+          * EXIF data display and technical parameters
+          * User-defined workflow tags and classification
+          * File information and processing metadata
+          
+        - nb = 2: Image Aesthetics Analysis
+          * Color palette extraction using K-means clustering
+          * Dominant color visualization and analysis
+          * Aesthetic composition analysis
+        
+        Memory Management:
+        The method performs proper cleanup by calling deleteLater() on the
+        current view before creating the new one, preventing memory leaks
+        from complex widgets like matplotlib figures and HDR previews.
+        
+        Args:
+            nb (int): Target panel index (0, 1, or 2). Values outside range
+                     are wrapped using modulo operation for safety.
+                     
+        State Preservation:
+        Current ProcessPipe is retrieved and passed to the new panel to
+        maintain consistent state across interface switches.
         """
         if pref.verbose:  print(" [VIEW] >> MultiDockView.switch(",nb,")")
 
@@ -855,6 +1471,32 @@ class MultiDockView(QDockWidget):
             self.repaint()
     # ------------------------------------------------------------------------------------------
     def setProcessPipe(self, processPipe):
+        """
+        Update current panel with new ProcessPipe data.
+        
+        Delegates ProcessPipe updates to the currently active child controller,
+        allowing each panel to refresh its content and interface state based
+        on the new image and processing parameters.
+        
+        Panel-Specific Behavior:
+        - Edit Panel: Restores all editing parameters (exposure, contrast, 
+          tone curves, color editors, geometry) from ProcessPipe nodes
+        - Info Panel: Updates metadata display, EXIF data, and user tags
+        - Aesthetics Panel: Regenerates color palette and analysis visualization
+        
+        Args:
+            processPipe (ProcessPipe): Processing pipeline containing image
+                and all associated editing parameters and metadata
+                
+        Returns:
+            Result of active child controller's setProcessPipe() method,
+            typically the updated image or processing result
+            
+        Note:
+            This method provides a unified interface for ProcessPipe updates
+            regardless of which panel is currently active, simplifying the
+            dock management logic in the parent controller.
+        """
         if pref.verbose:  print(" [VIEW] >> MultiDockView.setProcessPipe(",processPipe.getImage().name,")")
         return self.childController.setProcessPipe(processPipe)
 # ------------------------------------------------------------------------------------------
@@ -863,7 +1505,92 @@ class MultiDockView(QDockWidget):
 # --- class AdvanceSliderView(QFrame) ------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class AdvanceSliderView(QFrame):
+    """
+    Enhanced slider widget with auto/reset functionality and numerical input.
+    
+    Provides a comprehensive parameter adjustment interface combining a horizontal
+    slider with automatic calculation, manual reset, and direct numerical input
+    capabilities. Used extensively throughout uHDR for real-time parameter
+    adjustments in exposure, contrast, saturation, and other image processing
+    controls.
+    
+    Widget Components:
+    - Descriptive label: Parameter name display
+    - Auto button: Triggers automatic parameter calculation
+    - Value editor: Direct numerical input with validation
+    - Reset button: Restores default parameter value
+    - Horizontal slider: Continuous parameter adjustment
+    
+    Value Handling:
+    The widget internally scales slider positions based on step size for
+    precise control. Slider range is calculated as (range[0]/step, range[1]/step)
+    to provide appropriate granularity for different parameter types.
+    
+    Layout Structure:
+    +------------------------------------------+
+    | [Label] [Auto] [Value Input] [Reset]    |  <- First row (horizontal)
+    +------------------------------------------+
+    | [========== Slider =================]   |  <- Second row
+    +------------------------------------------+
+    
+    Callback Integration:
+    All user interactions automatically trigger controller callbacks:
+    - Slider movement: controller.sliderChange()
+    - Reset button: controller.reset()
+    - Auto button: controller.auto()
+    
+    Value input changes are handled through slider synchronization.
+    
+    Attributes:
+        - controller: Parent controller for callback delegation
+        - firstrow (QFrame): Container for top row controls
+        - label (QLabel): Parameter name display
+        - auto (QPushButton): Automatic parameter calculation trigger
+        - editValue (QLineEdit): Direct numerical input field with validation
+        - reset (QPushButton): Default value restoration button
+        - slider (QSlider): Main parameter adjustment control
+        - vbox (QVBoxLayout): Vertical layout manager
+        - hbox (QHBoxLayout): Horizontal layout for first row
+    
+    Example Usage:
+        # Exposure control with ±10 EV range and 0.25 step
+        exposure_slider = AdvanceSliderView(controller, "exposure", 0, (-10, 10), 0.25)
+        
+        # Contrast control with ±100 range and 1.0 step  
+        contrast_slider = AdvanceSliderView(controller, "contrast", 0, (-100, 100), 1.0)
+    
+    Technical Notes:
+        - QDoubleValidator ensures only valid numerical input
+        - Step size determines slider precision and scaling
+        - Range values should be compatible with step size
+        - Controller callbacks handle actual parameter application
+        - Widget maintains internal consistency between slider and text input
+    """
     def __init__(self, controller, name,defaultValue, range, step):
+        """
+        Initialize enhanced slider widget with auto/reset functionality.
+        
+        Creates a complete parameter adjustment interface with slider, buttons,
+        and text input. Automatically configures scaling, validation, and
+        callback connections for seamless integration.
+        
+        Args:
+            controller: Parent controller object implementing callback methods:
+                - sliderChange(): Handle slider value changes
+                - reset(): Restore default parameter value  
+                - auto(): Calculate automatic parameter value
+            name (str): Human-readable parameter name for label display
+            defaultValue (float): Initial parameter value and reset target
+            range (tuple): Parameter range as (min_value, max_value)
+            step (float): Parameter adjustment granularity and slider scaling factor
+                
+        Example:
+            # Create exposure slider: -10 to +10 EV, 0.25 EV steps
+            slider = AdvanceSliderView(controller, "exposure", 0.0, (-10.0, 10.0), 0.25)
+            
+            # Create contrast slider: -100 to +100, 1.0 steps  
+            slider = AdvanceSliderView(controller, "contrast", 0.0, (-100.0, 100.0), 1.0)
+        """
         super().__init__()
         self.setFrameShape(QFrame.StyledPanel)
         self.controller = controller
@@ -904,8 +1631,92 @@ class AdvanceSliderView(QFrame):
 # --- class ToneCurveView(QFrame) ----------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ToneCurveView(QFrame):
+    """
+    B-spline tone curve editing interface with matplotlib visualization.
+    
+    Provides comprehensive tone curve editing capabilities using B-spline interpolation
+    with individual control over five tonal ranges: shadows, blacks, mediums, whites,
+    and highlights. Features real-time curve visualization and semi-automatic curve
+    generation for enhanced workflow efficiency.
+    
+    Tone Curve Controls:
+    - Shadows (0-20%): Darkest image regions control
+    - Blacks (20-40%): Dark tone adjustments  
+    - Mediums (40-60%): Mid-tone contrast and brightness
+    - Whites (60-80%): Bright tone refinement
+    - Highlights (80-100%): Brightest regions control
+    
+    Interface Features:
+    - Real-time B-spline curve visualization using matplotlib
+    - Individual sliders for each tonal range (0-100 scale)
+    - Reset buttons for selective parameter restoration
+    - Semi-automatic curve generation based on image analysis
+    - Live curve updates during parameter adjustment
+    
+    B-spline Implementation:
+    The tone curve uses B-spline interpolation with fixed control points
+    at the five tonal boundaries. User adjustments modify the Y-coordinates
+    of these control points while maintaining smooth curve transitions.
+    
+    Mathematical Foundation:
+    - Input domain: [0, 100] (percentage lightness)
+    - Output range: [0, 100] (adjusted lightness)
+    - Control points: (0,0), (20,shadows), (40,blacks), (60,mediums), (80,whites), (100,highlights)
+    - Interpolation: Cubic B-spline with C² continuity
+    
+    Layout Structure:
+    +------------------------------------------+
+    | [Matplotlib Curve Visualization]        |
+    +------------------------------------------+
+    | [Auto Curve Generation Button]          |
+    +------------------------------------------+
+    | highlights: [slider] [value] [reset]    |
+    | whites:     [slider] [value] [reset]    |
+    | mediums:    [slider] [value] [reset]    |
+    | blacks:     [slider] [value] [reset]    |
+    | shadows:    [slider] [value] [reset]    |
+    +------------------------------------------+
+    
+    Attributes:
+        - controller (ToneCurveController): Parent controller for curve calculations
+        - curve (FigureWidget): Matplotlib figure widget for curve display
+        - autoCurve (QPushButton): Semi-automatic curve generation button
+        - sliderShadows, sliderBlacks, sliderMediums, sliderWhites, sliderHighlights: 
+            Individual tone range control sliders (0-100 range)
+        - editShadows, editBlacks, editMediums, editWhites, editHighlights:
+            Text input fields showing current slider values
+        - resetShadows, resetBlacks, resetMediums, resetWhites, resetHighlights:
+            Reset buttons for individual tone ranges
+        - labelShadows, labelBlacks, labelMediums, labelWhites, labelHighlights:
+            Descriptive labels for each tone range
+    
+    Usage Example:
+        The tone curve allows precise control over image tonality:
+        - Lift shadows (increase slider) to reveal dark detail
+        - Lower highlights (decrease slider) to recover bright detail  
+        - Adjust mediums for overall contrast and brightness
+        - Use auto curve for intelligent initial settings
+        
+    Technical Notes:
+        - All slider values represent percentage adjustments (0-100)
+        - Curve updates trigger real-time image processing
+        - B-spline ensures smooth transitions between control points
+        - Auto curve analyzes image histogram for optimal settings
+    """
 
     def __init__(self, controller):
+        """
+        Initialize B-spline tone curve editing interface.
+        
+        Creates the complete tone curve editing interface with matplotlib
+        visualization and individual control sliders for five tonal ranges.
+        Sets up all UI components, connects callbacks, and initializes
+        default parameter values.
+        
+        Args:
+            controller (ToneCurveController): Parent controller instance
+                that handles curve calculations and image processing
+        """
         super().__init__()
         self.setFrameShape(QFrame.StyledPanel)
 
@@ -1043,54 +1854,190 @@ class ToneCurveView(QFrame):
                                                                                          
 
     def sliderShadowsChange(self):
+        """
+        Handle shadows slider value changes and update tone curve.
+        
+        Called when the shadows slider (0-20% tonal range) is moved.
+        Updates the curve visualization and triggers image processing
+        if callbacks are active.
+        """
         if self.controller.callBackActive:
             value = self.sliderShadows.value()
             self.controller.sliderChange("shadows", value)
-        pass
 
     def sliderBlacksChange(self):
+        """
+        Handle blacks slider value changes and update tone curve.
+        
+        Called when the blacks slider (20-40% tonal range) is moved.
+        Updates the curve visualization and triggers image processing
+        if callbacks are active.
+        """
         if self.controller.callBackActive:
             value = self.sliderBlacks.value()
             self.controller.sliderChange("blacks", value)
-        pass
 
     def sliderMediumsChange(self):
+        """
+        Handle mediums slider value changes and update tone curve.
+        
+        Called when the mediums slider (40-60% tonal range) is moved.
+        This controls mid-tone contrast and overall image brightness.
+        Updates the curve visualization and triggers image processing
+        if callbacks are active.
+        """
         if self.controller.callBackActive:
             value = self.sliderMediums.value()
             self.controller.sliderChange("mediums", value)
-        pass
 
     def sliderWhitesChange(self):
+        """
+        Handle whites slider value changes and update tone curve.
+        
+        Called when the whites slider (60-80% tonal range) is moved.
+        Used for bright tone refinement and highlight detail control.
+        Updates the curve visualization and triggers image processing
+        if callbacks are active.
+        """
         if self.controller.callBackActive:
             value = self.sliderWhites.value()
             self.controller.sliderChange("whites", value)
-        pass
 
     def sliderHighlightsChange(self):
+        """
+        Handle highlights slider value changes and update tone curve.
+        
+        Called when the highlights slider (80-100% tonal range) is moved.
+        Controls the brightest image regions and highlight detail recovery.
+        Updates the curve visualization and triggers image processing
+        if callbacks are active.
+        """
         if self.controller.callBackActive:
             value = self.sliderHighlights.value()
             self.controller.sliderChange("highlights", value)
-        pass
 
     def resetShadowsCB(self):
+        """Reset shadows slider to default value and update curve."""
         if self.controller.callBackActive: self.controller.reset("shadows")
 
     def resetBlacksCB(self):
+        """Reset blacks slider to default value and update curve."""
         if self.controller.callBackActive: self.controller.reset("blacks")
     
     def resetMediumsCB(self):
+        """Reset mediums slider to default value and update curve."""
         if self.controller.callBackActive: self.controller.reset("mediums")
 
     def resetWhitesCB(self):
+        """Reset whites slider to default value and update curve."""
         if self.controller.callBackActive: self.controller.reset("whites")
 
     def resetHighlightsCB(self):
+        """Reset highlights slider to default value and update curve."""
         if self.controller.callBackActive: self.controller.reset("highlights")
 # ------------------------------------------------------------------------------------------
 # --- class LightnessMaskView(QGroupBox) ---------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class LightnessMaskView(QGroupBox):
+    """
+    Lightness-based masking control interface for selective tone editing.
+    
+    Provides checkbox controls for enabling/disabling tone range masks that allow
+    selective application of editing adjustments to specific lightness regions.
+    Works in conjunction with tone curve editing to provide precise control over
+    which tonal ranges are affected by parameter changes.
+    
+    Tone Range Masking:
+    The interface allows independent masking of five distinct lightness ranges
+    corresponding to the tone curve control points:
+    
+    - Shadows (0-20%): Darkest image regions
+      * Deep shadows, true blacks, dark details
+      * Useful for shadow lifting without affecting other tones
+      
+    - Blacks (20-40%): Lower mid-tone range
+      * Dark greys, low-key lighting areas
+      * Controls separation between shadows and mid-tones
+      
+    - Mediums (40-60%): Mid-tone range
+      * Standard exposure areas, skin tones, neutral greys
+      * Primary brightness and contrast control zone
+      
+    - Whites (60-80%): Upper mid-tone range  
+      * Bright areas, light greys, highlight transitions
+      * Controls separation between mid-tones and highlights
+      
+    - Highlights (80-100%): Brightest image regions
+      * Specular highlights, light sources, bright reflections
+      * Useful for highlight recovery and bright detail control
+    
+    Masking Functionality:
+    When checkboxes are enabled, subsequent editing operations (exposure,
+    contrast, color adjustments) are selectively applied only to pixels
+    within the specified lightness ranges. This allows for:
+    
+    - Targeted shadow lifting without brightening highlights
+    - Selective highlight recovery without darkening shadows
+    - Mid-tone contrast adjustments without clipping extremes
+    - Color corrections limited to specific tonal ranges
+    - Fine-tuned local adjustments for advanced workflow
+    
+    Layout Structure:
+    +---------------------------------------------------------------+
+    | mask lightness                                               |
+    +---------------------------------------------------------------+
+    | [✓] shadows [✓] blacks [✓] mediums [✓] whites [✓] highlights|
+    +---------------------------------------------------------------+
+    
+    Integration:
+    The mask settings work seamlessly with other editing controls in the
+    EditImageView, providing a non-destructive workflow where masks can
+    be enabled, adjusted, and disabled without losing editing progress.
+    
+    Attributes:
+        - controller (LightnessMaskController): Parent controller for mask logic
+        - checkboxShadows (QCheckBox): Shadows range mask toggle
+        - checkboxBlacks (QCheckBox): Blacks range mask toggle  
+        - checkboxMediums (QCheckBox): Mediums range mask toggle
+        - checkboxWhites (QCheckBox): Whites range mask toggle
+        - checkboxHighlights (QCheckBox): Highlights range mask toggle
+        - hbox (QHBoxLayout): Horizontal layout for checkbox arrangement
+
+    Usage Example:
+        # Enable shadow and highlight masking for targeted adjustment
+        mask_view.checkboxShadows.setChecked(True)
+        mask_view.checkboxHighlights.setChecked(True)
+        
+        # Apply selective exposure adjustment
+        # (affects only shadows and highlights)
+        
+    Technical Notes:
+        - Mask ranges correspond to tone curve control points
+        - Multiple masks can be active simultaneously
+        - Masks affect all subsequent editing operations
+        - Checkbox state is preserved in ProcessPipe parameters
+        - Real-time mask preview available through color editors
+    """
     def __init__(self, _controller):
+        """
+        Initialize lightness masking interface with five tone range checkboxes.
+        
+        Creates a horizontal arrangement of checkboxes for controlling tone range
+        masks. Sets up callback connections for real-time mask updates and
+        initializes all masks as disabled by default.
+        
+        Args:
+            _controller (LightnessMaskController): Parent controller implementing
+                maskChange() method for handling mask state updates
+                
+        Interface Layout:
+            All checkboxes are arranged horizontally in reading order:
+            [Shadows] [Blacks] [Mediums] [Whites] [Highlights]
+            
+        Default State:
+            All masks are initially disabled (unchecked) to allow normal
+            full-range editing operations.
+        """
         super().__init__("mask lightness")
         #self.setFrameShape(QFrame.StyledPanel)
 
@@ -1123,21 +2070,163 @@ class LightnessMaskView(QGroupBox):
         self.hbox.addWidget(self.checkboxHighlights)
 
     # callbacks
-    def clickShadows(self):     
-        if self.controller.callBackActive:  self.controller.maskChange("shadows", self.checkboxShadows.isChecked())
-    def clickBlacks(self):     
-        if self.controller.callBackActive:  self.controller.maskChange("blacks", self.checkboxBlacks.isChecked())
-    def clickMediums(self):     
-        if self.controller.callBackActive:  self.controller.maskChange("mediums", self.checkboxMediums.isChecked())
-    def clickWhites(self):     
-        if self.controller.callBackActive:  self.controller.maskChange("whites", self.checkboxWhites.isChecked())
-    def clickHighlights(self):     
-        if self.controller.callBackActive:  self.controller.maskChange("highlights", self.checkboxHighlights.isChecked())
+    def clickShadows(self):
+        """
+        Handle shadows mask checkbox toggle.
+        
+        Activates or deactivates masking for the shadows tone range (0-20%)
+        when the shadows checkbox state changes. Enables selective editing
+        of the darkest image regions.
+        """
+        if self.controller.callBackActive:  
+            self.controller.maskChange("shadows", self.checkboxShadows.isChecked())
+            
+    def clickBlacks(self):
+        """
+        Handle blacks mask checkbox toggle.
+        
+        Activates or deactivates masking for the blacks tone range (20-40%)
+        when the blacks checkbox state changes. Enables selective editing
+        of dark mid-tone regions.
+        """
+        if self.controller.callBackActive:  
+            self.controller.maskChange("blacks", self.checkboxBlacks.isChecked())
+            
+    def clickMediums(self):
+        """
+        Handle mediums mask checkbox toggle.
+        
+        Activates or deactivates masking for the mediums tone range (40-60%)
+        when the mediums checkbox state changes. Enables selective editing
+        of mid-tone regions including skin tones and neutral greys.
+        """
+        if self.controller.callBackActive:  
+            self.controller.maskChange("mediums", self.checkboxMediums.isChecked())
+            
+    def clickWhites(self):
+        """
+        Handle whites mask checkbox toggle.
+        
+        Activates or deactivates masking for the whites tone range (60-80%)
+        when the whites checkbox state changes. Enables selective editing
+        of bright mid-tone regions and highlight transitions.
+        """
+        if self.controller.callBackActive:  
+            self.controller.maskChange("whites", self.checkboxWhites.isChecked())
+            
+    def clickHighlights(self):
+        """
+        Handle highlights mask checkbox toggle.
+        
+        Activates or deactivates masking for the highlights tone range (80-100%)
+        when the highlights checkbox state changes. Enables selective editing
+        of the brightest image regions and specular highlights.
+        """
+        if self.controller.callBackActive:  
+            self.controller.maskChange("highlights", self.checkboxHighlights.isChecked())
 # ------------------------------------------------------------------------------------------
 # --- class HDRviewerView(QFrame) ----------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class HDRviewerView(QFrame):
+    """
+    HDR display preview control interface for external HDR monitor management.
+    
+    Provides essential controls for managing real-time HDR image preview on external
+    HDR-capable displays. Enables workflow acceleration through live preview updates
+    and side-by-side comparison capabilities for professional HDR image editing.
+    
+    HDR Display Features:
+    - Real-time preview: Live updates of edited HDR images on external HDR displays
+    - Automatic updates: Optional real-time synchronization with editing parameters
+    - Raw/edited comparison: Side-by-side visualization of original vs processed images
+    - Display reset: Clear HDR display and return to neutral state
+    - Manual updates: On-demand refresh for selective preview control
+    
+    Workflow Integration:
+    The HDR viewer integrates seamlessly with the editing workflow by providing
+    immediate visual feedback on actual HDR hardware. This allows colorists and
+    HDR specialists to:
+    
+    - Evaluate tone mapping accuracy on target display technology
+    - Assess color gamut utilization and saturation levels
+    - Verify highlight detail preservation and shadow lifting
+    - Compare multiple editing iterations efficiently
+    - Validate HDR content for delivery and mastering
+    
+    Display Requirements:
+    Requires external HDR-capable monitor configured through preferences system.
+    Supports various HDR display standards and peak brightness levels based on
+    hardware capabilities and preference configuration.
+    
+    Layout Structure:
+    +------------------------------------------+
+    | hdr preview                    [reset]   |  <- Top row
+    +------------------------------------------+
+    | [✓] auto  [update]  [compare]           |  <- Bottom row
+    +------------------------------------------+
+    
+    Control Functions:
+    - Auto checkbox: Enable/disable automatic preview updates during editing
+    - Update button: Manual refresh of HDR display with current image state
+    - Compare button: Side-by-side display of raw and edited versions
+    - Reset button: Clear HDR display and show default splash screen
+    
+    Performance Considerations:
+    Auto-update mode may impact editing performance due to continuous HDR image
+    processing and display updates. Manual update mode provides better responsiveness
+    for complex editing operations while maintaining preview capability.
+    
+    Attributes:
+        - controller (HDRController): Parent controller managing HDR display hardware
+        - label (QLabel): "hdr preview" identifier label
+        - resetButton (QPushButton): Clear HDR display control
+        - updateButton (QPushButton): Manual HDR preview refresh
+        - compareButton (QPushButton): Raw/edited comparison display
+        - autoCheckBox (QCheckBox): Automatic update toggle
+        - vbox (QVBoxLayout): Main vertical layout container
+        - hboxUp, hboxDown (QHBoxLayout): Top and bottom control row layouts
+        - hboxUpContainer, hboxDownContainer (QFrame): Layout containers
+
+    Usage Example:
+        # Enable auto-preview for real-time editing feedback
+        hdr_viewer.autoCheckBox.setChecked(True)
+        
+        # Manual update after complex editing operations
+        hdr_viewer.updateButton.click()
+        
+        # Compare original and edited versions
+        hdr_viewer.compareButton.click()
+    
+    Integration Notes:
+        - Works with AppView menu shortcuts (Ctrl+H, Ctrl+C, Ctrl+K)
+        - Synchronized with EditImageController editing operations
+        - Respects HDR display preferences and configuration
+        - Supports multiple HDR display standards and devices
+    """
     def __init__(self, _controller= None, build = False):
+        """
+        Initialize HDR preview control interface with display management capabilities.
+        
+        Creates the HDR viewer interface with auto-update checkbox, manual control
+        buttons, and proper layout arrangement. Optionally restores previous auto-update
+        state when rebuilding the interface.
+        
+        Args:
+            _controller (HDRController, optional): Parent HDR display controller
+                managing external HDR hardware and display operations
+            build (bool): Whether to restore previous auto-update state from
+                existing model. Used when rebuilding interface during dock switching.
+                
+        Interface Setup:
+            - Top row: "hdr preview" label + reset button
+            - Bottom row: auto checkbox + update button + compare button
+            - All controls connected to appropriate controller callbacks
+            
+        State Restoration:
+            When build=True, retrieves previous autoPreviewHDR setting from
+            the editing model to maintain consistent user preferences across
+            interface rebuilds and dock panel switches.
+        """
         super().__init__()
         self.setFrameShape(QFrame.StyledPanel)
 
@@ -1180,18 +2269,119 @@ class HDRviewerView(QFrame):
         self.compareButton.clicked.connect(self.compare)
         self.autoCheckBox.toggled.connect(self.auto)
 
-    def reset(self): self.controller.displaySplash()
+    def reset(self):
+        """
+        Clear HDR display and show default splash screen.
+        
+        Resets the external HDR monitor to a neutral state by displaying
+        the default splash screen. Useful for clearing previous previews
+        and returning to a known baseline state.
+        """
+        self.controller.displaySplash()
 
-    def update(self): self.controller.callBackUpdate()
+    def update(self):
+        """
+        Manually refresh HDR display with current image state.
+        
+        Triggers immediate update of the external HDR display with the
+        currently processed image, reflecting all current editing parameters.
+        Provides on-demand preview control for performance optimization.
+        """
+        self.controller.callBackUpdate()
 
-    def compare(self): self.controller.callBackCompare()
+    def compare(self):
+        """
+        Display side-by-side raw and edited image comparison.
+        
+        Shows both the original unprocessed image and the current edited
+        version simultaneously on the HDR display for direct visual
+        comparison. Essential for evaluating editing effectiveness and
+        maintaining reference to original image characteristics.
+        """
+        self.controller.callBackCompare()
 
-    def auto(self): self.controller.callBackAuto(self.autoCheckBox.isChecked())
+    def auto(self):
+        """
+        Toggle automatic HDR preview updates based on checkbox state.
+        
+        Enables or disables real-time HDR display updates that synchronize
+        automatically with editing parameter changes. When enabled, provides
+        immediate visual feedback but may impact editing performance.
+        """
+        self.controller.callBackAuto(self.autoCheckBox.isChecked())
 # ------------------------------------------------------------------------------------------
 # --- class LchColorSelectorView(QFrame) ---------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class LchColorSelectorView(QFrame):
+    """
+    LCH color space selection and editing interface.
+    
+    Provides comprehensive color editing in LCH (Lightness, Chroma, Hue) space
+    with visual color bars, range selection sliders, and targeted editing controls.
+    Allows precise color selection and adjustment with real-time visual feedback.
+    
+    Color Selection Components:
+    - Hue bar: Visual hue spectrum (0-360°)
+    - Chroma bar: Saturation/colorfulness visualization (0-100)
+    - Lightness bar: Brightness visualization (0-100)
+    - Range sliders: Min/max selection for each component
+    
+    Color Editing Components:
+    - Hue shift: Rotate colors around hue wheel (-180° to +180°)
+    - Exposure: Brightness adjustment (-3 to +3 stops)
+    - Contrast: Local contrast enhancement (-100 to +100)
+    - Saturation: Colorfulness adjustment (-100 to +100)
+    
+    Additional Features:
+    - Selection mask preview
+    - Reset buttons for selection and editing parameters
+    - Real-time color bar updates based on selection
+    
+    Layout Structure:
+    +------------------------------------------+
+    | Hue Chroma Lightness color selector      |
+    +------------------------------------------+
+    | [Hue Color Bar Visualization]           |
+    | [Min Hue Slider] [Max Hue Slider]       |
+    | [Selected Hue Range Bar]                |
+    +------------------------------------------+
+    | [Chroma Color Bar Visualization]        |
+    | [Min Chroma Slider] [Max Chroma Slider] |
+    +------------------------------------------+
+    | [Lightness Color Bar Visualization]     |
+    | [Min Light Slider] [Max Light Slider]   |
+    +------------------------------------------+
+    | [Reset Selection]                        |
+    +------------------------------------------+
+    | color editor: hue shift, exposure, contrast, saturation |
+    | hue shift:  [slider] [value]            |
+    | saturation: [slider] [value]            |
+    | exposure:   [slider] [value]            |
+    | contrast:   [slider] [value]            |
+    | [x] show selection                       |
+    | [Reset Edit]                             |
+    +------------------------------------------+
+    
+    Attributes:
+        - controller (LchColorSelectorController): Parent controller reference
+        - imageHueController, imageSaturationController, imageLightnessController: Color bar displays
+        - imageHueRangeController: Selected hue range visualization
+        - sliderHueMin, sliderHueMax: Hue range selection sliders
+        - sliderChromaMin, sliderChromaMax: Chroma range selection sliders
+        - sliderLightMin, sliderLightMax: Lightness range selection sliders
+        - sliderHueShift, sliderExposure, sliderContrast, sliderSaturation: Editing controls
+        - valueHueShift, valueExposure, valueContrast, valueSaturation: Value displays
+        - checkboxMask: Selection mask preview toggle
+        - resetSelection, resetEdit: Reset buttons
+    """
     def __init__(self, _controller, defaultValues=None):
+        """
+        Initialize LCH color selector interface.
+        
+        Args:
+            _controller (LchColorSelectorController): Parent controller instance
+            defaultValues: Optional default parameter values
+        """
         super().__init__()
         self.setFrameShape(QFrame.StyledPanel)
         self.controller = _controller
@@ -1375,6 +2565,12 @@ class LchColorSelectorView(QFrame):
 
     # callbacks
     def sliderHueChange(self):
+        """
+        Handle hue range selection changes and update visual feedback.
+        
+        Updates hue range visualization and chroma bar based on selected
+        hue range, then notifies controller of the change.
+        """
         hmin = self.sliderHueMin.value()
         hmax = self.sliderHueMax.value()
 
@@ -1390,45 +2586,78 @@ class LchColorSelectorView(QFrame):
         self.controller.sliderHueChange(hmin,hmax)
 
     def sliderChromaChange(self):
+        """Handle chroma range selection changes."""
         vmin = self.sliderChromaMin.value()
         vmax = self.sliderChromaMax.value()
         # call controller
         self.controller.sliderChromaChange(vmin,vmax)
 
     def sliderLightnessChange(self):
+        """Handle lightness range selection changes."""
         vmin = self.sliderLightMin.value()/3.0
         vmax = self.sliderLightMax.value()/3.0
         # call controller
         self.controller.sliderLightnessChange(vmin,vmax)
 
     def sliderExposureChange(self):
+        """Handle exposure editing changes with 0.1 stop precision."""
         ev = round(self.sliderExposure.value()/30,1)
         # force to 0.1 precision
         self.valueExposure.setText(str(ev))
         self.controller.sliderExposureChange(ev)
 
     def sliderSaturationChange(self):
+        """Handle saturation editing changes."""
         ev = self.sliderSaturation.value()
         self.valueSaturation.setText(str(ev))
         self.controller.sliderSaturationChange(ev)
 
     def sliderContrastChange(self):
+        """Handle contrast editing changes."""
         ev = self.sliderContrast.value()
         self.valueContrast.setText(str(ev))
         self.controller.sliderContrastChange(ev)
 
     def sliderHueShiftChange(self):
+        """Handle hue shift editing changes."""
         hs = self.sliderHueShift.value()
         self.valueHueShift.setText(str(hs))
         self.controller.sliderHueShiftChange(hs)
 
     def checkboxMaskChange(self):
+        """Handle selection mask preview toggle."""
         self.controller.checkboxMaskChange(self.checkboxMask.isChecked())
 # ------------------------------------------------------------------------------------------
 # --- class GeometryView(QFrame) -----------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class GeometryView(QFrame):
+    """
+    Geometric transformation controls for rotation and cropping adjustments.
+    
+    Provides sliders for basic geometric corrections including:
+    - Vertical cropping adjustment: Fine-tune vertical positioning for aspect ratio cropping
+    - Rotation: Small angle corrections for straightening images
+    
+    Layout:
+    +------------------------------------------+
+    | cropping adj. [slider] [value]          |
+    | rotation      [slider] [value]          |
+    +------------------------------------------+
+    
+    Attributes:
+        - controller (GeometryController): Parent controller reference
+        - sliderCroppingVerticalAdjustement: Vertical cropping offset slider
+        - valueCroppingVerticalAdjustement: Cropping adjustment value display
+        - sliderRotation: Rotation angle slider
+        - valueRotation: Rotation value display
+    """
     def __init__(self, _controller):
+        """
+        Initialize geometry transformation interface.
+        
+        Args:
+            _controller (GeometryController): Parent controller instance
+        """
         super().__init__()
         self.setFrameShape(QFrame.StyledPanel)
         self.controller = _controller
@@ -1473,23 +2702,73 @@ class GeometryView(QFrame):
 
     # callbacks
     def sliderCroppingVerticalAdjustementChange(self):
+        """Handle vertical cropping adjustment changes."""
         v = self.sliderCroppingVerticalAdjustement.value()
         self.valueCroppingVerticalAdjustement.setText(str(v))
         # call controller
         self.controller.sliderCroppingVerticalAdjustementChange(v)
 
     def sliderRotationChange(self):
+        """Handle rotation angle changes with 1/6 degree precision."""
         v = self.sliderRotation.value()/6
         self.valueRotation.setText(str(v))
         # call controller
         self.controller.sliderRotationChange(v)
 # ------------------------------------------------------------------------------------------
-# --- class AestheticsImageView(QFrame) ----------------------------------------------------
+# --- class ImageAestheticsView(QSplitter) -------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageAestheticsView(QSplitter):
-    """class AestheticsImageView(QSplitter): view of AestheticsImageController
+    """
+    Image aesthetics analysis and color palette visualization interface.
+    
+    Provides tools for analyzing image aesthetics including dominant color
+    extraction, color palette generation, and visual composition analysis.
+    Uses K-means clustering for color palette extraction with configurable
+    parameters.
+    
+    Layout Structure:
+    - Top: Image preview showing current processing result
+    - Bottom: Scrollable controls panel with:
+      * Process output selector (which processing step to analyze)
+      * Number of colors configuration (2-8 colors)
+      * Generated color palette visualization
+    
+    Analysis Features:
+    - Dominant color extraction using K-means clustering
+    - Configurable color count (2-8 dominant colors)
+    - Process step selection for analysis input
+    - Visual color palette representation
+    - Extensible for composition and strength line analysis
+    
+    Layout:
+    +------------------------------------------+
+    | [Image Preview]                          |
+    +------------------------------------------+
+    | color palette                            |
+    | process output: [dropdown]               |
+    | number of colors: [spinbox]              |
+    | [Color Palette Visualization]           |
+    +------------------------------------------+
+    
+    Attributes:
+        - controller (ImageAestheticsController): Parent controller reference
+        - imageWidgetController (ImageWidgetController): Main image display
+        - labelColorPalette: Color palette section label
+        - labelNodeSelector: Process output selection label
+        - nodeSelector (QComboBox): Process step selection dropdown
+        - labelColorsNumber: Color count configuration label
+        - nbColors (QSpinBox): Number of colors to extract (2-8)
+        - paletteImageWidgetController (ImageWidgetController): Color palette display
+        - scroll (QScrollArea): Scrollable container for controls
     """
     def __init__(self, _controller, build=False):
+        """
+        Initialize image aesthetics analysis interface.
+        
+        Args:
+            _controller (ImageAestheticsController): Parent controller instance
+            build (bool): Whether to restore previous state during construction
+        """
         if pref.verbose: print(" [VIEW] >> AestheticsImageView.__init__(",")")
         super().__init__(Qt.Vertical)
 
@@ -1552,14 +2831,42 @@ class ImageAestheticsView(QSplitter):
         # --------------- strength line:
 
     def setProcessPipe(self,processPipe, paletteImg):
+        """
+        Update display with new ProcessPipe and color palette.
+        
+        Args:
+            processPipe (ProcessPipe): New processing pipeline to display
+            paletteImg (numpy.ndarray): Generated color palette visualization
+        """
         self.imageWidgetController.setImage(processPipe.getImage())
         self.paletteImageWidgetController.setImage(paletteImg)
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ColorEditorsAutoView(QPushButton):
+    """
+    Automatic color editor configuration button.
+    
+    Provides a single button interface for automatically configuring
+    multiple color editors based on K-means analysis of image colors.
+    When activated, analyzes the current image to extract dominant colors
+    and sets up color editors with appropriate selection ranges.
+    
+    Warning: Activating this function will reset all existing color
+    editor configurations to the automatically generated settings.
+    
+    Attributes:
+        - controller (ColorEditorsAutoController): Parent controller reference
+    """
     def __init__(self,controller):
+        """
+        Initialize automatic color editor configuration button.
+        
+        Args:
+            controller (ColorEditorsAutoController): Parent controller instance
+        """
         super().__init__("auto color selection [! reset edit]")
         self.controller = controller
 
         self.clicked.connect(self.controller.auto)
 # ------------------------------------------------------------------------------------------
+

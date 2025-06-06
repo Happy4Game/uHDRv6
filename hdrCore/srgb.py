@@ -1,27 +1,28 @@
 # -*- coding: utf-8 -*-
 """
-sRGB
-====
+HDR Core sRGB Transfer Functions Module
 
-Defines the *sRGB* electro-optical transfer function (EOTF / EOCF) and its
-inverse:
+This module provides sRGB electro-optical transfer function (EOTF/EOCF) implementations
+for HDR image processing workflows. It includes both forward and inverse sRGB transfer
+functions that are essential for proper color space conversions in HDR imaging.
 
--   :func:`colour.models.eotf_inverse_sRGB`
--   :func:`colour.models.eotf_sRGB`
+These functions are based on the IEC 61966-2-1:1999 standard and ITU-R BT.709-6
+recommendations, ensuring accurate color reproduction and display compatibility.
 
-References
-----------
--   :cite:`InternationalElectrotechnicalCommission1999a` : International
-    Electrotechnical Commission. (1999). IEC 61966-2-1:1999 - Multimedia
-    systems and equipment - Colour measurement and management - Part 2-1:
-    Colour management - Default RGB colour space - sRGB (p. 51).
-    https://webstore.iec.ch/publication/6169
--   :cite:`InternationalTelecommunicationUnion2015i` : International
-    Telecommunication Union. (2015). Recommendation ITU-R BT.709-6 - Parameter
-    values for the HDTV standards for production and international programme
-    exchange BT Series Broadcasting service (pp. 1-32).
-    https://www.itu.int/dms_pubrec/itu-r/rec/bt/\
-R-REC-BT.709-6-201506-I!!PDF-E.pdf
+Functions:
+    - eotf_inverse_sRGB: Convert linear luminance to gamma-corrected sRGB values
+    - eotf_sRGB: Convert gamma-corrected sRGB values to linear luminance
+
+Note:
+    This module is derived from the Colour Science library and adapted for use
+    within the uHDR processing pipeline. It maintains compatibility with the
+    original Colour library interface while providing optimized implementations
+    for HDR imaging workflows.
+
+References:
+    - IEC 61966-2-1:1999 - sRGB colour space standard
+    - ITU-R BT.709-6 - HDTV parameter values
+    - Colour Science library (https://colour-science.org)
 """
 
 import numpy as np

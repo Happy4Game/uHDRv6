@@ -20,7 +20,44 @@
 # --- Package hdrGUI ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrGUI consists of the classes for GUI.
+uHDR GUI Controller Module
+
+This module implements the Model-View-Controller (MVC) pattern for the uHDR
+graphical user interface. It provides comprehensive controller classes that
+manage user interactions, coordinate between GUI components, and handle
+image processing workflows.
+
+The controller system manages multiple aspects of the HDR editing interface:
+- Image gallery navigation and display
+- HDR image editing controls and parameters
+- Processing pipeline management
+- File operations and metadata handling
+- Multi-monitor HDR display support
+
+Classes:
+    - GalleryMode: Enumeration for gallery display layouts
+    - ImageWidgetController: Individual image widget management
+    - ImageGalleryController: Image gallery navigation and selection
+    - AppController: Main application controller and workflow coordination
+    - MultiDockController: Multi-panel interface management
+    - EditImageController: HDR image editing controls and parameters
+    - ImageInfoController: Image metadata and information display
+    - AdvanceSliderController: Advanced slider control with auto-adjustment
+    - ToneCurveController: Tone curve editing and B-spline management
+    - LightnessMaskController: Lightness mask controls for tone range selection
+    - HDRviewerController: HDR image display and comparison
+    - LchColorSelectorController: LCH color space editing interface
+    - GeometryController: Geometric transformation controls
+    - ImageAestheticsController: Image aesthetics analysis and display
+
+Key Features:
+    - Complete MVC architecture for HDR image editing
+    - Multi-threaded processing with progress indicators
+    - HDR display management and calibration
+    - Advanced color editing with LCH color space support
+    - Tone curve editing with B-spline interpolation
+    - Batch processing and export capabilities
+    - Real-time preview and comparison tools
 """
 # -----------------------------------------------------------------------------
 # --- Import ------------------------------------------------------------------
@@ -46,6 +83,18 @@ from torch.autograd import Variable
 # --- package methods ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 def getScreenSize(app):
+    """
+    Get screen resolution information for multi-monitor support.
+    
+    Queries the application for all available screens and returns their
+    dimensions for HDR display configuration and window management.
+    
+    Args:
+        app (QApplication): PyQt5 application instance
+        
+    Returns:
+        list: List of QSize objects representing screen dimensions
+    """
     screens = app.screens()
     res = list(map(lambda x: x.size(), screens))
     return res
@@ -53,7 +102,20 @@ def getScreenSize(app):
 # --- Class GalleryMode -------------------------------------------------------
 # -----------------------------------------------------------------------------
 class GalleryMode(enum.Enum):
-    """ Enum  """
+    """
+    Enumeration for gallery display layout configurations.
+    
+    Defines different grid layouts for the image gallery, allowing users
+    to view multiple images simultaneously in various arrangements.
+    Each mode specifies the number of rows and columns for image display.
+    
+    Attributes:
+        - _1x1 (int): Single image view (1 row, 1 column)
+        - _3x2 (int): 3×2 grid layout (2 rows, 3 columns)
+        - _6x4 (int): 6×4 grid layout (4 rows, 6 columns)
+        - _9x6 (int): 9×6 grid layout (6 rows, 9 columns)
+        - _2x1 (int): 2×1 layout (1 row, 2 columns) for side-by-side comparison
+    """
 
     _1x1         = 0         # 
     _3x2         = 1         # 
@@ -63,6 +125,15 @@ class GalleryMode(enum.Enum):
     _2x1        =  4
 
     def nbRow(m):
+        """
+        Get the number of rows for a gallery mode.
+        
+        Args:
+            m (GalleryMode): Gallery mode enumeration value
+            
+        Returns:
+            int: Number of rows in the gallery layout
+        """
         if m == GalleryMode._1x1: return 1
         if m == GalleryMode._3x2: return 2
         if m == GalleryMode._6x4: return 4
@@ -70,6 +141,15 @@ class GalleryMode(enum.Enum):
 
         if m == GalleryMode._2x1: return 1
     def nbCol(m):
+        """
+        Get the number of columns for a gallery mode.
+        
+        Args:
+            m (GalleryMode): Gallery mode enumeration value
+            
+        Returns:
+            int: Number of columns in the gallery layout
+        """
         if m == GalleryMode._1x1: return 1
         if m == GalleryMode._3x2: return 3
         if m == GalleryMode._6x4: return 6
@@ -80,9 +160,27 @@ class GalleryMode(enum.Enum):
 # --- Class ImageWidgetController ---------------------------------------------
 # -----------------------------------------------------------------------------
 class ImageWidgetController:
-    """ image widget controller """
+    """
+    Controller for individual image widget components.
+    
+    Manages the display and interaction of individual image widgets within
+    the gallery and editing interface. Handles image loading, display
+    updates, and user interactions for single image components.
+    
+    Attributes:
+        - model (model.ImageWidgetModel): Data model for the image widget
+        - view (view.ImageWidgetView): View component for image display
+        - _id (int): Unique identifier for the widget
+    """
 
     def __init__(self, image=None,id = -1):
+        """
+        Initialize an image widget controller.
+        
+        Args:
+            image (numpy.ndarray or hdrCore.image.Image, optional): Initial image to display
+            id (int, optional): Unique identifier for the widget (default: -1)
+        """
 
         self.model = model.ImageWidgetModel(self)
         self.view = view.ImageWidgetView(self)
@@ -94,42 +192,121 @@ class ImageWidgetController:
             self.view.setPixmap(self.model.getColorData())
 
     def setImage(self, image):
+        """
+        Update the image displayed in the widget.
+        
+        Args:
+            image (numpy.ndarray or hdrCore.image.Image): New image to display
+            
+        Returns:
+            QPixmap: Updated pixmap for the display
+        """
         self.model.setImage(image)
         return self.view.setPixmap(self.model.getColorData())
 
     def setQPixmap(self, qPixmap):
+        """
+        Set the display pixmap directly.
+        
+        Args:
+            qPixmap (QPixmap): Pixmap to display in the widget
+        """
         self.view.setQPixmap(qPixmap)
 
-    def id(self): return self._id
+    def id(self): 
+        """
+        Get the widget's unique identifier.
+        
+        Returns:
+            int: Unique identifier for this widget
+        """
+        return self._id
 # -----------------------------------------------------------------------------
 # --- Class ImageGalleryController --------------------------------------------
 # -----------------------------------------------------------------------------
 class ImageGalleryController():
-    """ image gallery controller """
+    """
+    Controller for the image gallery interface.
+    
+    Manages the gallery view that displays multiple images in grid layouts,
+    handles pagination, gallery mode switching, and image selection. Provides
+    the main interface for browsing and selecting images for editing.
+    
+    The gallery supports multiple display modes (1×1, 3×2, 6×4, 9×6, 2×1) and
+    handles pagination when there are more images than can fit in the current view.
+    
+    Attributes:
+        - parent: Parent controller (typically AppController)
+        - view (view.ImageGalleryView): Gallery view component
+        - model (model.ImageGalleryModel): Gallery data model
+    """
 
     def __init__(self, parent):
+        """
+        Initialize the image gallery controller.
+        
+        Args:
+            parent: Parent controller that manages this gallery
+        """
         if pref.verbose: print(" [CONTROL] >> ImageGalleryController.__init__()")
 
         self.parent = parent    # AppView
         self.view = view.ImageGalleryView(self)
         self.model = model.ImageGalleryModel(self)
 
-    def setImages(self, imageFiles): self.model.setImages(imageFiles)
+    def setImages(self, imageFiles): 
+        """
+        Load a list of image files into the gallery.
+        
+        Args:
+            imageFiles (list): List of image file paths to load
+        """
+        self.model.setImages(imageFiles)
 
     def updateImages(self):
-        """ called by ImageGalleryModel to ask for update images """
+        """
+        Refresh the gallery display with current images.
+        
+        Called by the model when image data changes to update the view.
+        Resets the page number and refreshes the display.
+        """
         self.view.pageNumber = 0 # reset page number
         self.view.updateImages()
 
     def callBackButton_previousPage(self):  
+        """
+        Navigate to the previous page in the gallery.
+        
+        Handles pagination when there are more images than can fit in the
+        current gallery view. In single image mode, also selects the image.
+        """
         self.view.changePageNumber(-1)
         if self.view.shapeMode == GalleryMode._1x1 : self.selectImage(0)
 
     def callBackButton_nextPage(self):      
+        """
+        Navigate to the next page in the gallery.
+        
+        Handles pagination when there are more images than can fit in the
+        current gallery view. In single image mode, also selects the image.
+        """
         self.view.changePageNumber(+1)
         if self.view.shapeMode == GalleryMode._1x1 : self.selectImage(0)
 
     def computePageNumberOnGalleryModeChange(self,newGalleryMode):
+        """
+        Calculate the appropriate page number when changing gallery modes.
+        
+        When switching between different gallery layouts, this method ensures
+        the currently selected or viewed image remains visible by calculating
+        the correct page number for the new layout.
+        
+        Args:
+            newGalleryMode (GalleryMode): Target gallery layout mode
+            
+        Returns:
+            int: Calculated page number for the new gallery mode
+        """
         currentPage = self.view.pageNumber
         nbImagePerPage = GalleryMode.nbRow(self.view.shapeMode)*GalleryMode.nbCol(self.view.shapeMode)
         selectedImage = self.model.selectedImage() if (self.model.selectedImage()!=-1) else currentPage*nbImagePerPage
@@ -140,6 +317,13 @@ class ImageGalleryController():
         return newPageNumber
 
     def callBackButton_1x1(self):
+        """
+        Switch gallery to single image view mode (1×1).
+        
+        Changes the gallery layout to display one image at a time, suitable
+        for detailed viewing and editing. Recalculates pagination and updates
+        the display.
+        """
         if self.view.shapeMode != GalleryMode._1x1:
             self.view.resetGridLayoutWidgets()
             self.view.pageNumber = self.computePageNumberOnGalleryModeChange(GalleryMode._1x1)
@@ -150,6 +334,13 @@ class ImageGalleryController():
             self.view.repaint()
 
     def callBackButton_3x2(self): 
+        """
+        Switch gallery to 3×2 grid view mode.
+        
+        Changes the gallery layout to display 6 images in a 3×2 grid,
+        suitable for browsing multiple images while maintaining reasonable
+        image size for preview.
+        """
         if self.view.shapeMode != GalleryMode._3x2:
             self.view.resetGridLayoutWidgets()
             self.view.pageNumber = self.computePageNumberOnGalleryModeChange(GalleryMode._3x2)
@@ -160,6 +351,13 @@ class ImageGalleryController():
             self.view.repaint()
 
     def callBackButton_6x4(self): 
+        """
+        Switch gallery to 6×4 grid view mode.
+        
+        Changes the gallery layout to display 24 images in a 6×4 grid,
+        suitable for quick browsing of large image collections with
+        smaller thumbnail sizes.
+        """
         if self.view.shapeMode != GalleryMode._6x4:
             self.view.resetGridLayoutWidgets()
             self.view.pageNumber = self.computePageNumberOnGalleryModeChange(GalleryMode._6x4)
@@ -170,6 +368,13 @@ class ImageGalleryController():
             self.view.repaint()
 
     def callBackButton_9x6(self):
+        """
+        Switch gallery to 9×6 grid view mode.
+        
+        Changes the gallery layout to display 54 images in a 9×6 grid,
+        suitable for overview browsing of very large image collections
+        with small thumbnail sizes.
+        """
         if self.view.shapeMode != GalleryMode._9x6:
             self.view.resetGridLayoutWidgets()
             self.view.pageNumber = self.computePageNumberOnGalleryModeChange(GalleryMode._9x6)
@@ -180,6 +385,13 @@ class ImageGalleryController():
             self.view.repaint()
 
     def callBackButton_2x1(self):
+        """
+        Switch gallery to 2×1 comparison view mode.
+        
+        Changes the gallery layout to display 2 images side by side,
+        ideal for comparing different processing results or comparing
+        before/after versions of images.
+        """
         if self.view.shapeMode != GalleryMode._2x1:
             self.view.resetGridLayoutWidgets()
             self.view.pageNumber = self.computePageNumberOnGalleryModeChange(GalleryMode._2x1)
@@ -190,6 +402,15 @@ class ImageGalleryController():
             self.view.repaint()
 
     def selectImage(self, id):
+        """
+        Handle selection of an image in the gallery.
+        
+        Processes user selection of an image and updates the editing interface
+        to work with the selected image's processing pipeline.
+        
+        Args:
+            id (int): Index of the selected image within the current page
+        """
         if pref.verbose: print(" [CONTROL] >> ImageGalleryController.selectImage()")
 
         nbImagePage = GalleryMode.nbRow(self.view.shapeMode)*GalleryMode.nbCol(self.view.shapeMode)
@@ -233,29 +454,38 @@ class ImageGalleryController():
 # --- Class AppController -----------------------------------------------------
 # -----------------------------------------------------------------------------
 class AppController(object):
-    """controller for MainWindow
+    """
+    Main application controller implementing the MVC pattern.
     
-        Attributes:
-            screenSize 
-            hdrDisplay 
-            view                          
-            model
-            
-        Methods:
-            callBackSelectDir(self)
-            callBackSave(self)
-            callBackDisplayHDR(self)
-            callBackEndDisplay(self, img)
-            callBackCloseDisplayHDR(self)
-            callBackCompareRawEditedHDR(self)
-            callBackExportHDR(self)
-            callBackEndExportHDR(self, img)
-            callBackExportAllHDR(self)            
-            callBackEndAllExportHDR(self, img)  
-
+    This class serves as the central controller for the uHDR application,
+    managing the main window, coordinating between different components,
+    and handling high-level application operations like file management,
+    HDR display, and image export functionality.
+    
+    The AppController orchestrates interactions between the image gallery,
+    editing interface, HDR viewer, and manages the application's workflow
+    from image loading to final export operations.
+    
+    Attributes:
+        - screenSize (list): Available screen dimensions for multi-monitor support
+        - hdrDisplay (HDRviewerController): HDR image display controller
+        - view (view.AppView): Main application view component
+        - model (model.AppModel): Main application data model
+        - dirName (str): Currently selected directory path
+        - imagesName (list): List of image filenames in current directory
     """
 
     def __init__(self, app):
+        """
+        Initialize the main application controller.
+        
+        Sets up the application's core components including screen detection,
+        HDR display initialization, and main view creation. Establishes the
+        foundation for the complete HDR editing workflow.
+        
+        Args:
+            app (QApplication): PyQt5 application instance for screen detection
+        """
         if pref.verbose: print(" [CONTROL] >> AppController.__init__()")
 
         self.screenSize = getScreenSize(app)# get screens size
@@ -272,7 +502,19 @@ class AppController(object):
     # -----------------------------------------------------------------------------
 
     def callBackSelectDir(self):
-        """Callback of export HDR menu: open file dialog, store image filenames (self.imagesName), set directory to model
+        """
+        Open directory selection dialog and load HDR images.
+        
+        Presents a file dialog for directory selection, discovers all supported
+        image files in the chosen directory, and loads them into the gallery.
+        Automatically saves any pending metadata before switching directories.
+        
+        The method handles the complete workflow of:
+        1. Directory selection via QFileDialog
+        2. Saving current image metadata
+        3. Discovering supported image formats
+        4. Loading images into the gallery view
+        5. Resetting HDR display to splash screen
         """
         if pref.verbose: print(" [CONTROL] >> AppController.callBackSelectDir()")
         dirName = QFileDialog.getExistingDirectory(None, 'Select Directory', self.model.directory)
@@ -285,15 +527,45 @@ class AppController(object):
             self.view.imageGalleryController.setImages(self.imagesName)
             self.hdrDisplay.displaySplash()
     # -----------------------------------------------------------------------------
-    def callBackSave(self): self.view.imageGalleryController.save()
+    def callBackSave(self): 
+        """
+        Save current processing state and metadata.
+        
+        Triggers the gallery controller to save all current image metadata
+        and processing pipeline states to persistent storage.
+        """
+        self.view.imageGalleryController.save()
     # -----------------------------------------------------------------------------
     def callBackQuit(self):
+        """
+        Handle application shutdown with proper cleanup.
+        
+        Performs clean application exit by saving all metadata, closing
+        HDR display processes, and terminating the application gracefully.
+        Ensures no data loss during application closure.
+        """
         if pref.verbose: print(" [CB] >> AppController.callBackQuit()")
         self.view.imageGalleryController.save()
         self.hdrDisplay.close()
         sys.exit()
     # -----------------------------------------------------------------------------
     def callBackDisplayHDR(self):
+        """
+        Display processed HDR image on external HDR monitor.
+        
+        Initiates the HDR display workflow by processing the currently selected
+        image at full resolution with the complete processing pipeline, then
+        sends the result to the external HDR display. Shows progress feedback
+        during the compute-intensive full-resolution processing.
+        
+        The workflow includes:
+        1. Retrieving selected processing pipeline
+        2. Saving processing metadata
+        3. Loading full-resolution source image
+        4. Resizing to display resolution
+        5. Applying complete processing pipeline
+        6. Threading the computation with progress updates
+        """
 
         if pref.verbose:  print(" [CONTROL] >> AppController.callBackDisplayHDR()")
 
@@ -325,6 +597,20 @@ class AppController(object):
             thread.cCompute(self.callBackEndDisplay, processpipe, toneMap=False, progress=self.view.statusBar().showMessage)
     # -----------------------------------------------------------------------------
     def callBackEndDisplay(self, img):
+        """
+        Complete HDR display processing and send to external monitor.
+        
+        Finalizes the HDR display workflow by applying final processing steps
+        and sending the image to the external HDR display. Updates the status
+        bar to indicate completion.
+        
+        Args:
+            img (hdrCore.image.Image): Processed HDR image ready for display
+            
+        Note:
+            Re-enables auto-resizing after full-resolution processing and
+            applies display-specific scaling before HDR monitor output.
+        """
 
         if pref.verbose:  print(" [CONTROL] >> AppController.callBackEndDisplay()")
 
@@ -341,14 +627,29 @@ class AppController(object):
         self.hdrDisplay.displayFile("temp.hdr")
     # -----------------------------------------------------------------------------
     def callBackCloseDisplayHDR(self):
+        """
+        Close HDR display and return to splash screen.
+        
+        Terminates the current HDR display session and returns the external
+        HDR monitor to the default splash screen state.
+        """
         if pref.verbose: print(" [CONTROL] >> AppController.callBackCloseDisplayHDR()")
         self.hdrDisplay.displaySplash()
     # -----------------------------------------------------------------------------
     def callBackCompareRawEditedHDR(self):
         """
-        Callback of compare raw/edited HDR menu
-
-        Display side by side original image and edited version.        
+        Display side-by-side comparison of original and edited HDR images.
+        
+        Creates a comparison view showing the original unprocessed image
+        alongside the current edited version. Both images are displayed
+        at the same scale on the HDR monitor for direct visual comparison.
+        
+        The comparison workflow:
+        1. Loads original unprocessed image
+        2. Applies current processing pipeline
+        3. Resizes both images to fit side-by-side
+        4. Creates composite comparison image
+        5. Displays on HDR monitor with proper scaling
         """
 
         if pref.verbose:  print(" [CONTROL] >> AppController.callBackCompareOriginalInputHDR()")
@@ -409,9 +710,18 @@ class AppController(object):
     # -----------------------------------------------------------------------------
     def callBackExportHDR(self):
         """
-        Callback of export HDR menu
-
-        Export the image associated to selected process pipe
+        Export single HDR image with current processing applied.
+        
+        Initiates the HDR export workflow for the currently selected image,
+        allowing the user to choose the export destination and applying
+        the complete processing pipeline at full resolution.
+        
+        The export process includes:
+        1. User directory selection for output
+        2. Full-resolution image loading
+        3. Complete processing pipeline application
+        4. HDR-specific encoding and scaling
+        5. File output with appropriate metadata
         """
 
         if pref.verbose:  print(" [CONTROL] >> AppController.callBackExportHDR()") 
@@ -446,6 +756,16 @@ class AppController(object):
             thread.cCompute(self.callBackEndExportHDR, processpipe, toneMap=False, progress=self.view.statusBar().showMessage)
     # -----------------------------------------------------------------------------
     def callBackEndExportHDR(self, img):
+        """
+        Complete single HDR export and save to disk.
+        
+        Finalizes the HDR export process by applying final processing,
+        saving to the selected directory, and optionally displaying
+        the result on the HDR monitor.
+        
+        Args:
+            img (hdrCore.image.Image): Processed HDR image ready for export
+        """
         # turn off: autoResize
         hdrCore.processing.ProcessPipe.autoResize = True  
         
@@ -467,6 +787,13 @@ class AppController(object):
         self.hdrDisplay.displayFile("temp.hdr")
     # -----------------------------------------------------------------------------
     def callBackExportAllHDR(self):
+        """
+        Initiate batch export of all HDR images in the gallery.
+        
+        Starts the batch export process for all images in the current gallery,
+        allowing users to export multiple processed HDR images with a single
+        operation. Provides progress feedback during the batch operation.
+        """
         if pref.verbose:  print(" [CONTROL] >> AppController.callBackExportAllHDR()")
 
         self.processPipes = self.view.imageGalleryController.getProcessPipes()
@@ -498,6 +825,20 @@ class AppController(object):
         thread.cCompute(self.callBackEndAllExportHDR, processpipe, toneMap=False, progress=self.view.statusBar().showMessage)            
     # -----------------------------------------------------------------------------
     def callBackEndAllExportHDR(self, img):
+        """
+        Process single image in batch export and continue to next.
+        
+        Handles the completion of each individual image in the batch export
+        process, saves the current image, updates progress, and initiates
+        processing of the next image in the queue.
+        
+        Args:
+            img (hdrCore.image.Image): Current processed HDR image in batch
+            
+        Note:
+            Recursively processes all images in the batch until completion,
+            providing progress updates throughout the operation.
+        """
         # last image ?
         self.imageExportDone +=1
 
@@ -548,22 +889,87 @@ class AppController(object):
 # --- class MultiDockController() ----------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class MultiDockController():
+    """
+    Controller for managing multiple docked panels in the interface.
+    
+    This class manages the docking system that allows switching between different
+    functional panels: EDIT (image editing), INFO (metadata/information), and
+    MIAM (aesthetics analysis). It provides seamless transitions between
+    different modes of interaction with the HDR images.
+    
+    The docking system allows users to focus on specific aspects of image
+    processing while maintaining a consistent workflow and shared processing
+    pipeline state across all panels.
+    
+    Attributes:
+        - parent: Parent controller (typically AppController)
+        - view (view.MultiDockView): Multi-panel view component
+        - model: Data model (currently None, uses child controllers' models)
+    """
     def __init__(self,parent=None, HDRcontroller = None):
+        """
+        Initialize the multi-dock controller.
+        
+        Args:
+            parent: Parent controller for coordination
+            HDRcontroller: HDR display controller for HDR preview integration
+        """
         if pref.verbose: print(" [CONTROL] >> MultiDockController.__init__()")
 
         self.parent = parent
         self.view = view.MultiDockView(self, HDRcontroller)
         self.model = None
     # ---------------------------------------------------------------------------------------
-    def activateEDIT(self): self.switch(0)
-    def activateINFO(self): self.switch(1)
-    def activateMIAM(self):  self.switch(2)
+    def activateEDIT(self): 
+        """
+        Activate the image editing panel.
+        
+        Switches the interface to the image editing mode, providing access
+        to exposure, contrast, tone curves, color editing, and other HDR
+        processing controls.
+        """
+        self.switch(0)
+    def activateINFO(self): 
+        """
+        Activate the image information panel.
+        
+        Switches the interface to the metadata and information display mode,
+        showing EXIF data, processing history, and image properties.
+        """
+        self.switch(1)
+    def activateMIAM(self):  
+        """
+        Activate the aesthetics analysis panel.
+        
+        Switches the interface to the MIAM (aesthetics) analysis mode,
+        displaying image quality metrics, color palette analysis, and
+        aesthetic scoring information.
+        """
+        self.switch(2)
     # ---------------------------------------------------------------------------------------
     def switch(self,nb):
+        """
+        Switch to the specified panel number.
+        
+        Args:
+            nb (int): Panel index (0=EDIT, 1=INFO, 2=MIAM)
+        """
         if pref.verbose:  print(" [CONTROL] >> MultiDockController.switch()")
         self.view.switch(nb)
     # --------------------------------------------------------------------------------------
     def setProcessPipe(self, processPipe): 
+        """
+        Set the processing pipeline for the active panel.
+        
+        Propagates the processing pipeline to the currently active panel,
+        ensuring that all panels work with the same image and processing state.
+        
+        Args:
+            processPipe: Processing pipeline to apply to the active panel
+            
+        Returns:
+            bool: True if the pipeline was successfully set, False otherwise
+        """
         if pref.verbose: print(" [CONTROL] >> MultiDockController.setProcessPipe(",processPipe.getImage().name,")")
 
         return self.view.setProcessPipe(processPipe)
@@ -571,8 +977,34 @@ class MultiDockController():
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class EditImageController:
+    """
+    Controller for HDR image editing interface and processing pipeline.
+    
+    This class manages the comprehensive HDR image editing workflow, providing
+    controls for exposure, contrast, tone curves, saturation, color editing,
+    geometry transformations, and processing pipeline management. It coordinates
+    between the editing interface and the underlying HDR processing system.
+    
+    The controller handles real-time preview updates, auto-adjustment algorithms,
+    parameter synchronization, and HDR display integration for immediate visual
+    feedback during the editing process.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - previewHDR (bool): Enable/disable HDR preview updates
+        - controllerHDR: HDR display controller for real-time preview
+        - view (view.EditImageView): Image editing interface view
+        - model (model.EditImageModel): Image editing data model and processing
+    """
 
     def __init__(self, parent=None, HDRcontroller = None):
+        """
+        Initialize the image editing controller.
+        
+        Args:
+            parent: Parent controller for coordination
+            HDRcontroller: HDR display controller for real-time preview
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.__init__(",")")
 
         self.parent = parent
@@ -584,6 +1016,19 @@ class EditImageController:
         self.model = model.EditImageModel(self)
     # -----------------------------------------------------------------------------
     def setProcessPipe(self, processPipe): 
+        """
+        Set the processing pipeline for editing.
+        
+        Configures the editing interface to work with the specified processing
+        pipeline, updating all controls and displays to reflect the current
+        processing state.
+        
+        Args:
+            processPipe: Processing pipeline containing image and processing nodes
+            
+        Returns:
+            bool: True if the pipeline was successfully set, False otherwise
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.setProcessPipe(",")")
 
         if self.model.setProcessPipe(processPipe):
@@ -601,9 +1046,25 @@ class EditImageController:
         else:
             return False
     # -----------------------------------------------------------------------------
-    def getProcessPipe(self) : return self.model.getProcessPipe()
+    def getProcessPipe(self) : 
+        """
+        Get the current processing pipeline.
+        
+        Returns:
+            ProcessPipe: Current processing pipeline with all applied operations
+        """
+        return self.model.getProcessPipe()
     # -----------------------------------------------------------------------------
     def buildView(self,processPipe=None):
+        """
+        Build or rebuild the editing interface view.
+        
+        Reconstructs the editing interface, typically called when switching
+        between different panels or when the interface needs to be refreshed.
+        
+        Args:
+            processPipe: Optional processing pipeline to set during build
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.buildView(",")")
 
         """ called when MultiDockController recall a controller/view """
@@ -611,6 +1072,13 @@ class EditImageController:
         if processPipe: self.setProcessPipe(processPipe)
     # -----------------------------------------------------------------------------
     def autoExposure(self): 
+        """
+        Calculate and apply optimal exposure automatically.
+        
+        Uses histogram analysis to determine the optimal exposure value that
+        maximizes dynamic range usage without clipping, then applies this
+        exposure and updates the interface controls.
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.autoExposure(",")")
         if self.model.processpipe:
       
@@ -624,39 +1092,90 @@ class EditImageController:
             self.parent.controller.parent.controller.view.imageGalleryController.setProcessPipeWidgetQPixmap(qPixmap)
     # -----------------------------------------------------------------------------
     def changeExposure(self,value):
+        """
+        Adjust image exposure by specified EV value.
+        
+        Args:
+            value (float): Exposure adjustment in EV stops (positive = brighter)
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.changeExposure(",value,")")
         if self.model.processpipe: self.model.changeExposure(value)
     # -----------------------------------------------------------------------------
     def changeContrast(self,value):
+        """
+        Adjust image contrast by specified amount.
+        
+        Args:
+            value (float): Contrast adjustment value (positive = more contrast)
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.changeContrast(",value,")")
         if self.model.processpipe: self.model.changeContrast(value)
     # -----------------------------------------------------------------------------
     def changeToneCurve(self,controlPoints):
+        """
+        Modify tone curve using B-spline control points.
+        
+        Args:
+            controlPoints (dict): Control points defining the tone curve shape
+                                 with keys like 'shadows', 'highlights', etc.
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.changeToneCurve("")")
         if self.model.processpipe: self.model.changeToneCurve(controlPoints)
     # -----------------------------------------------------------------------------
     def changeLightnessMask(self, maskValues):
+        """
+        Configure lightness-based masking for tone range selection.
+        
+        Args:
+            maskValues (dict): Mask configuration for different tone ranges
+                              (shadows, blacks, mediums, whites, highlights)
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.changeLightnessMask(",maskValues,")")
         if self.model.processpipe: self.model.changeLightnessMask(maskValues)
     # -----------------------------------------------------------------------------
     def changeSaturation(self,value):
+        """
+        Adjust color saturation globally.
+        
+        Args:
+            value (float): Saturation adjustment value (positive = more saturated)
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.changeSaturation(",value,")")
         if self.model.processpipe: self.model.changeSaturation(value)
     # -----------------------------------------------------------------------------
     def changeColorEditor(self,values, idName):
+        """
+        Apply selective color editing to specific color ranges.
+        
+        Args:
+            values (dict): Color editing parameters including selection criteria
+                          and editing adjustments (hue, saturation, exposure, etc.)
+            idName (str): Identifier for the color editor instance
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.changeColorEditor(",values,")")
         if self.model.processpipe: self.model.changeColorEditor(values, idName)
     # -----------------------------------------------------------------------------
     def changeGeometry(self,values):
+        """
+        Apply geometric transformations (crop, rotation, etc.).
+        
+        Args:
+            values (dict): Geometry parameters including crop ratios,
+                          rotation angles, and positioning adjustments
+        """
         if pref.verbose: print(" [CONTROL] >> EditImageController.changeGeometry(",values,")")
         if self.model.processpipe: self.model.changeGeometry(values)
     # -----------------------------------------------------------------------------
     def updateImage(self,imgTM):
         """
-        updateImage: called when process-pipe computation is done
-            
+        Handle processing completion and update displays.
+        
+        Called when the processing pipeline computation is complete, updates
+        the interface display, gallery thumbnail, and optionally triggers
+        HDR preview updates.
+        
         Args:
-            imgTM (hdrCoreimage.Image, required): tone mapped image (resized) for GUI display
+            imgTM (hdrCore.image.Image): Tone-mapped image for GUI display
         """
         qPixmap =  self.view.setImage(imgTM)
         self.parent.controller.parent.controller.view.imageGalleryController.setProcessPipeWidgetQPixmap(qPixmap)
@@ -671,8 +1190,31 @@ class EditImageController:
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageInfoController:
+    """
+    Controller for image information and metadata display interface.
+    
+    This class manages the display and editing of image metadata, EXIF information,
+    processing history, and other image properties. It provides a comprehensive
+    view of all technical information associated with HDR images.
+    
+    The controller handles metadata organization, user-controlled metadata
+    visibility, and metadata modification workflows while maintaining
+    data integrity throughout the editing process.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - view (view.ImageInfoView): Metadata display interface
+        - model (model.ImageInfoModel): Metadata management model
+        - callBackActive (bool): Enable/disable callback processing
+    """
 
     def __init__(self, parent=None):
+        """
+        Initialize the image information controller.
+        
+        Args:
+            parent: Parent controller for coordination
+        """
         if pref.verbose: print(" [CONTROL] >> ImageInfoController.__init__()")
 
         self.parent = parent
@@ -682,12 +1224,33 @@ class ImageInfoController:
         self.callBackActive = True
     # -----------------------------------------------------------------------------
     def setProcessPipe(self, processPipe): 
+        """
+        Set processing pipeline for metadata display.
+        
+        Configures the information interface to display metadata and properties
+        for the specified processing pipeline's image.
+        
+        Args:
+            processPipe: Processing pipeline containing image with metadata
+            
+        Returns:
+            bool: True (always successful for info display)
+        """
         if pref.verbose: print(" [CONTROL] >> ImageInfoController.setProcessPipe(",processPipe.getImage().name,")")
         self.model.setProcessPipe(processPipe)
         self.view.setProcessPipe(processPipe)
         return True
     # -----------------------------------------------------------------------------
     def buildView(self,processPipe=None):
+        """
+        Build or rebuild the information interface view.
+        
+        Reconstructs the metadata display interface, typically called when
+        switching panels or refreshing the information display.
+        
+        Args:
+            processPipe: Optional processing pipeline to set during build
+        """
         if pref.verbose: print(" [CONTROL] >> ImageInfoController.buildView()")
 
         """ called when MultiDockController recall a controller/view """
@@ -695,13 +1258,59 @@ class ImageInfoController:
         if processPipe: self.setProcessPipe(processPipe)
     # -----------------------------------------------------------------------------
     def metadataChange(self,metaGroup,metaTag, on_off): 
+        """
+        Handle changes to metadata visibility or editing state.
+        
+        Processes user interactions with metadata display controls, allowing
+        users to show/hide specific metadata groups or modify metadata values.
+        
+        Args:
+            metaGroup (str): Metadata group identifier (e.g., 'EXIF', 'processing')
+            metaTag (str): Specific metadata tag within the group
+            on_off (bool): Enable/disable state for the metadata element
+        """
         if pref.verbose: print(" [CONTROL] >> ImageInfoController.useCaseChange(",metaGroup,",", metaTag,",", on_off,")")
         self.model.changeMeta(metaGroup,metaTag, on_off)
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class AdvanceSliderController():
+    """
+    Controller for advanced slider controls with auto-adjustment capabilities.
+    
+    This class provides enhanced slider functionality with features like automatic
+    value calculation, reset capabilities, and custom step sizes. It's used throughout
+    the HDR editing interface for precise parameter control with additional
+    automation features.
+    
+    The advanced slider combines manual adjustment with intelligent auto-adjustment
+    algorithms, allowing users to fine-tune parameters manually or rely on
+    automatic optimization algorithms.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - view (view.AdvanceSliderView): Slider interface component
+        - model (model.AdvanceSliderModel): Slider data model
+        - step (float): Step size for slider increments
+        - defaultValue (float): Default/reset value for the slider
+        - range (tuple): Minimum and maximum values for the slider
+        - callBackActive (bool): Enable/disable callback processing
+        - callBackValueChange: Callback function for value changes
+        - callBackAutoPush: Callback function for auto-adjustment
+    """
     def __init__(self, parent,name, defaultValue, range, step,callBackValueChange=None,callBackAutoPush= None):
+        """
+        Initialize the advanced slider controller.
+        
+        Args:
+            parent: Parent controller for coordination
+            name (str): Display name for the slider
+            defaultValue (float): Default value for reset functionality
+            range (tuple): (min, max) range for slider values
+            step (float): Step size for value increments
+            callBackValueChange: Callback function for value changes
+            callBackAutoPush: Callback function for auto-adjustment
+        """
         if pref.verbose: print(" [CONTROL] >> AdvanceSliderController.__init__(",") ")
         self.parent = parent
 
@@ -717,6 +1326,13 @@ class AdvanceSliderController():
         self.callBackAutoPush = callBackAutoPush
     # -----------------------------------------------------------------------------
     def sliderChange(self):
+        """
+        Handle manual slider value changes.
+        
+        Processes slider movement events, updates the model and display,
+        and triggers the value change callback if active. Converts slider
+        position to actual value using the configured step size.
+        """
 
         value = self.view.slider.value()*self.step
 
@@ -727,6 +1343,16 @@ class AdvanceSliderController():
         if self.callBackActive and self.callBackValueChange: self.callBackValueChange(value)
     # -----------------------------------------------------------------------------
     def setValue(self, value, callBackActive = True):
+        """
+        Set slider value programmatically.
+        
+        Updates the slider position and display to reflect the specified value,
+        with optional callback suppression for initialization or batch updates.
+        
+        Args:
+            value (float): New value to set
+            callBackActive (bool, optional): Whether to trigger callbacks (default: True)
+        """
         if pref.verbose: print(" [CONTROL] >> AdvanceSliderController.setValue(",value,") ")
 
         """ set value value in 'model' range"""
@@ -738,12 +1364,25 @@ class AdvanceSliderController():
         self.callBackActive = True
     # -----------------------------------------------------------------------------
     def reset(self):
+        """
+        Reset slider to its default value.
+        
+        Restores the slider to its initial default value and triggers
+        the value change callback to update dependent processing.
+        """
         if pref.verbose : print(" [CB] >> AdvanceSliderController.reset(",") ")
 
         self.setValue(self.defaultValue,callBackActive = False)
         if self.callBackValueChange: self.callBackValueChange(self.defaultValue)
     # -----------------------------------------------------------------------------
     def auto(self):
+        """
+        Trigger automatic value calculation.
+        
+        Initiates the auto-adjustment algorithm by calling the registered
+        auto-push callback, which typically analyzes the image and sets
+        an optimal value automatically.
+        """
         if pref.verbose: print(" [CB] >> AdvanceSliderController.auto(",") ")
 
         if self.callBackAutoPush: self.callBackAutoPush()
@@ -751,7 +1390,37 @@ class AdvanceSliderController():
 # --- class AdvanceSliderController --------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ToneCurveController():
+    """
+    Controller for tone curve editing with B-spline interpolation.
+    
+    This class manages the tone curve editing interface, allowing users to adjust
+    the luminance mapping through control points that define a smooth B-spline curve.
+    It includes automatic curve generation using machine learning, histogram overlay
+    display, and comprehensive curve visualization options.
+    
+    The tone curve is a fundamental HDR processing tool that maps input luminance
+    values to output values, effectively controlling the overall tone mapping
+    and local contrast of the image.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - model (model.ToneCurveModel): Tone curve mathematical model
+        - view (view.ToneCurveView): Curve editing interface
+        - callBackActive (bool): Enable/disable callback processing
+        - showInput (bool): Display input image histogram
+        - showbefore (bool): Display pre-curve histogram
+        - showAfter (bool): Display post-curve histogram  
+        - showOutput (bool): Display final output histogram
+        - weightFile (str): Machine learning model file for auto-curve
+        - networkModel: PyTorch neural network for automatic curve generation
+    """
     def __init__(self, parent):
+        """
+        Initialize the tone curve controller.
+        
+        Args:
+            parent: Parent controller for coordination and image access
+        """
 
         self.parent = parent
         self.model = model.ToneCurveModel()
@@ -770,6 +1439,17 @@ class ToneCurveController():
         self.networkModel = None  
     # -----------------------------------------------------------------------------
     def sliderChange(self, key, value):
+        """
+        Handle tone curve control point adjustments.
+        
+        Processes changes to individual control points (shadows, blacks, mediums,
+        whites, highlights), updates the B-spline curve, and triggers processing
+        pipeline updates. Auto-scales related control points to maintain curve smoothness.
+        
+        Args:
+            key (str): Control point identifier ('shadows', 'blacks', etc.)
+            value (float): New value for the control point
+        """
         if pref.verbose: print(" [CB] >> ToneCurveController.sliderChange(",key,",",value,")[callBackActive:",self.callBackActive,"] ")
 
         if self.callBackActive:
@@ -798,6 +1478,18 @@ class ToneCurveController():
             self.callBackActive =  True
     # -----------------------------------------------------------------------------
     def setValues(self, valuesDict,callBackActive = False):
+        """
+        Set all tone curve control points programmatically.
+        
+        Updates all control points simultaneously and refreshes the interface
+        to reflect the new curve shape. Typically used for loading saved
+        curves or applying automatic curve calculations.
+        
+        Args:
+            valuesDict (dict): Dictionary containing all control point values
+                             with keys like 'shadows', 'blacks', 'mediums', etc.
+            callBackActive (bool, optional): Whether to trigger callbacks (default: False)
+        """
         if pref.verbose: print(" [CONTROL] >> ToneCurveController.setValue(",valuesDict,") ")
 
         self.callBackActive = callBackActive
@@ -824,6 +1516,20 @@ class ToneCurveController():
     # -----------------------------------------------------------------------------     
     # zj add for semi-auto curve begin
     def autoCurve(self):
+        """
+        Generate tone curve automatically using machine learning analysis.
+        
+        Analyzes the current image's histogram distribution and uses a trained
+        neural network to predict optimal control point values for enhanced
+        image appearance. The ML model considers luminance distribution patterns
+        to suggest appropriate tone mapping.
+        
+        The process involves:
+        1. Computing cumulative histogram of image luminance
+        2. Feeding histogram to trained neural network
+        3. Predicting optimal control point values
+        4. Applying the generated curve to the processing pipeline
+        """
         processPipe = self.parent.controller.model.getProcessPipe()
         if processPipe != None :
             idExposure = processPipe.getProcessNodeByName("tonecurve")
@@ -858,6 +1564,16 @@ class ToneCurveController():
 
     # -----------------------------------------------------------------------------
     def reset(self, key):
+        """
+        Reset specific control point to its default value.
+        
+        Restores a single control point to its default position and updates
+        the curve accordingly. Useful for correcting individual control
+        points without affecting the entire curve.
+        
+        Args:
+            key (str): Control point to reset ('shadows', 'blacks', etc.)
+        """
         if pref.verbose: print(" [CONTROL] >> ToneCurveController.reset(",key,") ")
 
         valuesDefault = copy.deepcopy(self.model.default[key])[1]
@@ -867,6 +1583,19 @@ class ToneCurveController():
         self.parent.controller.changeToneCurve(controls) 
     # -----------------------------------------------------------------------------
     def plotCurve(self):
+        """
+        Display tone curve and histogram overlays.
+        
+        Renders the current tone curve along with optional histogram overlays
+        for input, pre-processing, post-processing, and output stages. Provides
+        visual feedback on how the curve affects the image's tonal distribution.
+        
+        The plot includes:
+        - Grid lines for reference
+        - Tone curve visualization
+        - Control points markers
+        - Optional histogram overlays for different processing stages
+        """
         try:
             self.view.curve.plot([0,100],[0,100],'r--', clear=True)
             self.view.curve.plot([20,20],[0,100],'r--', clear=False)
@@ -925,7 +1654,31 @@ class ToneCurveController():
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class LightnessMaskController():
+    """
+    Controller for lightness-based masking and tone range selection.
+    
+    This class manages the lightness mask interface, allowing users to selectively
+    target specific tonal ranges (shadows, blacks, mediums, whites, highlights) 
+    for localized editing operations. The masking system enables precise control
+    over HDR processing by limiting effects to specific luminance ranges.
+    
+    Lightness masking is essential for HDR editing as it allows photographers
+    to adjust different tonal ranges independently, creating more natural and
+    visually pleasing results.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - model (model.LightnessMaskModel): Lightness mask data model
+        - view (view.LightnessMaskView): Mask selection interface
+        - callBackActive (bool): Enable/disable callback processing
+    """
     def __init__(self, parent):
+        """
+        Initialize the lightness mask controller.
+        
+        Args:
+            parent: Parent controller for coordination and processing pipeline access
+        """
         if pref.verbose: print(" [CONTROL] >> MaskLightnessController.__init__(",")")
 
         self.parent= parent
@@ -935,12 +1688,36 @@ class LightnessMaskController():
         self.callBackActive = True
     # -----------------------------------------------------------------------------
     def maskChange(self,key, on_off):
+        """
+        Handle mask enable/disable for specific tone ranges.
+        
+        Processes user interactions with mask checkboxes, updating the mask
+        state for the specified tonal range and triggering processing updates
+        to apply the mask changes.
+        
+        Args:
+            key (str): Tone range identifier ('shadows', 'blacks', 'mediums', 
+                      'whites', 'highlights')
+            on_off (bool): Enable (True) or disable (False) the mask for this range
+        """
         if pref.verbose: print(" [CB] >> MaskLightnessController.maskChange(",key,",",on_off,")[callBackActive:",self.callBackActive,"] ")
 
         maskState = self.model.maskChange(key, on_off)  
         self.parent.controller.changeLightnessMask(maskState) 
     # -----------------------------------------------------------------------------
     def setValues(self, values,callBackActive = False):
+        """
+        Set all mask states programmatically.
+        
+        Updates all tone range masks simultaneously and refreshes the interface
+        to reflect the new mask configuration. Used for loading saved mask
+        states or batch mask updates.
+        
+        Args:
+            values (dict): Dictionary containing mask states for all tone ranges
+                          with boolean values for each range
+            callBackActive (bool, optional): Whether to trigger callbacks (default: False)
+        """
         if pref.verbose: print(" [CONTROL] >> LightnessMaskController.setValue(",values,") ")
 
         self.callBackActive = callBackActive
@@ -958,7 +1735,31 @@ class LightnessMaskController():
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class HDRviewerController():
+    """
+    Controller for external HDR display and viewer management.
+    
+    This class manages the external HDR display functionality, coordinating with
+    HDR-capable monitors to show processed images at their full dynamic range.
+    It handles display process management, image comparison modes, auto-preview
+    functionality, and HDR display scaling.
+    
+    The HDR viewer enables real-time preview of processing results on calibrated
+    HDR displays, providing immediate visual feedback for professional HDR
+    image editing workflows.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - model (model.HDRviewerModel): HDR display data model
+        - view: View component (set externally)
+        - viewerProcess: External HDR viewer process handle
+    """
     def __init__(self, parent):
+        """
+        Initialize the HDR viewer controller.
+        
+        Args:
+            parent: Parent controller for coordination and image access
+        """
         if pref.verbose: print(" [CONTROL] >> HDRviewerController.__init__(",")")
 
         self.parent= parent
@@ -969,18 +1770,50 @@ class HDRviewerController():
 
         self.displaySplash()
 
-    def setView(self, view): self.view = view
+    def setView(self, view): 
+        """
+        Set the view component for the HDR viewer.
+        
+        Args:
+            view: View component to associate with this controller
+        """
+        self.view = view
 
     def callBackUpdate(self):
+        """
+        Update HDR display with the current processed image.
+        
+        Retrieves the currently selected processing pipeline, processes the
+        image without tone mapping (preserving HDR values), and displays
+        the result on the HDR monitor. Updates the current image reference
+        for comparison operations.
+        """
         selectedProcessPipe = self.parent.view.imageGalleryController.model.getSelectedProcessPipe()
         img = selectedProcessPipe.getImage(toneMap = False)
         self.displayIMG(img)
         self.model.currentIMG = img
 
     def callBackAuto(self,on_off):
+        """
+        Toggle automatic HDR preview updates.
+        
+        Enables or disables automatic HDR display updates when processing
+        parameters change, allowing for real-time preview on HDR monitors.
+        
+        Args:
+            on_off (bool): Enable (True) or disable (False) auto-preview
+        """
         self.parent.view.dock.view.childControllers[0].model.autoPreviewHDR = on_off
 
     def callBackCompare(self):
+        """
+        Display before/after comparison on HDR monitor.
+        
+        Creates a side-by-side comparison showing the previous processing
+        result alongside the current result, enabling visual comparison
+        of processing changes. If no previous result exists, updates
+        with current processing.
+        """
         if self.model.currentIMG:
             old = self.model.currentIMG
             old = old.process(hdrCore.processing.clip())
@@ -1009,12 +1842,18 @@ class HDRviewerController():
 
     def displayFile(self, HDRfilename):
         """
-        HDRviewerController display file: run HDRImageViewer process ti display HDR image (from filename)
-
+        Display HDR file on external HDR monitor.
+        
+        Launches or updates the external HDR viewer process to display the
+        specified HDR file. Handles process management and error recovery
+        for reliable HDR display functionality.
+        
         Args:
-            HDRfilename: string
-                Required  : hdr image filename
-                
+            HDRfilename (str): Path to HDR file to display
+            
+        Note:
+            Uses HDRImageViewer.exe for Windows-based HDR display.
+            Includes automatic process restart if initial launch fails.
         """
 
          # check that no current display process already open
@@ -1032,6 +1871,16 @@ class HDRviewerController():
             self.viewerProcess = subprocess.Popen(["HDRImageViewer.exe","-f", "-input:"+HDRfilename, "-f", "-h"], shell=True)
 
     def displayIMG(self, img):
+        """
+        Display processed image on HDR monitor.
+        
+        Processes and displays a uHDR Image object on the external HDR monitor,
+        applying appropriate clipping, scaling, and centering for optimal
+        HDR display presentation.
+        
+        Args:
+            img (hdrCore.image.Image): Processed HDR image to display
+        """
         img = img.process(hdrCore.processing.clip())
         print(self.model.scaling())
         colorData = img.colorData*self.model.displayModel['scaling']
@@ -1051,10 +1900,24 @@ class HDRviewerController():
         self.displayFile('temp.hdr')
 
     def displaySplash(self):
+        """
+        Display default splash screen on HDR monitor.
+        
+        Shows the default splash screen image, typically used when no
+        specific image is being displayed or during application startup.
+        Clears the current image reference.
+        """
         self.model.currentIMG = None
         self.displayFile('grey.hdr')
 
     def close(self):
+        """
+        Close HDR viewer and terminate display process.
+        
+        Safely terminates the external HDR viewer process and cleans up
+        resources. Should be called during application shutdown or when
+        HDR display is no longer needed.
+        """
         # check that no current display process already open
         if self.viewerProcess:
             # the display HDR process is already running
@@ -1065,7 +1928,33 @@ class HDRviewerController():
 # ---- Class LchColorSelectorController ----------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class LchColorSelectorController:
+    """
+    Controller for LCH color space selective editing interface.
+    
+    This class manages the advanced color editing interface that operates in LCH
+    (Lightness, Chroma, Hue) color space, providing precise control over color
+    selection and modification. It enables photographers to selectively edit
+    specific color ranges with professional-grade precision.
+    
+    The LCH color editor combines color selection tools with editing controls,
+    allowing for targeted adjustments to specific colors while preserving the
+    overall image integrity. This is essential for professional HDR color grading.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - model (model.LchColorSelectorModel): LCH color editing data model
+        - view (view.LchColorSelectorView): LCH color editing interface
+        - idName (str): Unique identifier for this color editor instance
+        - callBackActive (bool): Enable/disable callback processing
+    """
     def __init__(self, parent, idName = None):
+        """
+        Initialize the LCH color selector controller.
+        
+        Args:
+            parent: Parent controller for coordination
+            idName (str, optional): Unique identifier for this editor instance
+        """
         if pref.verbose: print(" [CONTROL] >> LchColorSelectorController.__init__(",") ")
         self.parent = parent
         self.model =    model.LchColorSelectorModel(self)
@@ -1076,38 +1965,101 @@ class LchColorSelectorController:
         self.callBackActive = True
 
     def sliderHueChange(self, vMin, vMax):
+        """
+        Handle hue range selection changes.
+        
+        Args:
+            vMin (float): Minimum hue value for selection (0-360 degrees)
+            vMax (float): Maximum hue value for selection (0-360 degrees)
+        """
         values  = self.model.setHueSelection(vMin,vMax)
         if self.callBackActive : self.parent.controller.changeColorEditor(values, self.idName)
 
     def sliderChromaChange(self, vMin, vMax):
+        """
+        Handle chroma range selection changes.
+        
+        Args:
+            vMin (float): Minimum chroma value for selection (0-100)
+            vMax (float): Maximum chroma value for selection (0-100)
+        """
         values  = self.model.setChromaSelection(vMin,vMax)
         if self.callBackActive : self.parent.controller.changeColorEditor(values, self.idName)
 
     def sliderLightnessChange(self, vMin, vMax):
+        """
+        Handle lightness range selection changes.
+        
+        Args:
+            vMin (float): Minimum lightness value for selection (0-100)
+            vMax (float): Maximum lightness value for selection (0-100)
+        """
         values  = self.model.setLightnessSelection(vMin,vMax)
         if self.callBackActive : self.parent.controller.changeColorEditor(values, self.idName)
 
     def sliderExposureChange(self, ev):
+        """
+        Handle exposure adjustment for selected colors.
+        
+        Args:
+            ev (float): Exposure adjustment in EV stops for selected color range
+        """
         values = self.model.setExposure(ev)
         if self.callBackActive : self.parent.controller.changeColorEditor(values, self.idName)
 
     def sliderSaturationChange(self, sat):
+        """
+        Handle saturation adjustment for selected colors.
+        
+        Args:
+            sat (float): Saturation adjustment for selected color range
+        """
         values = self.model.setSaturation(sat)
         if self.callBackActive : self.parent.controller.changeColorEditor(values, self.idName)
 
     def sliderContrastChange(self, cc):
+        """
+        Handle contrast adjustment for selected colors.
+        
+        Args:
+            cc (float): Contrast adjustment for selected color range
+        """
         values = self.model.setContrast(cc)
         if self.callBackActive : self.parent.controller.changeColorEditor(values, self.idName)
 
     def sliderHueShiftChange(self, hs):
+        """
+        Handle hue shift for selected colors.
+        
+        Args:
+            hs (float): Hue shift amount in degrees for selected color range
+        """
         values = self.model.setHueShift(hs)
         if self.callBackActive : self.parent.controller.changeColorEditor(values, self.idName)
 
     def checkboxMaskChange(self,value): 
+        """
+        Toggle mask visualization for selected colors.
+        
+        Args:
+            value (bool): Enable (True) or disable (False) mask visualization
+        """
         values = self.model.setMask(value)
         if self.callBackActive : self.parent.controller.changeColorEditor(values, self.idName)
 
     def setValues(self, values, callBackActive = False):
+        """
+        Set all color editing parameters programmatically.
+        
+        Updates all selection and editing controls simultaneously, typically
+        used when loading saved color editing presets or initializing the
+        interface with specific values.
+        
+        Args:
+            values (dict): Complete color editing configuration including
+                          selection ranges and editing parameters
+            callBackActive (bool, optional): Whether to trigger callbacks (default: False)
+        """
         if pref.verbose: print(" [CONTROL] >> LchColorSelectorController.setValue(",values,") ")
 
         self.callBackActive = callBackActive
@@ -1156,6 +2108,13 @@ class LchColorSelectorController:
 
     # -----
     def resetSelection(self): 
+        """
+        Reset color selection parameters to defaults.
+        
+        Restores the color selection range (hue, chroma, lightness) to
+        default values while preserving editing parameters. Useful for
+        starting fresh color selections.
+        """
         if pref.verbose: print(" [CONTROL] >> LchColorSelectorController.resetSelection(",") ")
 
         default = copy.deepcopy(self.model.default)
@@ -1167,6 +2126,13 @@ class LchColorSelectorController:
         self.callBackActive = True
 
     def resetEdit(self): 
+        """
+        Reset editing parameters to defaults.
+        
+        Restores all editing adjustments (exposure, saturation, contrast,
+        hue shift) to default values while preserving color selection.
+        Useful for clearing applied adjustments.
+        """
         if pref.verbose: print(" [CONTROL] >> LchColorSelectorController.resetEdit(",") ")
 
         default = copy.deepcopy(self.model.default)
@@ -1180,7 +2146,31 @@ class LchColorSelectorController:
 # ---- Class LchColorSelectorController ----------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class GeometryController:
+    """
+    Controller for geometric transformations and image adjustments.
+    
+    This class manages geometric processing controls including cropping adjustments,
+    rotation, and spatial positioning. It provides essential tools for correcting
+    perspective issues, adjusting composition, and applying geometric corrections
+    to HDR images while preserving image quality.
+    
+    The geometry controller handles precision adjustments that are critical for
+    professional HDR photography, especially when correcting architectural
+    photography or adjusting horizon lines.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - model (model.GeometryModel): Geometric transformation data model
+        - view (view.GeometryView): Geometry adjustment interface
+        - callBackActive (bool): Enable/disable callback processing
+    """
     def __init__(self, parent ):
+        """
+        Initialize the geometry controller.
+        
+        Args:
+            parent: Parent controller for coordination and processing pipeline access
+        """
         if pref.verbose: print(" [CONTROL] >> GeometryController.__init__(",") ")
         self.parent = parent
         self.model =    model.GeometryModel(self)
@@ -1189,14 +2179,44 @@ class GeometryController:
         self.callBackActive = True
     # callbacks
     def sliderCroppingVerticalAdjustementChange(self,v):
+        """
+        Handle vertical cropping position adjustments.
+        
+        Adjusts the vertical position of the crop area, allowing users to
+        reframe the image vertically while maintaining the aspect ratio.
+        
+        Args:
+            v (float): Vertical adjustment value (typically -100 to +100)
+        """
         values = self.model.setCroppingVerticalAdjustement(v)
         if self.callBackActive : self.parent.controller.changeGeometry(values)
 
     def sliderRotationChange(self,v):
+        """
+        Handle rotation angle adjustments.
+        
+        Adjusts the image rotation angle for correcting tilted horizons or
+        perspective issues. Rotation is applied with automatic cropping to
+        maintain rectangular output.
+        
+        Args:
+            v (float): Rotation angle in degrees
+        """
         values = self.model.setRotation(v)
         if self.callBackActive : self.parent.controller.changeGeometry(values)
 
     def setValues(self, values, callBackActive = False):
+        """
+        Set all geometry parameters programmatically.
+        
+        Updates all geometric transformation controls simultaneously, typically
+        used when loading saved geometry settings or batch updates.
+        
+        Args:
+            values (dict): Dictionary containing geometry parameters including
+                          'up' (vertical adjustment) and 'rotation' (angle)
+            callBackActive (bool, optional): Whether to trigger callbacks (default: False)
+        """
         if pref.verbose: print(" [CONTROL] >> GeometryController.setValue(",values,") ")
 
         up =        values['up']        if 'up' in values.keys()        else 0.0
@@ -1214,7 +2234,30 @@ class GeometryController:
 # ---- Class AestheticsImageController -----------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class ImageAestheticsController:
+    """
+    Controller for image aesthetics analysis and display.
+    
+    This class manages the MIAM (Machine Intelligence for Aesthetic Metrics)
+    interface, providing comprehensive aesthetic analysis of HDR images including
+    quality scoring, color palette extraction, and aesthetic metrics visualization.
+    
+    The aesthetics controller integrates computer vision algorithms to evaluate
+    image quality across multiple dimensions, helping photographers understand
+    the aesthetic properties of their HDR images and make informed editing decisions.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - model (model.ImageAestheticsModel): Aesthetics analysis data model
+        - view (view.ImageAestheticsView): Aesthetics display interface
+    """
     def __init__(self, parent=None, HDRcontroller = None):
+        """
+        Initialize the image aesthetics controller.
+        
+        Args:
+            parent: Parent controller for coordination
+            HDRcontroller: HDR display controller (not used in current implementation)
+        """
         if pref.verbose: print(" [CONTROL] >> AestheticsImageController.__init__(",")")
 
         self.parent = parent
@@ -1222,6 +2265,15 @@ class ImageAestheticsController:
         self.view = view.ImageAestheticsView(self)
     # --------------------------------------------------------------------------------------
     def buildView(self,processPipe=None):
+        """
+        Build or rebuild the aesthetics interface view.
+        
+        Reconstructs the aesthetics analysis interface, typically called when
+        switching to the aesthetics panel or refreshing the analysis display.
+        
+        Args:
+            processPipe: Optional processing pipeline to analyze during build
+        """
         if pref.verbose: print(" [CONTROL] >> AestheticsImageController.buildView()")
 
         # called when MultiDockController recall a controller/view 
@@ -1229,6 +2281,19 @@ class ImageAestheticsController:
         if processPipe: self.setProcessPipe(processPipe)
     # --------------------------------------------------------------------------------------
     def setProcessPipe(self, processPipe): 
+        """
+        Set processing pipeline for aesthetic analysis.
+        
+        Configures the aesthetics interface to analyze the specified processing
+        pipeline's image, computing aesthetic metrics and generating visual
+        analysis including color palette extraction.
+        
+        Args:
+            processPipe: Processing pipeline containing image for analysis
+            
+        Returns:
+            bool: True (always successful for aesthetics analysis)
+        """
         if pref.verbose: print(" [CONTROL] >> AestheticsImageController.setProcessPipe()")
 
         self.model.setProcessPipe(processPipe)
@@ -1241,26 +2306,74 @@ class ImageAestheticsController:
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------
 def messageBox(title, text):
-        msg = QMessageBox()
-        msg.setText(text)
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.setWindowTitle(title)
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.setEscapeButton(QMessageBox.Close)
-        msg.exec_()
+    """
+    Display informational message dialog.
+    
+    Creates and displays a simple message box with OK button for user notifications.
+    
+    Args:
+        title (str): Dialog window title
+        text (str): Message text to display
+    """
+    msg = QMessageBox()
+    msg.setText(text)
+    msg.setStandardButtons(QMessageBox.Ok)
+    msg.setWindowTitle(title)
+    msg.setStandardButtons(QMessageBox.Ok)
+    msg.setEscapeButton(QMessageBox.Close)
+    msg.exec_()
 # -----------------------------------------------------------------------------
 def okCancelBox(title, text):
-        msg = QMessageBox()
-        msg.setText(text)
-        msg.setWindowTitle(title)
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        msg.setEscapeButton(QMessageBox.Close)
-        return msg.exec_()
+    """
+    Display confirmation dialog with OK/Cancel options.
+    
+    Creates and displays a confirmation dialog allowing user to proceed or cancel.
+    
+    Args:
+        title (str): Dialog window title
+        text (str): Confirmation message text
+        
+    Returns:
+        int: User's choice (QMessageBox.Ok or QMessageBox.Cancel)
+    """
+    msg = QMessageBox()
+    msg.setText(text)
+    msg.setWindowTitle(title)
+    msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+    msg.setEscapeButton(QMessageBox.Close)
+    return msg.exec_()
 # ------------------------------------------------------------------------------------------
 # ---- Class ColorEditorsAutoController ----------------------------------------------------
 # ------------------------------------------------------------------------------------------
 class  ColorEditorsAutoController:
+    """
+    Controller for automatic color editor configuration and management.
+    
+    This class provides automated color editing capabilities by analyzing image
+    content and automatically configuring multiple color editor instances with
+    optimal settings. It uses advanced algorithms to identify dominant colors
+    and suggest appropriate editing parameters for professional color grading.
+    
+    The automatic color editor system streamlines the workflow for complex color
+    corrections by providing intelligent starting points for manual fine-tuning.
+    
+    Attributes:
+        - parent: Parent controller for coordination
+        - controlled (list): List of controlled color editor instances
+        - stepName (str): Processing step name for this auto-controller
+        - model (model.ColorEditorsAutoModel): Auto-color editing data model
+        - view (view.ColorEditorsAutoView): Auto-color editing interface
+        - callBackActive (bool): Enable/disable callback processing
+    """
     def __init__(self, parent, controlledColorEditors, stepName ):
+        """
+        Initialize the automatic color editors controller.
+        
+        Args:
+            parent: Parent controller for coordination
+            controlledColorEditors (list): List of color editor controllers to manage
+            stepName (str): Processing step identifier for this auto-controller
+        """
         if pref.verbose: print(" [CONTROL] >> ColorEditorsAutoController.__init__(",") ")
 
         self.parent = parent
@@ -1273,6 +2386,14 @@ class  ColorEditorsAutoController:
         self.callBackActive = True
     # callbacks
     def auto(self): 
+        """
+        Trigger automatic color editor configuration.
+        
+        Analyzes the current image to identify dominant colors and automatically
+        configures all controlled color editors with appropriate selection ranges
+        and initial editing parameters. Resets all editors before applying new
+        automatic configurations.
+        """
         if pref.verbose: print(" [CONTROL] >> ColorEditorsAutoController.auto(",") ")
         for ce in self.controlled: ce.resetSelection(); ce.resetEdit()
         values = self.model.compute()

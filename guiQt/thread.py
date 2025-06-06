@@ -18,7 +18,33 @@
 # --- Package hdrGUI ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrGUI consists of the classes for GUI.
+guiQt.thread module: Threading and parallel processing management for uHDR.
+
+This module provides comprehensive threading support for uHDR's GUI application,
+enabling real-time image processing, parallel computation, and responsive user
+interaction. It implements several threading patterns for different use cases:
+
+Threading Classes:
+    - RequestCompute: Real-time HDR editing with single-threaded sequential processing
+    - RunCompute: Worker thread for HDR processing pipeline execution
+    - RequestLoadImage: Parallel image loading and thumbnail generation
+    - RunLoadImage: Worker thread for individual image loading
+    - pCompute: Multi-threaded HDR processing with image splitting
+    - pRun: Worker thread for processing image splits
+    - cCompute: C++ accelerated HDR processing (single-threaded)
+    - cRun: Worker thread for C++ pipeline execution
+    - RequestAestheticsCompute: Aesthetics analysis threading
+    - RunAestheticsCompute: Worker thread for aesthetics computation
+
+Threading Patterns:
+1. Real-time Editing: Uses RequestCompute for immediate UI feedback during editing
+2. Parallel Loading: Uses RequestLoadImage for efficient gallery thumbnail generation  
+3. Split Processing: Uses pCompute for large image processing with progress feedback
+4. C++ Acceleration: Uses cCompute for hardware-accelerated processing
+5. Background Analysis: Uses RequestAestheticsCompute for non-blocking analysis
+
+All threading classes use Qt's QThreadPool for efficient thread management
+and provide callback mechanisms for result delivery and progress updates.
 """
 # -----------------------------------------------------------------------------
 # --- Import ------------------------------------------------------------------
@@ -35,26 +61,36 @@ import preferences.preferences as pref
 # -----------------------------------------------------------------------------
 class RequestCompute(object):
     """
-    manage parallel (multithreading) computation of processpipe.compute() when editing image (not used for display HDR or export HDR):
-        - uses a single/specific thread to compute process-pipe,
-        - store compute request when user changes editing values, restart process-pipe computing when the previous one is finished.
-
+    Real-time HDR processing coordinator for interactive image editing.
+    
+    Manages parallel computation of ProcessPipe operations during interactive
+    editing, ensuring responsive UI while maintaining processing order. Uses
+    a single dedicated thread to compute process-pipes, storing compute requests
+    when user changes editing values and restarting computation when previous
+    processing finishes.
+    
+    Key Features:
+    - Single-threaded sequential processing to avoid resource conflicts
+    - Request queuing for parameter changes during processing
+    - Automatic restart for pending updates
+    - Parent callback for result delivery
+    
     Attributes:
-        parent (guiQt.model.EditImageModel): reference to parent, used to callback parent when processing is over.
-        requestDict (dict): dict that stores editing values.
-        pool (QThreadPool): Qt thread pool.
-        processpipe (hdrCore.processing.Processpipe): active processpipe.
-        readyToRun (bool): True when no processing is ongoing, else False.
-        waitingUpdate (bool): True if requestCompute has been called during a processing.
-
-    Methods:
-        setProcessPipe
-        requestCompute
-        endCompute
+        - parent (EditImageModel): Parent model for result callbacks
+        - requestDict (dict): Stores pending parameter updates {processNodeId: params}
+        - pool (QThreadPool): Qt thread pool for worker management
+        - processpipe (ProcessPipe): Active processing pipeline reference
+        - readyToRun (bool): Processing availability flag
+        - waitingUpdate (bool): Pending update flag during processing
     """
 
     def __init__(self, parent):
-
+        """
+        Initialize request compute coordinator.
+        
+        Args:
+            parent (EditImageModel): Parent model for result delivery
+        """
         self.parent = parent
 
         self.requestDict= {} # store resqustCompute key:processNodeId, value: processNode params
@@ -66,28 +102,27 @@ class RequestCompute(object):
         self.waitingUpdate = False
 
     def setProcessPipe(self,pp):
-        """set the current active processpipe.
+        """
+        Set the current active processing pipeline.
 
-            Args:
-                pp (hrdCore.processing.ProcessPipe, Required)
-
-            Returns:
-                
+        Args:
+            pp (ProcessPipe, Required): Processing pipeline to manage
         """
         self.processpipe = pp
     
     def requestCompute(self, id, params):
-        """send new parameters for a process-node and request a new processpipe computation.
+        """
+        Queue parameter update and request processing pipeline computation.
+        
+        Stores new parameters for a process-node and triggers pipeline
+        computation. If processing is already running, marks for restart
+        when current computation completes.
 
-            Args:
-                id (int, Required): index of process-node in processpipe
-                params (dict, Required): parameters of process-node 
-
-            Returns:
-                
+        Args:
+            id (int, Required): Index of process-node in processing pipeline
+            params (dict, Required): Updated parameters for process-node
         """
         self.requestDict[id] = copy.deepcopy(params)
-
 
         if self.readyToRun:
             # start processing processpipe
@@ -97,14 +132,12 @@ class RequestCompute(object):
             self.waitingUpdate = True
 
     def endCompute(self):
-        """called when process-node computation is finished.
-            Get processed image and send it to parent (guiQt.model.EditImageModel).
-            If there are new requestCompute, restart computation of processpipe
-
-        Args:
-
-        Retruns:
-
+        """
+        Handle processing completion and manage restart.
+        
+        Called when process-node computation finishes. Retrieves processed
+        image, sends it to parent model, and restarts computation if there
+        are pending parameter updates.
         """
         imgTM = self.processpipe.getImage(toneMap=True)
         self.parent.updateImage(imgTM)
@@ -115,26 +148,33 @@ class RequestCompute(object):
 # --- Class RunCompute --------------------------------------------------------
 # -----------------------------------------------------------------------------
 class RunCompute(QRunnable):
-    """defines the run method that executes on a dedicated thread: processpipe computation.
+    """
+    Worker thread for HDR processing pipeline execution.
     
-        Attributes:
-            parent (guiQt.thread.RequestCompute): parent called.endCompute() when processing is over.
-
-        Methods:
-            run
+    Executes ProcessPipe computation on a dedicated thread, supporting both
+    Python and C++ acceleration modes. Handles parameter updates and manages
+    processing completion callbacks.
+    
+    Attributes:
+        - parent (RequestCompute): Parent coordinator for completion callback
     """
     def __init__(self,parent):
+        """
+        Initialize compute worker thread.
+        
+        Args:
+            parent (RequestCompute): Parent coordinator instance
+        """
         super().__init__()
         self.parent = parent
 
     def run(self):
-        """method called by the Qt Thread pool.
-            Calls parent.endCompute() when process is over.
-
-            Args:
-
-            Returns:
-
+        """
+        Main thread execution method.
+        
+        Executes ProcessPipe computation using either C++ acceleration
+        or Python processing. Updates pipeline parameters, performs
+        computation, and triggers completion callback.
         """
         self.parent.readyToRun = False
         for k in self.parent.requestDict.keys(): self.parent.processpipe.setParameters(k,self.parent.requestDict[k])
@@ -156,53 +196,55 @@ class RunCompute(QRunnable):
 # -----------------------------------------------------------------------------
 class RequestLoadImage(object):
     """
-    manage parallel (multithreading) computation of loading images:
-        - uses a new thread to load each image.
-        - calls parent with process-pipe associated to loaded image
+    Parallel image loading coordinator for gallery thumbnail generation.
+    
+    Manages multi-threaded loading of images for gallery display, creating
+    new threads for each image load operation. Handles load completion
+    callbacks and error recovery with automatic retry mechanisms.
+    
     Attributes:
-        parent (guiQt.model.ImageGalleryModel): reference to parent, used to callback parent when processing is over.
-        pool (QThreadPool): Qt thread pool.
-        requestsDone (Dict): key is index of image in page 
-            requestsDone[requestsDone]= True when image is loaded
-
-    Methods:
-        requestLoad
-        endLoadImage
-
+        - parent (ImageGalleryModel): Parent model for image registration
+        - pool (QThreadPool): Qt thread pool for worker management
+        - requestsDone (dict): Load completion tracking {imageIndex: completed}
     """
 
     def __init__(self, parent):
-
+        """
+        Initialize image loading coordinator.
+        
+        Args:
+            parent (ImageGalleryModel): Parent gallery model
+        """
         self.parent = parent
         self.pool = QThreadPool.globalInstance()        # get a global pool
         self.requestsDone = {}
 
     def requestLoad(self, minIdxInPage, imgIdxInPage, filename):
         """
+        Start image loading for specified gallery position.
+        
         Args:
-            minIdxInPage (int, Required): image/processpipe index of first image in page.
-            imgIdxInPage (int, Required): index of image/processpipe in the current page. 
-            filename     (str, Required): image filename.
-
-        Returns:
-            
+            minIdxInPage (int, Required): First image index in current page
+            imgIdxInPage (int, Required): Relative image index within page
+            filename (str, Required): Image file path to load
         """
         self.requestsDone[minIdxInPage+ imgIdxInPage] = False
         self.pool.start(RunLoadImage(self,minIdxInPage, imgIdxInPage,filename))
 
     def endLoadImage(self,error,idx0, idx,processPipe, filename):
-        """called when loading is over or failed (IOError, ValueError).
-            Set process-pipe into parent (guiQt.model.ImageGalleryModel) then update view.
-            If loading failed (IOError, ValueError) recall self.requestLoad()
+        """
+        Handle image loading completion or error recovery.
+        
+        Called when loading completes or fails (IOError, ValueError).
+        Updates parent model with ProcessPipe and refreshes view on success.
+        Automatically retries loading on failure.
 
         Args:
-            error           (bool, Required): True if loading failed (take into account ValueError).
-            idx0            (int, Required): image/processpipe index of first image in page.
-            idx             (int, Required): index of image/processpipe in the current page.
-            processPipe     (hrdCore.processing.ProcessPipe, Required):  process-pipe associated to loaded image.
-            filename        (str, Required): filename of image
-
-        Returns:
+            error (bool, Required): True if loading failed
+            idx0 (int, Required): First image index in current page
+            idx (int, Required): Relative image index within page
+            processPipe (ProcessPipe, Required): Loaded image processing pipeline
+            filename (str, Required): Image filename
         """
         if not error:
             self.requestsDone[idx0 + idx] = True
@@ -214,11 +256,28 @@ class RequestLoadImage(object):
 # --- Class RunLoadImage ------------------------------------------------------
 # -----------------------------------------------------------------------------
 class RunLoadImage(QRunnable):
+    """
+    Worker thread for individual image loading and ProcessPipe creation.
+    
+    Loads HDR images, creates associated ProcessPipes with default parameters,
+    and performs initial computation for thumbnail generation. Handles
+    loading errors gracefully with error reporting.
+    
+    Attributes:
+        - parent (RequestLoadImage): Parent coordinator for completion callback
+        - minIdxInPage (int): First image index in current page
+        - imgIdxInPage (int): Relative image index within page
+        - filename (str): Image file path to load
+    """
     def __init__(self,parent, minIdxInPage, imgIdxInPage, filename):
         """
+        Initialize image loading worker thread.
+        
         Args:
-
-        Returns:
+            parent (RequestLoadImage): Parent coordinator instance
+            minIdxInPage (int): First image index in current page
+            imgIdxInPage (int): Relative image index within page
+            filename (str): Image file path to load
         """
         super().__init__()
         self.parent = parent
@@ -228,9 +287,11 @@ class RunLoadImage(QRunnable):
 
     def run(self):
         """
-        Args:
-
-        Returns:
+        Main thread execution for image loading.
+        
+        Loads image file, creates default ProcessPipe, performs initial
+        computation, and reports completion or error to parent coordinator.
+        Handles IOError and ValueError exceptions gracefully.
         """
         try:
             image_ = hdrCore.image.Image.read(self.filename, thumb=True)
@@ -245,24 +306,43 @@ class RunLoadImage(QRunnable):
 # -----------------------------------------------------------------------------
 class pCompute(object):
     """
-    manage parallel (multithreading) computation of processpipe.compute when display HDR image or export HDR image:
-        - the image is split into multiple parts (called splits), then multithreading processing is started for each split,
-        - when all  computations of the splits are over, the processed splits are merge (note that geometry processing computation is processed after merging)
-        - the parent callback function is called with the processed image (tone-mapped or not according to constructor parameters)
-
+    Multi-threaded HDR processing with image splitting for large images.
+    
+    Manages parallel computation of ProcessPipe operations for HDR display
+    or export by splitting large images into multiple parts and processing
+    them concurrently. Provides progress feedback and handles geometry
+    processing separately at the end for optimal performance.
+    
+    Processing Workflow:
+    1. Split input image into grid of smaller sections
+    2. Create duplicate ProcessPipes for each split
+    3. Process splits in parallel using thread pool
+    4. Merge processed splits back into complete image
+    5. Apply geometry processing to final merged result
+    6. Callback with final processed image
+    
     Attributes:
-        callBack (function): function called when processing is over.
-        progress (function): function called to display processing progress.
-        nbSplits (int): number of image splits
-        nbDone (int): for which the computation is over. 
-        geometryNode (hdrCore.process.ProcessNode): geometry process node which compuation is done at the end.
-        meta (hdrCore.metadata.metadata): metadata of processpipe input image.
-
-    Methods:
-        endCompute
+        - callBack (function): Completion callback function
+        - progress (function): Progress update callback function
+        - nbSplits (int): Total number of image splits to process
+        - nbDone (int): Number of completed split processing operations
+        - geometryNode (ProcessNode): Geometry processing node for final step
+        - meta (metadata): Image metadata for preservation
     """
 
     def __init__(self, callBack, processpipe,nbWidth,nbHeight, toneMap=True, progress=None, meta=None):
+        """
+        Initialize parallel HDR processing with image splitting.
+        
+        Args:
+            callBack (function): Function called when processing completes
+            processpipe (ProcessPipe): HDR processing pipeline to apply
+            nbWidth (int): Number of horizontal splits
+            nbHeight (int): Number of vertical splits  
+            toneMap (bool): Apply tone mapping to final result
+            progress (function, optional): Progress callback function
+            meta (metadata, optional): Image metadata to preserve
+        """
         self.callBack = callBack
         self.progress =progress
         self.nbSplits = nbWidth*nbHeight
@@ -294,10 +374,16 @@ class pCompute(object):
 
     def endCompute(self,idx,idy, split):
         """
-        Args:
-
-        Returns:
+        Handle completion of individual split processing.
         
+        Called when each split finishes processing. Tracks completion progress,
+        updates progress callback, and triggers final merge and geometry
+        processing when all splits are complete.
+        
+        Args:
+            idx (int): X-coordinate of completed split
+            idy (int): Y-coordinate of completed split
+            split (Image): Processed image split result
         """
         self.splits[idy][idx]= copy.deepcopy(split)
         self.nbDone += 1
@@ -316,13 +402,28 @@ class pCompute(object):
 # -----------------------------------------------------------------------------
 class pRun(QRunnable):
     """
-        Args:
-
-        Returns:
-        
+    Worker thread for processing individual image splits in parallel.
+    
+    Executes ProcessPipe computation on a single image split, supporting
+    both tone-mapped and HDR output modes. Reports completion back to
+    parent pCompute coordinator.
+    
+    Attributes:
+        - parent (pCompute): Parent coordinator for completion callback
+        - processpipe (ProcessPipe): Processing pipeline to apply to split
+        - idx (tuple): (x, y) coordinates of split in grid
+        - toneMap (bool): Apply tone mapping to result
     """
     def __init__(self,parent,processpipe,toneMap, idxX,idxY):
         """
+        Initialize split processing worker thread.
+        
+        Args:
+            parent (pCompute): Parent coordinator instance
+            processpipe (ProcessPipe): Processing pipeline to apply
+            toneMap (bool): Apply tone mapping to result
+            idxX (int): X-coordinate of split in grid
+            idxY (int): Y-coordinate of split in grid
         """
         super().__init__()
         self.parent = parent
@@ -332,10 +433,10 @@ class pRun(QRunnable):
 
     def run(self):
         """
-        Args:
-
-        Returns:
+        Main thread execution for split processing.
         
+        Executes ProcessPipe computation on the assigned image split
+        and reports completion with processed result to parent coordinator.
         """
         self.processpipe.compute()
         pRes = self.processpipe.getImage(toneMap=self.toneMap)
@@ -347,10 +448,29 @@ class pRun(QRunnable):
 # --- Class cCompute ----------------------------------------------------------
 # -----------------------------------------------------------------------------
 class cCompute(object):
-    """xxx
+    """
+    C++ accelerated HDR processing for high-performance computation.
+    
+    Provides hardware-accelerated HDR processing using C++ backend
+    for improved performance on large images or complex operations.
+    Uses single-threaded execution with optimized C++ implementation.
+    
+    Attributes:
+        - callBack (function): Completion callback function
+        - progress (function): Progress update callback function
+        - pool (QThreadPool): Qt thread pool for worker management
     """
 
     def __init__(self, callBack, processpipe, toneMap=True, progress=None):
+        """
+        Initialize C++ accelerated HDR processing.
+        
+        Args:
+            callBack (function): Function called when processing completes
+            processpipe (ProcessPipe): HDR processing pipeline to execute
+            toneMap (bool): Apply tone mapping to result
+            progress (function, optional): Progress callback function
+        """
         self.callBack = callBack
         self.progress =progress
 
@@ -362,10 +482,10 @@ class cCompute(object):
 
     def endCompute(self, img):
         """
-        Args:
-
-        Returns:
+        Handle processing completion and deliver result.
         
+        Args:
+            img (Image): Processed HDR image result
         """
         self.callBack(img)
 # -----------------------------------------------------------------------------
@@ -373,13 +493,25 @@ class cCompute(object):
 # -----------------------------------------------------------------------------
 class cRun(QRunnable):
     """
-        Args:
-
-        Returns:
-        
+    Worker thread for C++ accelerated HDR processing execution.
+    
+    Executes ProcessPipe computation using C++ backend acceleration
+    for improved performance. Handles input image copying and result
+    delivery to parent coordinator.
+    
+    Attributes:
+        - parent (cCompute): Parent coordinator for completion callback
+        - processpipe (ProcessPipe): Processing pipeline to execute
+        - toneMap (bool): Apply tone mapping to result
     """
     def __init__(self,parent,processpipe,toneMap):
         """
+        Initialize C++ processing worker thread.
+        
+        Args:
+            parent (cCompute): Parent coordinator instance
+            processpipe (ProcessPipe): Processing pipeline to execute
+            toneMap (bool): Apply tone mapping to result
         """
         super().__init__()
         self.parent = parent
@@ -388,10 +520,11 @@ class cRun(QRunnable):
 
     def run(self):
         """
-        Args:
-
-        Returns:
+        Main thread execution with C++ acceleration.
         
+        Executes ProcessPipe computation using C++ backend (hdrCore.coreC)
+        for improved performance. Copies input image, processes through
+        C++ pipeline, and reports completion to parent coordinator.
         """
         img  = copy.deepcopy(self.processpipe.getInputImage())
         imgRes = hdrCore.coreC.coreCcompute(img, self.processpipe)
@@ -407,26 +540,32 @@ class cRun(QRunnable):
 # -----------------------------------------------------------------------------
 class RequestAestheticsCompute(object):
     """
-    manage parallel (multithreading) computation of processpipe.compute() when editing image (not used for display HDR or export HDR):
-        - uses a single/specific thread to compute process-pipe,
-        - store compute request when user changes editing values, restart process-pipe computing when the previous one is finished.
-
+    Threading coordinator for image aesthetics analysis and computation.
+    
+    Manages parallel computation of aesthetic analysis including color palette
+    extraction, composition analysis, and visual quality assessment. Uses
+    single-threaded sequential processing to maintain analysis order while
+    providing non-blocking background computation.
+    
+    Similar to RequestCompute but specialized for aesthetics analysis workflows
+    that may have different performance characteristics and requirements.
+    
     Attributes:
-        parent (guiQt.model.EditImageModel): reference to parent, used to callback parent when processing is over.
-        requestDict (dict): dict that stores editing values.
-        pool (QThreadPool): Qt thread pool.
-        processpipe (hdrCore.processing.Processpipe): active processpipe.
-        readyToRun (bool): True when no processing is ongoing, else False.
-        waitingUpdate (bool): True if requestCompute has been called during a processing.
-
-    Methods:
-        setProcessPipe
-        requestCompute
-        endCompute
+        - parent: Parent model for result callbacks  
+        - requestDict (dict): Stores pending parameter updates
+        - pool (QThreadPool): Qt thread pool for worker management
+        - processpipe (ProcessPipe): Active processing pipeline reference
+        - readyToRun (bool): Processing availability flag
+        - waitingUpdate (bool): Pending update flag during processing
     """
 
     def __init__(self, parent):
-
+        """
+        Initialize aesthetics compute coordinator.
+        
+        Args:
+            parent: Parent model for result delivery
+        """
         self.parent = parent
 
         self.requestDict= {} # store resqustCompute key:processNodeId, value: processNode params
@@ -438,25 +577,21 @@ class RequestAestheticsCompute(object):
         self.waitingUpdate = False
 
     def setProcessPipe(self,pp):
-        """set the current active processpipe.
+        """
+        Set the current active processing pipeline.
 
-            Args:
-                pp (hrdCore.processing.ProcessPipe, Required)
-
-            Returns:
-                
+        Args:
+            pp (ProcessPipe, Required): Processing pipeline to manage
         """
         self.processpipe = pp
     
     def requestCompute(self, id, params):
-        """send new parameters for a process-node and request a new processpipe computation.
+        """
+        Queue parameter update and request aesthetics computation.
 
-            Args:
-                id (int, Required): index of process-node in processpipe
-                params (dict, Required): parameters of process-node 
-
-            Returns:
-                
+        Args:
+            id (int, Required): Index of process-node in processing pipeline
+            params (dict, Required): Updated parameters for process-node
         """
         self.requestDict[id] = copy.deepcopy(params)
 
@@ -468,14 +603,12 @@ class RequestAestheticsCompute(object):
             self.waitingUpdate = True
 
     def endCompute(self):
-        """called when process-node computation is finished.
-            Get processed image and send it to parent (guiQt.model.EditImageModel).
-            If there are new requestCompute, restart computation of processpipe
-
-        Args:
-
-        Retruns:
-
+        """
+        Handle aesthetics processing completion and manage restart.
+        
+        Called when aesthetics computation finishes. Retrieves processed
+        image, sends it to parent model, and restarts computation if there
+        are pending parameter updates.
         """
         imgTM = self.processpipe.getImage(toneMap=True)
         self.parent.updateImage(imgTM)
@@ -486,26 +619,33 @@ class RequestAestheticsCompute(object):
 # --- Class RunCompute --------------------------------------------------------
 # -----------------------------------------------------------------------------
 class RunAestheticsCompute(QRunnable):
-    """defines the run method that executes on a dedicated thread: processpipe computation.
+    """
+    Worker thread for aesthetics analysis and computation execution.
     
-        Attributes:
-            parent (guiQt.thread.RequestCompute): parent called.endCompute() when processing is over.
-
-        Methods:
-            run
+    Executes ProcessPipe computation focused on aesthetics analysis including
+    color palette extraction, composition metrics, and visual quality assessment.
+    Uses Python-based processing for flexibility in analysis algorithms.
+    
+    Attributes:
+        - parent (RequestAestheticsCompute): Parent coordinator for completion callback
     """
     def __init__(self,parent):
+        """
+        Initialize aesthetics compute worker thread.
+        
+        Args:
+            parent (RequestAestheticsCompute): Parent coordinator instance
+        """
         super().__init__()
         self.parent = parent
 
     def run(self):
-        """method called by the Qt Thread pool.
-            Calls parent.endCompute() when process is over.
-
-            Args:
-
-            Returns:
-
+        """
+        Main thread execution for aesthetics processing.
+        
+        Executes ProcessPipe computation with focus on aesthetics analysis.
+        Updates pipeline parameters, performs Python-based computation
+        with timing metrics, and triggers completion callback.
         """
         self.parent.readyToRun = False
         for k in self.parent.requestDict.keys(): self.parent.processpipe.setParameters(k,self.parent.requestDict[k])

@@ -18,8 +18,18 @@
 # --- Package hdrCore ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrCore consists of the core classes for HDR imaging.
+HDR Core C++ Integration Module
 
+This module provides high-performance C++ integration for HDR image processing
+through dynamic library loading. It interfaces with the HDRip.dll C++ library
+to accelerate computationally intensive image processing operations.
+
+The module implements a fixed processing pipeline architecture optimized for
+speed, including exposure adjustment, contrast control, tone curves, lightness
+masking, saturation adjustment, and multiple color editors.
+
+Functions:
+    coreCcompute: Main C++ processing pipeline execution function
 """
 
 # -----------------------------------------------------------------------------
@@ -35,14 +45,41 @@ import preferences.preferences as pref
 # -----------------------------------------------------------------------------
 
 def coreCcompute(img, processPipe):
-    """compute image process-pipe in C++ (fast computation), fixed process pipe architecture: (1) exposure, (2) contrast, (3) tone-curve, (4)saturation, (5-10) 5 color editors)
-
-        Args:
-            img (hdrCore.image.Image, Required): image
-            processPipe (hdrCore.processing.ProcessPipe, Required): process pipe
-                
-        Returns:
-            (hdrCore.image.Image, Required): image
+    """
+    Execute the complete HDR processing pipeline using C++ acceleration.
+    
+    This function provides high-speed image processing by interfacing with a
+    C++ dynamic library (HDRip.dll). It implements a fixed pipeline architecture
+    consisting of 10 processing stages: exposure, contrast, tone curve, lightness
+    mask, saturation, and 5 color editors.
+    
+    The processing pipeline is optimized for performance and follows this sequence:
+    1. Exposure adjustment
+    2. Contrast control  
+    3. Tone curve mapping (shadows, blacks, mediums, whites, highlights)
+    4. Lightness mask application
+    5. Saturation adjustment
+    6-10. Five independent color editors with selection and editing capabilities
+    
+    Args:
+        img (hdrCore.image.Image): Input HDR image to be processed
+        processPipe (hdrCore.processing.ProcessPipe): Processing pipeline containing
+                                                     all processing parameters in the
+                                                     expected fixed architecture
+            
+    Returns:
+        hdrCore.image.Image: Processed image with C++ accelerated operations applied
+        
+    Note:
+        This function requires HDRip.dll to be present in the current directory.
+        The processing pipeline architecture is fixed and cannot be modified.
+        Each color editor supports selection by lightness, chroma, and hue ranges
+        with tolerance-based masking and independent edit controls for hue,
+        exposure, contrast, and saturation.
+        
+    Raises:
+        OSError: If HDRip.dll cannot be loaded
+        ctypes.ArgumentError: If parameter types don't match expected C++ interface
     """
     if pref.verbose:  print(f"[hdrCore] >> coreCcompute({img})") 
 

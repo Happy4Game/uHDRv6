@@ -18,8 +18,14 @@
 # --- Package hdrCore ---------------------------------------------------------
 # -----------------------------------------------------------------------------
 """
-package hdrCore consists of the core classes for HDR imaging.
+HDR Core Quality Assessment Module
 
+This module provides functionality for assessing and recording image quality
+metrics and artifacts. It includes user-based quality scoring systems and
+artifact detection capabilities for HDR image evaluation.
+
+Classes:
+    quality: Image quality assessment and artifact tracking system
 """
 
 
@@ -37,26 +43,37 @@ from . import utils, processing, image
 # -----------------------------------------------------------------------------
 class quality(object):
     """
-    TODO - Documentation de la classe quality
+    Image quality assessment and artifact tracking system.
+    
+    This class provides a comprehensive framework for evaluating image quality
+    through user scoring and artifact detection. It tracks multiple quality
+    dimensions including aesthetics, comfort, and naturalness, along with
+    common HDR processing artifacts.
     
     Attributes:
-        _image: TODO
-            TODO
-        imageNpath: TODO
-            TODO
-        user: TODO
-            TODO
-        score: TODO
-            TODO
-        artifact: TODO
-            TODO
+        - _image (hdrCore.image.Image): Reference to the assessed image
+        - imageNpath (dict): Image identification containing name and path
+        - user (dict): User information for the assessment
+        - score (dict): Quality scores across multiple dimensions:
+            * quality: Overall quality score
+            * aesthetics: Aesthetic appeal score  
+            * comfort: Visual comfort score
+            * naturalness: Naturalness/realism score
+        - artifact (dict): Boolean flags for detected artifacts:
+            * ghost: Ghosting artifacts
+            * noise: Noise artifacts
+            * blur: Blur artifacts
+            * halo: Halo artifacts
+            * other: Other unspecified artifacts
     """
     
     def __init__(self):
         """
-        TODO - Documentation de la méthode __init__
+        Initialize a new quality assessment object.
         
-        /!\ - Les constructeurs n'apparaissent pas dans la doc générées par sphinx.
+        Creates a new quality assessment with default values for all
+        scoring dimensions and artifact flags. All scores are initialized
+        to 0 and all artifact flags to False.
         """
         self._image =       None
         self.imageNpath =    {'name':None, 'path': None}
@@ -66,11 +83,18 @@ class quality(object):
 
     def toDict(self):
         """
-        Convert the object into a dict.
+        Convert the quality assessment to a dictionary representation.
+        
+        Creates a dictionary containing all assessment data including image
+        information, user details, scores, and artifact flags. This format
+        is suitable for serialization and storage.
         
         Returns:
-            TODO
-                TODO
+            dict: Complete quality assessment data with keys:
+                - image: Image name and path information
+                - user: User identification data
+                - score: All quality dimension scores
+                - artifact: All artifact detection flags
         """
         return {'image': copy.deepcopy(self.imageNpath),
                               'user':copy.deepcopy(self.user),
@@ -79,20 +103,18 @@ class quality(object):
 
     def __repr__(self):
         """
-        Convert to a string value.
+        Return a string representation of the quality assessment.
         
         Returns:
-            str
-                TODO
+            str: String representation of the complete assessment data
         """
         return str(self.toDict())
 
     def __str__(self):
         """
-        Convert to a string value.
+        Return a human-readable string representation of the quality assessment.
         
         Returns:
-            str
-                TODO
+            str: Human-readable string of the complete assessment data
         """
         return self.__repr__()

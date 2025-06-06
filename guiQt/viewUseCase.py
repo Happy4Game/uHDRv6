@@ -239,10 +239,27 @@ class ImageGalleryView(QSplitter):
         event.accept()
 # ------------------------------------------------------------------------------------------
 class AppView(QMainWindow):
-    """ 
-        MainWindow(Vue)
+    """
+    Main application window for use case classification workflow.
+    
+    Provides a simplified main window interface optimized for HDR image
+    use case classification and workflow management. Includes basic menu
+    system and docking functionality for use case selection interface.
+    
+    Attributes:
+        - controller: Reference to AppViewController
+        - screenSize: Display configuration from controller
+        - imageGalleryController: Gallery controller for image management
+        - dock: Multi-dock controller for use case interface
     """
     def __init__(self, appViewController = None, shapeMode=None):
+        """
+        Initialize use case application view.
+        
+        Args:
+            appViewController: Parent application controller
+            shapeMode: Initial gallery layout mode
+        """
         super().__init__()
         # --------------------
         scale = 0.8
@@ -275,13 +292,29 @@ class AppView(QMainWindow):
         self.buildDisplayHDR()
         self.buildInfoMenu()
     # ------------------------------------------------------------------------------------------
-    def resizeEvent(self, event): super().resizeEvent(event)
+    def resizeEvent(self, event): 
+        """
+        Handle Qt resize events.
+        
+        Args:
+            event: Qt resize event object
+        """
+        super().resizeEvent(event)
     # ------------------------------------------------------------------------------------------
     def setWindowGeometry(self, scale=0.8):
+        """
+        Configure window size and position based on screen dimensions.
+        
+        Args:
+            scale (float): Scaling factor for window size (default 0.8)
+        """
         width, height = self.controller.screenSize[0].width(), self.controller.screenSize[0].height()
         self.setGeometry(0, 0, math.floor(width*scale), math.floor(height*scale))
     # ------------------------------------------------------------------------------------------
     def buildFileMenu(self):
+        """
+        Create file menu with directory selection functionality.
+        """
         menubar = self.menuBar()# get menubar
         fileMenu = menubar.addMenu('&File')# file menu
         selectDir = QAction('&Select directory', self)        
@@ -291,6 +324,9 @@ class AppView(QMainWindow):
         fileMenu.addAction(selectDir)
     # ------------------------------------------------------------------------------------------    
     def buildInfoMenu(self):
+        """
+        Create help/debug menu for use case workflow.
+        """
         menubar = self.menuBar()# get menubar
         helpMenu = menubar.addMenu('&Help')# file menu
         debug = QAction('&Debug', self)        
@@ -300,6 +336,9 @@ class AppView(QMainWindow):
         helpMenu.addAction(debug)
 # ------------------------------------------------------------------------------------------
     def buildDisplayHDR(self):
+        """
+        Create HDR display menu for use case workflow.
+        """
         menubar = self.menuBar()# get menubar
         displayHDRmenu = menubar.addMenu('&Display HDR')# file menu
         displayHDR = QAction('&HDR display', self)        
@@ -315,6 +354,9 @@ class AppView(QMainWindow):
         displayHDRmenu.addAction(closeHDR)
 # ------------------------------------------------------------------------------------------        
     def buildDockMenu(self):
+        """
+        Create dock management menu for use case interface switching.
+        """
         menubar = self.menuBar()# get menubar
         dockMenu = menubar.addMenu('&Dock')# file menu
 
@@ -331,11 +373,36 @@ class AppView(QMainWindow):
         dockMenu.addAction(edit)
 # ------------------------------------------------------------------------------------------
     def closeEvent(self, event):
+        """
+        Handle application shutdown and cleanup.
+        
+        Args:
+            event: Qt close event
+        """
         print(" [CB] >> AppView.closeEvent()>> ... closing")
         self.imageGalleryController.save()
 # ------------------------------------------------------------------------------------------
 class ImageInfoView(QSplitter):
+    """
+    Image information display view for use case classification workflow.
+    
+    Provides a simplified interface for viewing image metadata and properties
+    during use case classification. Displays EXIF data and technical information
+    to help users make informed use case decisions.
+    
+    Attributes:
+        - controller: Reference to ImageInfoController
+        - imageWidgetController: Image display controller
+        - layout (QFormLayout): Form layout for metadata fields
+        - imageName, imagePath, imageSize, etc.: Metadata display widgets
+    """
     def __init__(self, _controller):
+        """
+        Initialize image info view for use case workflow.
+        
+        Args:
+            _controller: Parent ImageInfoController instance
+        """
         print(" [VIEW] >> ImageInfoView.__init__(",")")
 
         super().__init__(Qt.Vertical)
@@ -381,6 +448,19 @@ class ImageInfoView(QSplitter):
         self.setSizes([60,40])
 
     def setImage(self,image): 
+        """
+        Update display with new image and populate metadata fields.
+        
+        Extracts and displays comprehensive metadata from the image including
+        EXIF data, technical parameters, and file information for use case
+        classification assistance.
+        
+        Args:
+            image (hdrCore.image.Image): Image with metadata to display
+            
+        Returns:
+            Result of imageWidgetController.setImage() operation
+        """
         print(" [VIEW] >> ImageInfoView.setImage(",image.name,")")
         if image.metadata.metadata['filename'] != None: self.imageName.setText(image.metadata.metadata['filename'])
         else: self.imageName.setText(" ........ ")
@@ -412,23 +492,65 @@ class ImageInfoView(QSplitter):
         else: self.imageFocalLength.setText(" ........ ")
         # ---------------------------------------------------
 
-
-
-
-
         return self.imageWidgetController.setImage(image)
 # ------------------------------------------------------------------------------------------
 class AdvanceLineEdit(object):
+    """
+    Enhanced line edit widget with label for metadata display.
+    
+    Provides a labeled text input widget optimized for displaying
+    image metadata in the use case classification interface.
+    
+    Attributes:
+        - label (QLabel): Display label for the field
+        - lineEdit (QLineEdit): Text input widget
+    """
     def __init__(self, labelName, defaultText, layout, callBack=None):
+        """
+        Initialize labeled line edit widget.
+        
+        Args:
+            labelName (str): Display label text
+            defaultText (str): Initial/default text value
+            layout: Parent layout to add widget to
+            callBack (function, optional): Text change callback function
+        """
         self.label = QLabel(labelName)
         self.lineEdit =QLineEdit(defaultText)
         if callBack: self.lineEdit.textChanged.connect(callBack)
         layout.addRow(self.label,self.lineEdit)
 
-    def setText(self, txt): self.lineEdit.setText(txt)
+    def setText(self, txt): 
+        """
+        Update the displayed text value.
+        
+        Args:
+            txt (str): New text to display
+        """
+        self.lineEdit.setText(txt)
 # ------------------------------------------------------------------------------------------
 class EditImageView(QSplitter):
+    """
+    Simplified HDR image editing view for use case workflow.
+    
+    Provides basic HDR editing controls optimized for use case classification
+    workflow. Includes essential controls like exposure and contrast for
+    quick image assessment during classification.
+    
+    Attributes:
+        - controller: Reference to EditImageController
+        - imageWidgetController: Image display controller
+        - layout (QVBoxLayout): Vertical layout for controls
+        - exposure: Exposure adjustment controller
+        - contrast: Contrast adjustment controller
+    """
     def __init__(self, _controller):
+        """
+        Initialize simplified edit image view.
+        
+        Args:
+            _controller: Parent EditImageController instance
+        """
         print(" [VIEW] >> EditImageView.__init__(",")")
         super().__init__(Qt.Vertical)
 
@@ -465,32 +587,70 @@ class EditImageView(QSplitter):
         self.setSizes([60,40])
 
     def setImage(self,image):
+        """
+        Update display with new image.
+        
+        Args:
+            image (hdrCore.image.Image): Image to display
+            
+        Returns:
+            Result of imageWidgetController.setImage() operation
+        """
         print(" [VIEW] >> EditImageView.setImage(",image.name,")")
         return self.imageWidgetController.setImage(image)
 
     def autoExposure(self):
+        """
+        Apply automatic exposure adjustment.
+        
+        Delegates to controller for automatic exposure calculation and application.
+        """
         print(" [CB] >> EditImageView.autoExposure(",")")
 
         self.controller.autoExposure()
         pass
 
     def changeExposure(self, value):
+        """
+        Handle manual exposure changes from user input.
+        
+        Args:
+            value (float): New exposure value in EV stops
+        """
         print(" [CB] >> EditImageView.changeExposure(",")")
 
         self.controller.changeExposure(value)
         pass
 
     def autoContrast(self):
+        """
+        Apply automatic contrast adjustment (placeholder).
+        """
         print(" [CB] >> EditImageView.autoContrast(",")")
         pass
 
     def changeContrast(self, value):
+        """
+        Handle manual contrast changes from user input.
+        
+        Args:
+            value (float): New contrast value
+        """
         print(" [CB] >> EditImageView.changeContrast(",")")
 
         self.controller.changeContrast(value)
         pass
 
     def setProcessPipe(self, processPipe):
+        """
+        Initialize controls with ProcessPipe parameters.
+        
+        Restores slider values from the ProcessPipe to match current
+        image processing state without triggering callbacks.
+        
+        Args:
+            processPipe (ProcessPipe): Processing pipeline with parameters
+        """
         print(" [VIEW] >> EditImageView.setProcessPipe(",")")
         # exposure
         # recover value in pipe and restore it
@@ -504,7 +664,25 @@ class EditImageView(QSplitter):
         self.contrast.setValue(value['contrast'], callBackActive = False)
 # ------------------------------------------------------------------------------------------
 class MultiDockView(QDockWidget):
+    """
+    Multi-panel dock widget for use case workflow interface switching.
+    
+    Provides a dockable interface that can switch between different panels
+    for image editing and information display during use case classification.
+    
+    Attributes:
+        - controller: Reference to MultiDockController
+        - childControllers (list): List of available child controllers
+        - childController: Currently active child controller
+        - active (int): Index of currently active controller
+    """
     def __init__(self, _controller):
+        """
+        Initialize multi-dock view for use case workflow.
+        
+        Args:
+            _controller: Parent MultiDockController instance
+        """
         print(" [VIEW] >> MultiDockView.__init__(",")")
 
         super().__init__("Image Edit/Info")
@@ -519,6 +697,12 @@ class MultiDockView(QDockWidget):
         self.repaint()
 
     def switch(self):
+        """
+        Toggle between available child controllers.
+        
+        Cycles through available controllers (edit/info) and rebuilds
+        the view with current ProcessPipe data.
+        """
         print(" [VIEW] >> MultiDockView.switch(",")")
      
         self.active = (self.active+1)%len(self.childControllers)
@@ -531,11 +715,45 @@ class MultiDockView(QDockWidget):
         self.repaint()
 
     def setProcessPipe(self, processPipe):
+        """
+        Update current controller with new ProcessPipe.
+        
+        Args:
+            processPipe (ProcessPipe): New processing pipeline to display
+        """
         print(" [VIEW] >> MultiDockView.setProcessPipe(",processPipe.getImage().name,")")
         self.childController.setProcessPipe(processPipe)
 # ------------------------------------------------------------------------------------------
 class AdvanceSliderView(QFrame):
+    """
+    Enhanced slider widget with auto/reset functionality for use case workflow.
+    
+    Provides an advanced slider control with automatic adjustment,
+    reset capability, and manual value entry for use case classification
+    parameter adjustment.
+    
+    Attributes:
+        - controller: Reference to AdvanceSliderController
+        - firstrow (QFrame): Top row container for controls
+        - vbox (QVBoxLayout): Vertical layout container
+        - hbox (QHBoxLayout): Horizontal layout for top row
+        - label (QLabel): Parameter name label
+        - auto (QPushButton): Automatic adjustment button
+        - editValue (QLineEdit): Manual value entry field
+        - reset (QPushButton): Reset to default button
+        - slider (QSlider): Main slider control
+    """
     def __init__(self, controller, name,defaultValue, range, step):
+        """
+        Initialize advanced slider view.
+        
+        Args:
+            controller: Parent AdvanceSliderController instance
+            name (str): Parameter display name
+            defaultValue (float): Initial slider value
+            range (tuple): (min, max) value range
+            step (float): Slider step increment
+        """
         super().__init__()
         self.controller = controller
         self.firstrow = QFrame()
@@ -573,7 +791,37 @@ class AdvanceSliderView(QFrame):
         self.auto.clicked.connect(self.controller.auto)
 # ------------------------------------------------------------------------------------------
 class ImageUseCaseView(QSplitter):
+    """
+    Main interface for HDR image use case classification.
+    
+    Provides a comprehensive interface for classifying HDR images according
+    to 18 predefined photographic use cases organized by shooting environment
+    and lighting conditions. Essential for workflow optimization and automated
+    parameter selection.
+    
+    Use Case Categories:
+    - Inside (I): Indoor photography with challenging lighting
+    - Outside (O): Outdoor photography with varying conditions  
+    - Lowlight (L): Low-light and night photography
+    - Special (S): Special cases and technical challenges
+    
+    Attributes:
+        - controller: Reference to ImageUseCaseController
+        - imageWidgetController: Image display controller
+        - layout (QFormLayout): Form layout for use case radio buttons
+        - useCase01-18: Radio button controllers for each use case
+        - scroll (QScrollArea): Scrollable container for use cases
+    """
     def __init__(self, _controller):
+        """
+        Initialize image use case classification view.
+        
+        Creates radio button interface for all 18 use case categories
+        with appropriate labels and organization.
+        
+        Args:
+            _controller: Parent ImageUseCaseController instance
+        """
         print(" [VIEW] >> ImageUseCaseView.__init__(",")")
 
         super().__init__(Qt.Vertical)
@@ -642,19 +890,54 @@ class ImageUseCaseView(QSplitter):
         self.setSizes([60,40])
 
     def setImage(self,image): 
+        """
+        Update display with new image for use case classification.
+        
+        Args:
+            image (hdrCore.image.Image): Image to classify
+            
+        Returns:
+            Result of imageWidgetController.setImage() operation
+        """
         print(" [VIEW] >> ImageInfoView.setImage(",image.name,")")
         # ---------------------------------------------------
         return self.imageWidgetController.setImage(image)
 # ------------------------------------------------------------------------------------------
 class AdvanceRadioButton(object):
+    """
+    Enhanced radio button widget with label for use case selection.
+    
+    Provides a labeled radio button optimized for use case classification
+    with optional callback functionality for selection handling.
+    
+    Attributes:
+        - label (QLabel): Display label for the use case
+        - radioButton (QRadioButton): Radio button control
+    """
     ### https://www.tutorialspoint.com/pyqt/pyqt_qradiobutton_widget.htm
     def __init__(self, labelName, defaultState, layout, callBack=None):
+        """
+        Initialize labeled radio button widget.
+        
+        Args:
+            labelName (str): Display label text for use case
+            defaultState (bool): Initial checked state
+            layout: Parent layout to add widget to
+            callBack (function, optional): Selection callback function
+        """
         self.label = QLabel(labelName)
         self.radioButton =QRadioButton("test")
         if callBack: self.radioButton.toggled.connect(callBack)
         layout.addRow(self.label,self.radioButton)
 
-    def setState(self, state): self.radioButton.setChecked(state)
+    def setState(self, state): 
+        """
+        Set radio button checked state.
+        
+        Args:
+            state (bool): New checked state
+        """
+        self.radioButton.setChecked(state)
 # ------------------------------------------------------------------------------------------
 
 
