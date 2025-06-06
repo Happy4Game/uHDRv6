@@ -305,16 +305,16 @@ enabling real-time image processing, parallel computation, and responsive user
 interaction. It implements several threading patterns for different use cases:</p>
 
 <p>Threading Classes:
-    RequestCompute: Real-time HDR editing with single-threaded sequential processing
-    RunCompute: Worker thread for HDR processing pipeline execution
-    RequestLoadImage: Parallel image loading and thumbnail generation
-    RunLoadImage: Worker thread for individual image loading
-    pCompute: Multi-threaded HDR processing with image splitting
-    pRun: Worker thread for processing image splits
-    cCompute: C++ accelerated HDR processing (single-threaded)
-    cRun: Worker thread for C++ pipeline execution
-    RequestAestheticsCompute: Aesthetics analysis threading
-    RunAestheticsCompute: Worker thread for aesthetics computation</p>
+    - RequestCompute: Real-time HDR editing with single-threaded sequential processing
+    - RunCompute: Worker thread for HDR processing pipeline execution
+    - RequestLoadImage: Parallel image loading and thumbnail generation
+    - RunLoadImage: Worker thread for individual image loading
+    - pCompute: Multi-threaded HDR processing with image splitting
+    - pRun: Worker thread for processing image splits
+    - cCompute: C++ accelerated HDR processing (single-threaded)
+    - cRun: Worker thread for C++ pipeline execution
+    - RequestAestheticsCompute: Aesthetics analysis threading
+    - RunAestheticsCompute: Worker thread for aesthetics computation</p>
 
 <p>Threading Patterns:</p>
 
@@ -361,16 +361,16 @@ and provide callback mechanisms for result delivery and progress updates.</p>
 </span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a><span class="sd">interaction. It implements several threading patterns for different use cases:</span>
 </span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>
 </span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a><span class="sd">Threading Classes:</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">    RequestCompute: Real-time HDR editing with single-threaded sequential processing</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="sd">    RunCompute: Worker thread for HDR processing pipeline execution</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="sd">    RequestLoadImage: Parallel image loading and thumbnail generation</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="sd">    RunLoadImage: Worker thread for individual image loading</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a><span class="sd">    pCompute: Multi-threaded HDR processing with image splitting</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a><span class="sd">    pRun: Worker thread for processing image splits</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="sd">    cCompute: C++ accelerated HDR processing (single-threaded)</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="sd">    cRun: Worker thread for C++ pipeline execution</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="sd">    RequestAestheticsCompute: Aesthetics analysis threading</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="sd">    RunAestheticsCompute: Worker thread for aesthetics computation</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">    - RequestCompute: Real-time HDR editing with single-threaded sequential processing</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="sd">    - RunCompute: Worker thread for HDR processing pipeline execution</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="sd">    - RequestLoadImage: Parallel image loading and thumbnail generation</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="sd">    - RunLoadImage: Worker thread for individual image loading</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a><span class="sd">    - pCompute: Multi-threaded HDR processing with image splitting</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a><span class="sd">    - pRun: Worker thread for processing image splits</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="sd">    - cCompute: C++ accelerated HDR processing (single-threaded)</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="sd">    - cRun: Worker thread for C++ pipeline execution</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="sd">    - RequestAestheticsCompute: Aesthetics analysis threading</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="sd">    - RunAestheticsCompute: Worker thread for aesthetics computation</span>
 </span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>
 </span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="sd">Threading Patterns:</span>
 </span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="sd">1. Real-time Editing: Uses RequestCompute for immediate UI feedback during editing</span>
