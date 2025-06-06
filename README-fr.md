@@ -5,7 +5,7 @@
 ## 👥 Contributeurs
 - Rémi COZOT
 - Rémi SYNVAVE
-- ..
+- Jing ZHANG
 - Arnaud WISSOCQ
 - Justin FONTAINE
 - Thibaut DUFEUTREL
