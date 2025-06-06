@@ -10,8 +10,8 @@ These functions are based on the IEC 61966-2-1:1999 standard and ITU-R BT.709-6
 recommendations, ensuring accurate color reproduction and display compatibility.
 
 Functions:
-    eotf_inverse_sRGB: Convert linear luminance to gamma-corrected sRGB values
-    eotf_sRGB: Convert gamma-corrected sRGB values to linear luminance
+    - eotf_inverse_sRGB: Convert linear luminance to gamma-corrected sRGB values
+    - eotf_sRGB: Convert gamma-corrected sRGB values to linear luminance
 
 Note:
     This module is derived from the Colour Science library and adapted for use

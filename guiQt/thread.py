@@ -25,16 +25,16 @@ enabling real-time image processing, parallel computation, and responsive user
 interaction. It implements several threading patterns for different use cases:
 
 Threading Classes:
-    RequestCompute: Real-time HDR editing with single-threaded sequential processing
-    RunCompute: Worker thread for HDR processing pipeline execution
-    RequestLoadImage: Parallel image loading and thumbnail generation
-    RunLoadImage: Worker thread for individual image loading
-    pCompute: Multi-threaded HDR processing with image splitting
-    pRun: Worker thread for processing image splits
-    cCompute: C++ accelerated HDR processing (single-threaded)
-    cRun: Worker thread for C++ pipeline execution
-    RequestAestheticsCompute: Aesthetics analysis threading
-    RunAestheticsCompute: Worker thread for aesthetics computation
+    - RequestCompute: Real-time HDR editing with single-threaded sequential processing
+    - RunCompute: Worker thread for HDR processing pipeline execution
+    - RequestLoadImage: Parallel image loading and thumbnail generation
+    - RunLoadImage: Worker thread for individual image loading
+    - pCompute: Multi-threaded HDR processing with image splitting
+    - pRun: Worker thread for processing image splits
+    - cCompute: C++ accelerated HDR processing (single-threaded)
+    - cRun: Worker thread for C++ pipeline execution
+    - RequestAestheticsCompute: Aesthetics analysis threading
+    - RunAestheticsCompute: Worker thread for aesthetics computation
 
 Threading Patterns:
 1. Real-time Editing: Uses RequestCompute for immediate UI feedback during editing

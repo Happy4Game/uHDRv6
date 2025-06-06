@@ -29,10 +29,10 @@ encoding and decoding, which are essential for proper HDR image display and
 color space transformations.
 
 Functions:
-    numba_cctf_sRGB_encoding: CPU-accelerated sRGB gamma encoding
-    numba_cctf_sRGB_decoding: CPU-accelerated sRGB gamma decoding  
-    cuda_cctf_sRGB_encoding: GPU-accelerated sRGB gamma encoding
-    cuda_cctf_sRGB_decoding: GPU-accelerated sRGB gamma decoding
+    - numba_cctf_sRGB_encoding: CPU-accelerated sRGB gamma encoding
+    - numba_cctf_sRGB_decoding: CPU-accelerated sRGB gamma decoding  
+    - cuda_cctf_sRGB_encoding: GPU-accelerated sRGB gamma encoding
+    - cuda_cctf_sRGB_decoding: GPU-accelerated sRGB gamma decoding
 """
 
 # -----------------------------------------------------------------------------

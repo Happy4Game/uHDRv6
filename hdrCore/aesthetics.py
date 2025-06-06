@@ -29,9 +29,9 @@ The module implements advanced machine learning techniques including K-means clu
 for color palette extraction and provides frameworks for extensible aesthetic analysis.
 
 Classes:
-    ImageAestheticsModel: Abstract base class for aesthetic modeling
-    Palette: Color palette extraction and analysis using K-means clustering
-    MultidimensionalImageAestheticsModel: Container for multiple aesthetic models
+    - ImageAestheticsModel: Abstract base class for aesthetic modeling
+    - Palette: Color palette extraction and analysis using K-means clustering
+    - MultidimensionalImageAestheticsModel: Container for multiple aesthetic models
 """
 
 # -----------------------------------------------------------------------------

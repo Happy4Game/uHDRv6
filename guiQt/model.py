@@ -34,20 +34,20 @@ The models handle:
 - Threading coordination for parallel processing
 
 Main Classes:
-    ImageWidgetModel: Simple image display model
-    ImageGalleryModel: Gallery view with pagination and process-pipes
-    AppModel: Main application state and directory management
-    EditImageModel: Complete HDR editing pipeline model
-    ToneCurveModel: B-spline tone curve editing with control points
-    LightnessMaskModel: Tone range selection masking
-    HDRviewerModel: HDR display configuration
-    ImageAestheticsModel: Color palette and aesthetics analysis
-    ColorEditorsAutoModel: Automatic color editor configuration
+    - ImageWidgetModel: Simple image display model
+    - ImageGalleryModel: Gallery view with pagination and process-pipes
+    - AppModel: Main application state and directory management
+    - EditImageModel: Complete HDR editing pipeline model
+    - ToneCurveModel: B-spline tone curve editing with control points
+    - LightnessMaskModel: Tone range selection masking
+    - HDRviewerModel: HDR display configuration
+    - ImageAestheticsModel: Color palette and aesthetics analysis
+    - ColorEditorsAutoModel: Automatic color editor configuration
 
 Threading Models:
-    AdvanceSliderModel: Slider state management
-    LchColorSelectorModel: LCH color space editing
-    GeometryModel: Geometric transformations
+    - AdvanceSliderModel: Slider state management
+    - LchColorSelectorModel: LCH color space editing
+    - GeometryModel: Geometric transformations
 """
 
 # -----------------------------------------------------------------------------

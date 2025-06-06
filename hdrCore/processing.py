@@ -30,19 +30,19 @@ through the ProcessPipe system. It supports various color spaces, geometric
 transformations, and specialized HDR processing techniques.
 
 Classes:
-    Processing: Abstract base class for all processing operations
-    tmo_cctf: Tone mapping using color correction transfer functions
-    exposure: Exposure adjustment and auto-exposure calculation
-    contrast: Contrast control with gamma-based adjustments
-    clip: Value clipping for range control
-    ColorSpaceTransform: Color space conversion operations
-    resize: Image resizing with anti-aliasing options
-    Ycurve: Luminance curve adjustments using B-spline interpolation
-    saturation: Saturation control in LCH color space
-    colorEditor: Advanced color editing with selection masks
-    lightnessMask: Lightness-based masking for tone range selection
-    geometry: Geometric transformations including cropping and rotation
-    ProcessPipe: Complete processing pipeline management system
+    - Processing: Abstract base class for all processing operations
+    - tmo_cctf: Tone mapping using color correction transfer functions
+    - exposure: Exposure adjustment and auto-exposure calculation
+    - contrast: Contrast control with gamma-based adjustments
+    - clip: Value clipping for range control
+    - ColorSpaceTransform: Color space conversion operations
+    - resize: Image resizing with anti-aliasing options
+    - Ycurve: Luminance curve adjustments using B-spline interpolation
+    - saturation: Saturation control in LCH color space
+    - colorEditor: Advanced color editing with selection masks
+    - lightnessMask: Lightness-based masking for tone range selection
+    - geometry: Geometric transformations including cropping and rotation
+    - ProcessPipe: Complete processing pipeline management system
 
 Key Features:
     - HDR-specific tone mapping operators

@@ -25,11 +25,11 @@ file operations, array manipulations, and mathematical transformations used thro
 the hdrCore package.
 
 Functions:
-    filenamesplit: Parse filename into path, name, and extension components
-    filterlistdir: Filter directory contents by file extensions
-    ndarray2vector: Convert 2D image arrays to 1D vectors
-    NPlinearWeightMask: Generate linear weight masks for image blending
-    croppRotated: Calculate crop dimensions for rotated images
+    - filenamesplit: Parse filename into path, name, and extension components
+    - filterlistdir: Filter directory contents by file extensions
+    - ndarray2vector: Convert 2D image arrays to 1D vectors
+    - NPlinearWeightMask: Generate linear weight masks for image blending
+    - croppRotated: Calculate crop dimensions for rotated images
 """
 
 # -----------------------------------------------------------------------------

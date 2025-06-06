@@ -35,20 +35,20 @@ The controller system manages multiple aspects of the HDR editing interface:
 - Multi-monitor HDR display support
 
 Classes:
-    GalleryMode: Enumeration for gallery display layouts
-    ImageWidgetController: Individual image widget management
-    ImageGalleryController: Image gallery navigation and selection
-    AppController: Main application controller and workflow coordination
-    MultiDockController: Multi-panel interface management
-    EditImageController: HDR image editing controls and parameters
-    ImageInfoController: Image metadata and information display
-    AdvanceSliderController: Advanced slider control with auto-adjustment
-    ToneCurveController: Tone curve editing and B-spline management
-    LightnessMaskController: Lightness mask controls for tone range selection
-    HDRviewerController: HDR image display and comparison
-    LchColorSelectorController: LCH color space editing interface
-    GeometryController: Geometric transformation controls
-    ImageAestheticsController: Image aesthetics analysis and display
+    - GalleryMode: Enumeration for gallery display layouts
+    - ImageWidgetController: Individual image widget management
+    - ImageGalleryController: Image gallery navigation and selection
+    - AppController: Main application controller and workflow coordination
+    - MultiDockController: Multi-panel interface management
+    - EditImageController: HDR image editing controls and parameters
+    - ImageInfoController: Image metadata and information display
+    - AdvanceSliderController: Advanced slider control with auto-adjustment
+    - ToneCurveController: Tone curve editing and B-spline management
+    - LightnessMaskController: Lightness mask controls for tone range selection
+    - HDRviewerController: HDR image display and comparison
+    - LchColorSelectorController: LCH color space editing interface
+    - GeometryController: Geometric transformation controls
+    - ImageAestheticsController: Image aesthetics analysis and display
 
 Key Features:
     - Complete MVC architecture for HDR image editing

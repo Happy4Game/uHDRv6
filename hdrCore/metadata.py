@@ -26,8 +26,8 @@ both reading existing metadata from image files and creating new metadata struct
 for processed images.
 
 Classes:
-    tags: Manages tag definitions and hierarchical tag organization
-    metadata: Complete metadata management for HDR images including EXIF data
+    - tags: Manages tag definitions and hierarchical tag organization
+    - metadata: Complete metadata management for HDR images including EXIF data
 """
 
 
