@@ -1,1 +1,0 @@
-pdoc uHDR.py guiQt hdrCore -o docs

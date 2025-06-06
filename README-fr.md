@@ -24,6 +24,11 @@ Pour lancer l'application:
 ```bash
 python uHDR.py
 ```
+Pour générer la documentation
+```bash
+pdoc uHDR.py guiQt hdrCore -o docs
+```
+ou exécutez le fichier generate-doc.bat
 
 ## 🔎 Architecture
 ```bash
